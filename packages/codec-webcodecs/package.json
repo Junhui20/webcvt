@@ -1,7 +1,7 @@
 {
-  "name": "@webcvt/core",
+  "name": "@webcvt/codec-webcodecs",
   "version": "0.0.0",
-  "description": "Public API, types, format detector, and backend registry for webcvt",
+  "description": "Thin adapter over the W3C WebCodecs API — encode/decode video and audio frames for webcvt container packages",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -14,6 +14,7 @@
     }
   },
   "files": ["dist"],
+  "sideEffects": false,
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -22,6 +23,9 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist coverage .turbo"
   },
+  "dependencies": {
+    "@webcvt/core": "workspace:*"
+  },
   "devDependencies": {
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",
@@ -29,7 +33,6 @@
     "@vitest/coverage-v8": "^2.1.0"
   },
   "license": "MIT",
-  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   }

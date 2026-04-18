@@ -1,0 +1,105 @@
+import { describe, expect, it } from 'vitest';
+import { detectFormat, detectFormatWithHint } from './detect.ts';
+
+function bytes(...xs: number[]): Uint8Array {
+  return Uint8Array.from(xs);
+}
+
+describe('detectFormat', () => {
+  it('detects PNG by magic bytes', async () => {
+    const png = bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0);
+    const result = await detectFormat(png);
+    expect(result?.ext).toBe('png');
+    expect(result?.mime).toBe('image/png');
+  });
+
+  it('detects JPEG (JFIF marker)', async () => {
+    const jpg = bytes(0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46);
+    const result = await detectFormat(jpg);
+    expect(result?.ext).toBe('jpeg');
+  });
+
+  it('detects WebP (RIFF + WEBP)', async () => {
+    const webp = bytes(
+      0x52, 0x49, 0x46, 0x46, // RIFF
+      0, 0, 0, 0, // size
+      0x57, 0x45, 0x42, 0x50, // WEBP
+    );
+    const result = await detectFormat(webp);
+    expect(result?.ext).toBe('webp');
+  });
+
+  it('detects WAV (RIFF + WAVE)', async () => {
+    const wav = bytes(
+      0x52, 0x49, 0x46, 0x46,
+      0, 0, 0, 0,
+      0x57, 0x41, 0x56, 0x45, // WAVE
+    );
+    const result = await detectFormat(wav);
+    expect(result?.ext).toBe('wav');
+  });
+
+  it('detects GIF89a', async () => {
+    const gif = bytes(0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0, 0);
+    const result = await detectFormat(gif);
+    expect(result?.ext).toBe('gif');
+  });
+
+  it('detects BMP', async () => {
+    const bmp = bytes(0x42, 0x4d, 0, 0, 0, 0);
+    const result = await detectFormat(bmp);
+    expect(result?.ext).toBe('bmp');
+  });
+
+  it('detects ICO', async () => {
+    const ico = bytes(0x00, 0x00, 0x01, 0x00, 0, 0);
+    const result = await detectFormat(ico);
+    expect(result?.ext).toBe('ico');
+  });
+
+  it('detects MP3 with ID3 tag', async () => {
+    const mp3 = bytes(0x49, 0x44, 0x33, 0x04, 0, 0);
+    const result = await detectFormat(mp3);
+    expect(result?.ext).toBe('mp3');
+  });
+
+  it('detects MP3 by MPEG frame sync', async () => {
+    const mp3 = bytes(0xff, 0xfb, 0x90, 0x00);
+    const result = await detectFormat(mp3);
+    expect(result?.ext).toBe('mp3');
+  });
+
+  it('returns undefined for unknown magic bytes', async () => {
+    const unknown = bytes(0x00, 0x01, 0x02, 0x03);
+    expect(await detectFormat(unknown)).toBeUndefined();
+  });
+
+  it('handles too-short input gracefully', async () => {
+    expect(await detectFormat(bytes(0x89))).toBeUndefined();
+  });
+
+  it('works with Blob input', async () => {
+    const blob = new Blob([bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a)]);
+    const result = await detectFormat(blob);
+    expect(result?.ext).toBe('png');
+  });
+});
+
+describe('detectFormatWithHint', () => {
+  it('falls back to filename when magic bytes unknown', async () => {
+    const txt = bytes(0x68, 0x65, 0x6c, 0x6c, 0x6f); // "hello"
+    const result = await detectFormatWithHint(txt, 'subtitle.srt');
+    expect(result?.ext).toBe('srt');
+  });
+
+  it('prefers magic bytes over filename when both exist', async () => {
+    const png = bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    const result = await detectFormatWithHint(png, 'actually_a.jpg');
+    expect(result?.ext).toBe('png');
+  });
+
+  it('returns undefined when hint has no extension', async () => {
+    const unknown = bytes(0, 0, 0, 0);
+    expect(await detectFormatWithHint(unknown, 'no_extension_file')).toBeUndefined();
+  });
+});
