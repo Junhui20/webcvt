@@ -1,0 +1,40 @@
+{
+  "name": "webcvt-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Browser-first, hardware-accelerated file conversion library",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "typecheck": "turbo run typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "clean": "turbo run clean && rm -rf node_modules .turbo"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.10.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "tsup": "^8.3.0"
+  },
+  "author": "bryan@instamedia.my",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bryanchng/webcvt.git"
+  },
+  "homepage": "https://github.com/bryanchng/webcvt#readme",
+  "bugs": {
+    "url": "https://github.com/bryanchng/webcvt/issues"
+  }
+}

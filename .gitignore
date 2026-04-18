@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+.turbo
+.vitest
+.vscode
+.idea
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.local
+.pnpm-store
+/apps/*/.next
+/apps/*/out
+/apps/*/.vercel
+/apps/*/.wrangler
