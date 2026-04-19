@@ -657,18 +657,37 @@ Note: format count grows slowly up to launch, then jumps hard in Waves D–E whe
 
 ## 10. Next Action
 
-Once this plan is approved, the immediate next step is:
+### Where we are
 
-> **Create monorepo skeleton at `C:\Users\Instamedia\Documents\GitHub\webcvt\`**, push initial commit to GitHub, set up Cloudflare Pages auto-deploy.
+Repo live at https://github.com/Junhui20/webcvt. Phase 1 done. Phase 2: 2/5 containers complete (`container-wav`, `container-mp3`). 7 packages, 529 tests, lint+typecheck+build all green in CI.
 
-After that, execute **Phase 1** (Weeks 1–2):
-1. `@webcvt/core` — public API, types, format detector, Worker pool
-2. `@webcvt/codec-webcodecs` — thin WebCodecs adapter
-3. `@webcvt/image-canvas` — PNG/JPG/WebP/BMP/ICO (first working demo)
-4. `@webcvt/subtitle` — all text subtitle formats (warm-up before binary containers)
-5. CI pipeline green from day 1
+### Proven per-package pipeline (from container-mp3)
 
-Phase 3 (Weeks 6–16) is the make-or-break moment — that's where the MP4 / Matroska implementations prove (or disprove) that Option B was the right call. Budget 2.5 months for this block, not 1.
+The full agent loop ran end-to-end successfully on container-mp3 — every new container should follow the same 5-stage flow:
+
+```
+1. typescript-pro agent  → TDD implementation from design note (~1.5K LOC + tests)
+2. code-reviewer agent   → quality + API design review
+3. security-reviewer     → DoS / OOM / buffer-bounds review (in parallel with #2)
+4. typescript-pro agent  → apply review fixes + add regression tests
+5. local verify + commit + push
+```
+
+container-mp3 numbers from this loop: 120 → 124 → 131 tests, 97.09% → 96.87% coverage. 6 DoS vectors caught and patched before merge — none would have been found by tests alone. The pipeline pays for itself.
+
+### Immediate next step
+
+**`container-aac`** (LOC budget ~330, smallest remaining Phase 2 container). Follow the 5-stage pipeline above. Design note at `docs/design-notes/container-aac.md` is the spec.
+
+### Phase 2 remaining
+
+| Container | LOC | Pipeline status |
+|---|---|---|
+| `container-aac` | ~330 | 🔜 next |
+| `container-flac` | ~720 | design note ready |
+| `container-ogg` | ~1,130 | design note ready (incl. sequential chaining) |
+
+Phase 3 (Weeks 6–16) — MP4 + Matroska — is still the make-or-break block. Budget 2.5 months for it, not 1. The container-mp3 experience tells us the design-note → implement → review → security-fix loop adds ~30% to bare implementation time but catches issues that would burn weeks in field debugging.
 
 ---
 
