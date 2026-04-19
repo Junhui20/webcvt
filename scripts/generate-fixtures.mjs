@@ -158,6 +158,28 @@ const FIXTURES = [
       '+faststart',
     ],
   },
+  {
+    out: 'video/testsrc-1s-160x120-vp8-vorbis.webm',
+    args: [
+      '-f',
+      'lavfi',
+      '-i',
+      'testsrc=duration=1:size=160x120:rate=10',
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=440:duration=1:sample_rate=44100',
+      '-c:v',
+      'libvpx',
+      '-b:v',
+      '100k',
+      '-c:a',
+      'libvorbis',
+      '-b:a',
+      '64k',
+      '-shortest',
+    ],
+  },
 ];
 
 async function runFfmpeg(outputPath, args) {

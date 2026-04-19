@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 7/8 (5/5 audio containers done — Phase-2 demo deferred to Phase 5) · Phase 3: 1/6 (container-mp4 first-pass M4A audio done; webm/mkv/ts + mp4 second-pass remain)** · CI green · 1,139 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 7/8 (5/5 audio containers done — Phase-2 demo deferred to Phase 5) · Phase 3: 2/6 (container-mp4 first-pass + container-webm first-pass done; mkv/ts + mp4 second-pass remain)** · CI green · 1,328 tests passing · last revised 2026-04-19
 
 ---
 
@@ -522,7 +522,7 @@ A 3rd-party dep gets in **only if**:
 ### Phase 3 — Core containers, set 2 (Weeks 6–16) · **hardest phase, 2.5 months**
 - [x] `@webcvt/container-mp4` **first-pass** (single-track audio M4A) — ~1,650 LOC across 14 files in `src/` (incl. `src/boxes/`); 179 tests, 96% line / 81% branch / 98% function coverage. Boxes: ftyp, moov/mvhd, trak/tkhd, mdia/mdhd, hdlr, minf/smhd, dinf/dref, stbl (stsd/mp4a/esds/stts/stsc/stsz/stco/co64), mdat. RLE expansion for stts + stsc; both stco (32-bit) and co64 (64-bit) chunk offsets transparent; AudioSpecificConfig extracted from esds DecoderSpecificInfo (re-implemented inline, ~50 LOC; shared-helper extraction with container-aac is Phase 3.5+). WebCodecs decode path emits EncodedAudioChunks via `iterateAudioSamples`. Round-trip parse → serialize against in-memory parsed bytes (committed-fixture byte-equals not used because AAC byte output drifts across host OS/arch). Iterative box-tree walker (NOT recursive) with depth cap 10. Also registered `m4a` (audio/mp4) in `@webcvt/core/formats.ts`. Code-reviewed (3 HIGH fixed: synthetic mdat-before-moov test added for Trap §8 branch coverage; mvhd/tkhd/mdhd version field now runtime-validated and throws on version > 1 instead of silently mis-parsing as v0; misplaced module-level import moved to top of file). Security-reviewed (2 HIGH + 4 MEDIUM all fixed: box-tree boundary check off-by-one collapsed to single guard, `parseMp4aPayload` inner child-box scan now bounded by global `MAX_BOXES_PER_FILE` cap so 64 MiB mp4a payload can't trigger 8M-iteration CPU DoS, largeSize validated against remaining bytes, `size = 0` rejected for non-mdat boxes per design note Trap §1, dead `Mp4CorruptStreamError` guard restructured per-trak failures now surface typed Mp4MissingBoxError/Mp4InvalidBoxError, `dref` enforces `entry_count === 1` per design note `dinf` self-contained-only requirement). Out of scope (Phase 3.5+): video tracks, multi-track, fragmented MP4 (moof/sidx/tfra/trex), edit lists (elst), metadata (udta/meta), DRM (pssh/cenc), sample groups, subtitles, HEIF, QuickTime legacy boxes, ctts, stz2.
 - [ ] `@webcvt/container-mp4` **second-pass (Phase 3.5)** — ~4,500 LOC: edit lists (elst), fragmented MP4 (moof/sidx/tfra/etc.), video tracks (avc1/hev1/vp09/av01), multi-track, movie metadata (udta/meta), DRM (cenc).
-- [ ] Weeks 11–13: `@webcvt/container-webm` (Matroska subset) — ~2,500 LOC
+- [x] `@webcvt/container-webm` **first-pass** (single video + single audio, codecs `{V_VP8, V_VP9, A_VORBIS, A_OPUS}`) — ~3,216 LOC across 16 files; 189 tests, 94% line / 84% branch / 94% function coverage. EBML primitives (RFC 8794): two distinct VINT entry points (`readVintId` keeps marker bit, `readVintSize` strips); iterative element walker with depth cap 8 (no recursion). Elements implemented: EBML header (DocType="webm" gate, rejects "matroska"), Segment, SeekHead, Info (TimecodeScale default 1_000_000 ns), Tracks/TrackEntry/Video/Audio, Cluster/SimpleBlock (lacing modes 00 + 01 supported; 10 + 11 throw `WebmLacingNotSupportedError`), Cues/CuePoint. CodecPrivate preserved verbatim (Vorbis 3-packet init + Opus OpusHead → WebCodecs `description`). Round-trip parse → serialize (semantic equivalence; byte-identical proven for synthetic canonical-layout inputs without Xiph lacing — Xiph-laced blocks split into separate unlaced SimpleBlocks on serialize, documented limitation). WebmBackend identity-only. Code-reviewed (2 HIGH fixed: round-trip JSDoc claimed false fast-path + missing byte-identity test; `parseFlatChildren` duplicated across 3 modules consolidated to shared helper). Security-reviewed (2 HIGH + 3 MEDIUM all fixed: parser silently tolerated Segment unknown-size contradicting design note + brief — now throws WebmUnknownSizeError; `decodeXiphLacing` returned `[]` silently on malformed lace tables → silent data loss to WebCodecs, now throws WebmCorruptStreamError; child-parsers bypassed global `MAX_ELEMENTS_PER_FILE` cap — shared helper now threads `elementCount`; `SeekPosition`/`CueClusterPosition` not validated against fileBytes.length; VP8/VP9 non-empty CodecPrivate accepted up to 1 MiB, now rejected per design note Trap §13). Out of scope (Phase 3.5+ or container-mkv): generic Matroska DocType, AV1, multiple tracks, subtitles, Chapters/Tags/Attachments, encryption, BlockGroup/BlockAdditions, live/streaming WebM, lacing modes 10+11.
 - [ ] Weeks 14–15: `@webcvt/container-mkv` (full Matroska, EBML) — ~2,000 LOC
 - [ ] Week 16: `@webcvt/container-ts` (MPEG-TS + PAT/PMT) — ~1,000 LOC
 - [ ] Interop tests: byte-exact muxing + FFmpeg can demux our output
@@ -658,7 +658,7 @@ Note: format count grows slowly up to launch, then jumps hard in Waves D–E whe
 
 ### Where we are
 
-Repo live at https://github.com/Junhui20/webcvt. Phase 1 + Phase 2 library code complete. Phase 2: **all 5 audio containers**; demo deferred to Phase 5. **Phase 3 in progress: container-mp4 first-pass (M4A audio) shipped 2026-04-19.** 12 packages, 1,139 tests, lint+typecheck+build all green in CI.
+Repo live at https://github.com/Junhui20/webcvt. Phase 1 + Phase 2 library code complete; demo deferred to Phase 5. **Phase 3 in progress: container-mp4 + container-webm first-passes both shipped 2026-04-19.** 13 packages, 1,328 tests, lint+typecheck+build all green in CI.
 
 ### Proven per-package pipeline (from container-mp3)
 
@@ -676,14 +676,13 @@ container-mp3 numbers from this loop: 120 → 124 → 131 tests, 97.09% → 96.8
 
 ### Immediate next step
 
-**`container-webm` first-pass** (Matroska subset for WebM — VP8/VP9 video, Vorbis/Opus audio). Needs: design note (planner agent), WebM video fixture (add to `scripts/generate-fixtures.mjs`). EBML element parsing (variable-length integers + IDs) is the foundational primitive — share with `container-mkv` later. Same 5-stage pipeline.
+**`container-mkv` first-pass** (full Matroska, builds on container-webm's EBML primitives). Needs: design note (planner agent), MKV fixture (likely H.264/HEVC + AAC track types not in WebM scope), and explicit decision on whether to share VINT/EBML primitives with container-webm (preferred) or duplicate. Same 5-stage pipeline.
 
 ### Phase 3 remaining
 
 | Container | First-pass LOC | Pipeline status |
 |---|---|---|
-| `container-webm` (Matroska subset for WebM) | ~2,500 | 🔜 next — design note + fixture both pending |
-| `container-mkv` (full Matroska + EBML, builds on webm) | ~2,000 | design note pending |
+| `container-mkv` (full Matroska + EBML, builds on webm) | ~2,000 | 🔜 next — design note + fixture pending |
 | `container-ts` (MPEG-TS + PAT/PMT) | ~1,000 | design note pending |
 | `container-mp4` second-pass (video, fragmented, etc.) | ~4,500 | Phase 3.5 |
 | Interop tests (FFmpeg can demux our output) | — | Phase 3 wrap-up |

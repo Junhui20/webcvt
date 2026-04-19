@@ -1,0 +1,61 @@
+/**
+ * @webcvt/container-webm — WebM container muxer and demuxer.
+ *
+ * Public API surface (minimal per Lesson #6 — do not re-export internal helpers).
+ */
+
+// Parser / serializer entry points.
+export { parseWebm } from './parser.ts';
+export type { WebmFile } from './parser.ts';
+
+export { serializeWebm } from './serializer.ts';
+
+// Element types.
+export type { WebmEbmlHeader } from './elements/header.ts';
+export type { WebmInfo } from './elements/segment-info.ts';
+export type {
+  WebmTrack,
+  WebmVideoTrack,
+  WebmAudioTrack,
+  WebmCodecId,
+} from './elements/tracks.ts';
+export type { WebmCluster, WebmSimpleBlock } from './elements/cluster.ts';
+export type { WebmCuePoint } from './elements/cues.ts';
+export type { WebmSeekHead, WebmSeekEntry } from './elements/seek-head.ts';
+
+// Block iterators.
+export {
+  iterateVideoChunks,
+  iterateAudioChunks,
+  type VideoChunk,
+  type AudioChunk,
+} from './block-iterator.ts';
+
+// Backend registration.
+export { WebmBackend, WEBM_FORMAT } from './backend.ts';
+
+// Typed error classes (exported so callers can catch by type).
+export {
+  WebmInputTooLargeError,
+  WebmDocTypeNotSupportedError,
+  WebmEbmlVersionError,
+  WebmEbmlLimitError,
+  WebmVintError,
+  WebmElementTooLargeError,
+  WebmTooManyElementsError,
+  WebmDepthExceededError,
+  WebmUnknownSizeError,
+  WebmMissingElementError,
+  WebmUnsupportedCodecError,
+  WebmLacingNotSupportedError,
+  WebmMultiTrackNotSupportedError,
+  WebmUnsupportedTrackTypeError,
+  WebmMissingTimecodeError,
+  WebmCodecPrivateTooLargeError,
+  WebmTooManyBlocksError,
+  WebmCorruptStreamError,
+  WebmMissingSegmentError,
+  WebmTruncatedError,
+  WebmTooManyCuePointsError,
+  WebmEncodeNotImplementedError,
+} from './errors.ts';

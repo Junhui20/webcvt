@@ -1,0 +1,110 @@
+/**
+ * Segment Info element (ID 0x1549A966) decode and encode.
+ *
+ * Extracts: TimecodeScale (default 1_000_000 ns — Trap §4), Duration (float),
+ * MuxingApp and WritingApp (utf-8 strings).
+ */
+
+import {
+  DEFAULT_TIMECODE_SCALE,
+  ID_DURATION,
+  ID_INFO,
+  ID_MUXING_APP,
+  ID_TIMECODE_SCALE,
+  ID_WRITING_APP,
+} from '../constants.ts';
+import { findChild } from '../ebml-element.ts';
+import type { EbmlElement } from '../ebml-element.ts';
+import {
+  concatBytes,
+  readFloat,
+  readUintNumber,
+  readUtf8,
+  writeFloat64,
+  writeUint,
+  writeUtf8,
+} from '../ebml-types.ts';
+import { writeVintId, writeVintSize } from '../ebml-vint.ts';
+import { WebmMissingElementError } from '../errors.ts';
+import { encodeMasterElement, encodeUintElement, encodeUtf8Element } from './header.ts';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface WebmInfo {
+  /** Nanoseconds per TimecodeScale tick. Default 1_000_000. */
+  timecodeScale: number;
+  /** Duration in TimecodeScale units (float). Optional. */
+  duration?: number;
+  /** Muxing application string. */
+  muxingApp: string;
+  /** Writing application string. */
+  writingApp: string;
+}
+
+// ---------------------------------------------------------------------------
+// Decoder
+// ---------------------------------------------------------------------------
+
+/**
+ * Decode the Info element from its children.
+ *
+ * Trap §4: TimecodeScale defaults to 1_000_000 ns if absent.
+ * MuxingApp and WritingApp are technically required by Matroska spec;
+ * we tolerate absence with empty string for robustness.
+ */
+export function decodeInfo(bytes: Uint8Array, children: EbmlElement[]): WebmInfo {
+  // TimecodeScale — default 1_000_000 if absent (Trap §4).
+  const timecodeScaleElem = findChild(children, ID_TIMECODE_SCALE);
+  const timecodeScale = timecodeScaleElem
+    ? readUintNumber(bytes.subarray(timecodeScaleElem.payloadOffset, timecodeScaleElem.nextOffset))
+    : DEFAULT_TIMECODE_SCALE;
+
+  // Duration — optional float (32 or 64 bit).
+  const durationElem = findChild(children, ID_DURATION);
+  const duration = durationElem
+    ? readFloat(bytes.subarray(durationElem.payloadOffset, durationElem.nextOffset))
+    : undefined;
+
+  // MuxingApp — utf-8, tolerate absence.
+  const muxingAppElem = findChild(children, ID_MUXING_APP);
+  const muxingApp = muxingAppElem
+    ? readUtf8(bytes.subarray(muxingAppElem.payloadOffset, muxingAppElem.nextOffset))
+    : '';
+
+  // WritingApp — utf-8, tolerate absence.
+  const writingAppElem = findChild(children, ID_WRITING_APP);
+  const writingApp = writingAppElem
+    ? readUtf8(bytes.subarray(writingAppElem.payloadOffset, writingAppElem.nextOffset))
+    : '';
+
+  return { timecodeScale, duration, muxingApp, writingApp };
+}
+
+// ---------------------------------------------------------------------------
+// Encoder
+// ---------------------------------------------------------------------------
+
+/** Canonical muxing/writing app string for files this package produces. */
+export const WEBCVT_APP_STRING = '@webcvt/container-webm';
+
+/**
+ * Encode the Info element to bytes.
+ */
+export function encodeInfo(info: WebmInfo): Uint8Array {
+  const parts: Uint8Array[] = [encodeUintElement(ID_TIMECODE_SCALE, BigInt(info.timecodeScale))];
+
+  if (info.duration !== undefined && !Number.isNaN(info.duration)) {
+    // Duration as float64 element.
+    const idBytes = writeVintId(ID_DURATION);
+    const payload = writeFloat64(info.duration);
+    const sizeBytes = writeVintSize(BigInt(payload.length));
+    parts.push(concatBytes([idBytes, sizeBytes, payload]));
+  }
+
+  parts.push(encodeUtf8Element(ID_MUXING_APP, info.muxingApp || WEBCVT_APP_STRING));
+  parts.push(encodeUtf8Element(ID_WRITING_APP, info.writingApp || WEBCVT_APP_STRING));
+
+  return encodeMasterElement(ID_INFO, concatBytes(parts));
+}
