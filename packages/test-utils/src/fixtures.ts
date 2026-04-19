@@ -36,5 +36,8 @@ export async function loadFixture(relativePath: string): Promise<Uint8Array> {
  */
 export async function loadFixtureBlob(relativePath: string, type = ''): Promise<Blob> {
   const bytes = await loadFixture(relativePath);
-  return new Blob([bytes], { type });
+  // Cast to ArrayBuffer to satisfy TS5.7+ which narrows Uint8Array.buffer
+  // to ArrayBufferLike (potentially SharedArrayBuffer). loadFixture always
+  // returns a Uint8Array backed by a plain ArrayBuffer.
+  return new Blob([bytes.buffer as ArrayBuffer], { type });
 }

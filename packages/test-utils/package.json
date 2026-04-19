@@ -28,7 +28,6 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "build": "echo 'no build — internal source-only package'",
     "clean": "rm -rf coverage .turbo"
   },
   "devDependencies": {

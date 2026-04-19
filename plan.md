@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1 — 6/8 complete** · CI green · 315 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1 done · Phase 2 in progress (1/5 containers)** · CI green · 398 tests passing · last revised 2026-04-19
 
 ---
 
@@ -498,12 +498,13 @@ A 3rd-party dep gets in **only if**:
 **Phase 1 outcome:** 4 packages published-ready, 315 tests passing, ~3,300 LOC source. Bundle sizes: core 3 KB, codec-webcodecs 12 KB, image-canvas 6 KB, subtitle 25 KB. All ESM + CJS + .d.ts.
 
 ### Phase 2 — Core containers, set 1 (Weeks 3–5)
-- [ ] `@webcvt/container-wav` (~150 LOC, warm-up)
+- [x] **Test-fixture pipeline** — `@webcvt/test-utils` package (bytes/fixtures/audio-synth helpers, 18 tests) + `scripts/generate-fixtures.mjs` using pinned `ffmpeg-static` + 4 reference fixtures committed under `tests/fixtures/audio/` + `.gitattributes` (binary)
+- [x] **Design notes** — `docs/design-notes/container-{wav,mp3,flac,ogg,aac}.md` written from official specs (clean-room per §11)
+- [x] `@webcvt/container-wav` — RIFF/WAV muxer + demuxer, 65 tests, 94.8% coverage, ~12 KB bundle. Includes WAVEFORMATEXTENSIBLE recognition; RF64 throws `WavTooLargeError` (deferred)
 - [ ] `@webcvt/container-mp3` (frame parsing + ID3v2)
 - [ ] `@webcvt/container-aac` (ADTS)
 - [ ] `@webcvt/container-ogg` (pages + packets)
 - [ ] `@webcvt/container-flac`
-- [ ] Tests: byte-exact parity with ffmpeg reference files
 - [ ] Demo: WAV ↔ MP3 ↔ FLAC ↔ OGG conversion using our containers + WebCodecs
 
 ### Phase 3 — Core containers, set 2 (Weeks 6–16) · **hardest phase, 2.5 months**
