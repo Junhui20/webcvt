@@ -170,6 +170,14 @@ export async function detectFormat(
     if (svgResult) return svgResult;
   }
 
+  // NOTE: JSON / CSV / TSV / INI / ENV (the five @webcvt/data-text formats) are NOT
+  // detectable by magic bytes. They are all UTF-8 text that may share the same byte
+  // patterns (all can start with a BOM or printable ASCII). Attempting to auto-detect
+  // them from bytes would cause silent data corruption — e.g. a JSON array starting
+  // with '[' is indistinguishable from CSV with '[' in the first cell without schema
+  // knowledge. Callers MUST pass an explicit format string to parseDataText(). There
+  // is no detectFormat() support for these formats.
+
   // MP3 fallback: frame sync 0xFF 0xFB/0xFA/0xF3/0xF2
   if (head[0] === 0xff) {
     const b1 = head[1];

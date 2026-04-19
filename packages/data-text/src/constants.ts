@@ -1,0 +1,73 @@
+/**
+ * Shared security-cap constants for @webcvt/data-text.
+ *
+ * All values are derived from the design note §"Security caps".
+ * Every format module references these constants; do not hardcode them inline.
+ */
+
+// ---------------------------------------------------------------------------
+// Universal input caps
+// ---------------------------------------------------------------------------
+
+/** Maximum raw input size in bytes (10 MiB). Checked BEFORE TextDecoder. */
+export const MAX_INPUT_BYTES = 10 * 1024 * 1024;
+
+/** Maximum decoded character count (10,485,760). Checked AFTER TextDecoder. */
+export const MAX_INPUT_CHARS = 10_485_760;
+
+// ---------------------------------------------------------------------------
+// JSON-specific caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum nesting depth allowed in a JSON document (256).
+ * Pre-scan rejects inputs exceeding this BEFORE JSON.parse is called,
+ * preventing V8 stack-overflow exposure from deeply nested arrays/objects.
+ */
+export const MAX_JSON_DEPTH = 256;
+
+// ---------------------------------------------------------------------------
+// CSV / TSV-specific caps
+// ---------------------------------------------------------------------------
+
+/** Maximum number of rows in a CSV/TSV document (1,000,000). */
+export const MAX_CSV_ROWS = 1_000_000;
+
+/** Maximum number of columns per row in a CSV/TSV document (1,024). */
+export const MAX_CSV_COLS = 1024;
+
+/**
+ * Maximum cumulative number of cells (rows × cols) across the entire CSV/TSV
+ * document (8,000,000). Per-row + per-cell caps still apply, but this caps
+ * the multiplicative product so that an attacker can't reach 1M rows × 1024
+ * cols ≈ 1B cells (~8 GiB of pointer space) before either individual cap
+ * would fire. Sec-M-3 defense from review.
+ */
+export const MAX_CSV_CELLS = 8_000_000;
+
+// ---------------------------------------------------------------------------
+// INI-specific caps
+// ---------------------------------------------------------------------------
+
+/** Maximum number of sections in an INI document (1,024). */
+export const MAX_INI_SECTIONS = 1024;
+
+/** Maximum total number of keys across all sections in an INI document (100,000). */
+export const MAX_INI_KEYS = 100_000;
+
+// ---------------------------------------------------------------------------
+// ENV-specific caps
+// ---------------------------------------------------------------------------
+
+/** Maximum number of key/value pairs in an ENV document (100,000). */
+export const MAX_ENV_KEYS = 100_000;
+
+// ---------------------------------------------------------------------------
+// MIME types
+// ---------------------------------------------------------------------------
+
+export const JSON_MIME = 'application/json';
+export const CSV_MIME = 'text/csv';
+export const TSV_MIME = 'text/tab-separated-values';
+export const INI_MIME = 'text/x-ini';
+export const ENV_MIME = 'text/plain';

@@ -37,6 +37,27 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'ts', mime: 'video/mp2t', category: 'video', description: 'MPEG-2 Transport Stream' },
   // Image (Phase 4: image-svg package)
   { ext: 'svg', mime: 'image/svg+xml', category: 'image', description: 'Scalable Vector Graphics' },
+  // Data-text (Phase 4: data-text package)
+  {
+    ext: 'json',
+    mime: 'application/json',
+    category: 'data',
+    description: 'JavaScript Object Notation',
+  },
+  { ext: 'csv', mime: 'text/csv', category: 'data', description: 'Comma-Separated Values' },
+  {
+    ext: 'tsv',
+    mime: 'text/tab-separated-values',
+    category: 'data',
+    description: 'Tab-Separated Values',
+  },
+  { ext: 'ini', mime: 'text/x-ini', category: 'data', description: 'INI Configuration File' },
+  {
+    ext: 'env',
+    mime: 'text/plain',
+    category: 'data',
+    description: 'Environment Variables File (.env)',
+  },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',
