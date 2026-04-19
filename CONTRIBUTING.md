@@ -157,7 +157,7 @@ the PR template and in each package's README.
 
 ## Community
 
-- Issues: https://github.com/bryanchng/webcvt/issues
+- Issues: https://github.com/Junhui20/webcvt/issues
 - Discussions: (enable once repo is public)
 - Security: see `SECURITY.md` (TODO)
 
