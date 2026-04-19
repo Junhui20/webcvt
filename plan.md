@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 6/8 (4/5 containers done — wav/mp3/flac/aac · fixtures + design notes done · `@webcvt/backend-wasm` stub scaffolded)** · CI green · 801 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 7/8 (5/5 containers done — wav/mp3/flac/aac/ogg · fixtures + design notes done · `@webcvt/backend-wasm` stub scaffolded · only Phase-2 demo remains)** · CI green · 960 tests passing · last revised 2026-04-19
 
 ---
 
@@ -509,14 +509,14 @@ A 3rd-party dep gets in **only if**:
 
 **Phase 1 outcome:** 4 packages published-ready, 315 tests passing, ~3,300 LOC source. Bundle sizes: core 3 KB, codec-webcodecs 12 KB, image-canvas 6 KB, subtitle 25 KB. All ESM + CJS + .d.ts.
 
-### Phase 2 — Core containers, set 1 (Weeks 3–5) — **6/8**
+### Phase 2 — Core containers, set 1 (Weeks 3–5) — **7/8**
 - [x] **Test-fixture pipeline** — `@webcvt/test-utils` package (bytes/fixtures/audio-synth helpers, 18 tests) + `scripts/generate-fixtures.mjs` using pinned `ffmpeg-static` + 6 reference fixtures committed under `tests/fixtures/audio/` (wav x2, mp3, flac, aac AAC-LC ADTS, ogg Vorbis) + `.gitattributes` (binary). _Also closes the deferred Phase 1 item._
 - [x] **Design notes** — `docs/design-notes/container-{wav,mp3,flac,ogg,aac}.md` written from official specs (clean-room per §11)
 - [x] `@webcvt/container-wav` — RIFF/WAV muxer + demuxer, 65 tests, 94.8% coverage, ~12 KB bundle. Includes WAVEFORMATEXTENSIBLE recognition; RF64 throws `WavTooLargeError` (deferred)
 - [x] `@webcvt/container-mp3` — MPEG-1/2/2.5 Layer III + ID3v2/v1 + Xing/LAME/VBRI; 131 tests, 96.87% coverage, ~22 KB bundle. Code-reviewed (3 HIGH fixed: APE skip clarity, encodeUnsynchronisation un-export, dead branch). Security-reviewed (3 HIGH + 3 MED DoS vectors fixed: ext-header bounds, APE underflow, 200 MiB input cap, 64 MiB ID3 body cap, frameBytes guard, matchMagic bounds). MPEG 2.5 read-only; free-format throws.
 - [x] `@webcvt/container-aac` (ADTS) — 7/9-byte ADTS frame parse + serialize + AudioSpecificConfig builder; 102 tests, ~99% line coverage. Also registered AAC in `@webcvt/core` (formats.ts + detect.ts ADTS magic with explicit nibble allowlist `{0,1,8,9}` to disambiguate from MP3 frame sync). Code-reviewed (1 HIGH fixed: canHandle accepted HE-AAC MIMEs `audio/aacp`/`audio/x-aac`, contradicting design note Trap #7 — narrowed to `audio/aac` exact match, HE-AAC now routes to backend-wasm via registry). Security-reviewed (1 HIGH + 2 MEDIUM all fixed: parseAdtsHeader 9-byte CRC bounds throw, cumulative sync-scan cap at 16 MiB across the parser loop not just per-call, corrupt-stream guard now also fires on ≥95% rejected with ≥32 attempts even when some frames parsed).
 - [x] `@webcvt/container-flac` — STREAMINFO/SEEKTABLE/VORBIS_COMMENT/PICTURE/PADDING + frame demux + serializer + 7-byte UTF-8 varint (36-bit) + CRC-8/CRC-16 tables; 158 tests, ~95% line coverage. Code-reviewed (1 HIGH fixed: canHandle was too permissive, now identity-only per design note). Security-reviewed (2 CRITICAL + 3 HIGH + 4 MEDIUM all fixed: parseFlac 200 MiB cap, frame-scan distance cap via maxFrameSize, ID3 syncsafe validation + 64 MiB cap, SEEKTABLE 65k point cap, VORBIS_COMMENT count + per-comment caps, TextDecoder hoist, CRC-16 mismatch threshold throw, varint OOB explicit throw, subarray + 64 MiB metadata cumulative cap, readUint64BE bounds). Encode routes to `@webcvt/backend-wasm` via registry (canHandle returns false for FLAC encode).
-- [ ] `@webcvt/container-ogg` — fixture ready (sine-1s-44100-mono.ogg, Vorbis, 6,098 bytes); +sequential chaining (~1,130 LOC)
+- [x] `@webcvt/container-ogg` — Ogg page demux/mux + lacing reassembly + non-reflected CRC-32 (poly 0x04C11DB7) + Vorbis identification/comment/setup + Opus OpusHead/OpusTags + chained-stream iteration (Trap §4b) + multiplex rejection (§4a); 159 tests, ~93% line coverage. Also registered `opus` and `oga` formats in `@webcvt/core/formats.ts`. Code-reviewed (1 HIGH fixed: canHandle accepted cross-MIME `audio/ogg ↔ audio/opus` "identity" — third recurrence of the canHandle-too-permissive pattern; narrowed to strict `input.mime === output.mime`). Security-reviewed (3 HIGH + 2 MEDIUM all fixed: cumulative sync-scan budget MAX_TOTAL_SYNC_SCAN_BYTES wired into parser, Opus channel_mapping_family != 0 rejected, parser now invokes decodeVorbisComment/decodeOpusTags so the per-comment/vendor caps actually fire on the parse path, truncated-stream codec-null silent-empty case throws OggCorruptStreamError, packet-count cap off-by-one fixed). Stage-4 also caught & fixed an OOM in `splitPacketToPages` when targetPageBodySize < 255 (bodySize=0 → infinite pagination loop): clamped to a 255-byte minimum.
 - [ ] Demo: WAV ↔ MP3 ↔ FLAC ↔ OGG conversion using our containers + WebCodecs (depends on all 5 containers)
 
 ### Phase 3 — Core containers, set 2 (Weeks 6–16) · **hardest phase, 2.5 months**
@@ -659,7 +659,7 @@ Note: format count grows slowly up to launch, then jumps hard in Waves D–E whe
 
 ### Where we are
 
-Repo live at https://github.com/Junhui20/webcvt. Phase 1 done. Phase 2: 4/5 containers complete (`container-wav`, `container-mp3`, `container-flac`, `container-aac`). 10 packages, 801 tests, lint+typecheck+build all green in CI. Only `container-ogg` + the integration demo remain.
+Repo live at https://github.com/Junhui20/webcvt. Phase 1 done. Phase 2: **all 5 containers complete** (`container-wav`, `container-mp3`, `container-flac`, `container-aac`, `container-ogg`). 11 packages, 960 tests, lint+typecheck+build all green in CI. Only the Phase-2 integration demo remains before Phase 3 (MP4/Matroska/WebM/TS).
 
 ### Proven per-package pipeline (from container-mp3)
 
@@ -677,13 +677,13 @@ container-mp3 numbers from this loop: 120 → 124 → 131 tests, 97.09% → 96.8
 
 ### Immediate next step
 
-**`container-ogg`** (LOC budget ~1,130, the largest of the Phase-2 containers because of sequential chaining — concatenated logical bitstreams that share an Ogg page sequence). Fixture is ready (Vorbis); design note at `docs/design-notes/container-ogg.md` covers the chaining algorithm. Follow the 5-stage pipeline.
+**Phase-2 integration demo** — last open Phase-2 task. The five audio containers (wav/mp3/flac/aac/ogg) plus `@webcvt/codec-webcodecs` are now individually proven. The demo wires them through the core BackendRegistry to show real conversions in a browser playground (e.g. WAV → MP3 → FLAC round-trips, Opus encode via WebCodecs, Vorbis decode via WebCodecs where supported). Decision needed before starting: minimal CLI smoke vs full `apps/playground` site. The latter is currently scheduled for Phase 5 (`apps/playground` Cloudflare Pages); a thin Phase-2 demo page is fine and re-uses for Phase 3.
 
 ### Phase 2 remaining
 
-| Container | LOC | Pipeline status |
-|---|---|---|
-| `container-ogg` | ~1,130 | 🔜 next (fixture ready, design note ready, incl. sequential chaining) |
+| Item | Status |
+|---|---|
+| Phase-2 integration demo | 🔜 next — pick scope: CLI smoke vs thin browser playground |
 
 Phase 3 (Weeks 6–16) — MP4 + Matroska — is still the make-or-break block. Budget 2.5 months for it, not 1. The container-mp3 experience tells us the design-note → implement → review → security-fix loop adds ~30% to bare implementation time but catches issues that would burn weeks in field debugging.
 
