@@ -44,6 +44,13 @@ if (!ffmpegPath) {
  *
  * Bumping ffmpeg-static version may change byte output for lossy formats.
  * Re-run this script and commit the new bytes when that happens.
+ *
+ * Platform note: AAC (`aac` encoder) and Ogg Vorbis (`libvorbis`) bytes can
+ * also drift across host OS / arch because their psychoacoustic loops are
+ * float-heavy and ffmpeg-static ships a different native binary per
+ * platform. Tests that consume *.aac / *.ogg fixtures must therefore
+ * structurally validate (ADTS sync word, Ogg page magic) rather than rely
+ * on byte-equals comparisons against the committed bytes.
  */
 const FIXTURES = [
   {
@@ -98,6 +105,38 @@ const FIXTURES = [
       '2',
       '-c:a',
       'pcm_s16le',
+    ],
+  },
+  {
+    out: 'audio/sine-1s-44100-mono.aac',
+    args: [
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=440:duration=1:sample_rate=44100',
+      '-ac',
+      '1',
+      '-c:a',
+      'aac',
+      '-profile:a',
+      'aac_low',
+      '-b:a',
+      '96k',
+    ],
+  },
+  {
+    out: 'audio/sine-1s-44100-mono.ogg',
+    args: [
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=440:duration=1:sample_rate=44100',
+      '-ac',
+      '1',
+      '-c:a',
+      'libvorbis',
+      '-b:a',
+      '96k',
     ],
   },
 ];

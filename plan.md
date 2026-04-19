@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 4/8 (2/5 containers + fixtures + design notes done)** · CI green · 529 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 4/8 (2/5 containers + fixtures + design notes done; AAC+OGG fixtures regenerated, `@webcvt/backend-wasm` stub scaffolded so aac/flac/ogg encode-fallback paths can import without errors)** · CI green · 537 tests passing · last revised 2026-04-19
 
 ---
 
@@ -510,13 +510,13 @@ A 3rd-party dep gets in **only if**:
 **Phase 1 outcome:** 4 packages published-ready, 315 tests passing, ~3,300 LOC source. Bundle sizes: core 3 KB, codec-webcodecs 12 KB, image-canvas 6 KB, subtitle 25 KB. All ESM + CJS + .d.ts.
 
 ### Phase 2 — Core containers, set 1 (Weeks 3–5) — **4/8**
-- [x] **Test-fixture pipeline** — `@webcvt/test-utils` package (bytes/fixtures/audio-synth helpers, 18 tests) + `scripts/generate-fixtures.mjs` using pinned `ffmpeg-static` + 4 reference fixtures committed under `tests/fixtures/audio/` + `.gitattributes` (binary). _Also closes the deferred Phase 1 item._
+- [x] **Test-fixture pipeline** — `@webcvt/test-utils` package (bytes/fixtures/audio-synth helpers, 18 tests) + `scripts/generate-fixtures.mjs` using pinned `ffmpeg-static` + 6 reference fixtures committed under `tests/fixtures/audio/` (wav x2, mp3, flac, aac AAC-LC ADTS, ogg Vorbis) + `.gitattributes` (binary). _Also closes the deferred Phase 1 item._
 - [x] **Design notes** — `docs/design-notes/container-{wav,mp3,flac,ogg,aac}.md` written from official specs (clean-room per §11)
 - [x] `@webcvt/container-wav` — RIFF/WAV muxer + demuxer, 65 tests, 94.8% coverage, ~12 KB bundle. Includes WAVEFORMATEXTENSIBLE recognition; RF64 throws `WavTooLargeError` (deferred)
 - [x] `@webcvt/container-mp3` — MPEG-1/2/2.5 Layer III + ID3v2/v1 + Xing/LAME/VBRI; 131 tests, 96.87% coverage, ~22 KB bundle. Code-reviewed (3 HIGH fixed: APE skip clarity, encodeUnsynchronisation un-export, dead branch). Security-reviewed (3 HIGH + 3 MED DoS vectors fixed: ext-header bounds, APE underflow, 200 MiB input cap, 64 MiB ID3 body cap, frameBytes guard, matchMagic bounds). MPEG 2.5 read-only; free-format throws.
-- [ ] `@webcvt/container-aac` (ADTS) — needs fixture generation + design-note revisit (HE-AAC routed to backend-wasm which doesn't exist yet)
-- [ ] `@webcvt/container-flac` — has fixture, decode via WebCodecs Chrome 124+/Safari 17+; encode routed to future backend-wasm
-- [ ] `@webcvt/container-ogg` — needs fixture; +sequential chaining (~1,130 LOC)
+- [ ] `@webcvt/container-aac` (ADTS) — fixture ready (sine-1s-44100-mono.aac, AAC-LC ADTS, 12,792 bytes); HE-AAC fallback can import `@webcvt/backend-wasm` stub without module-not-found
+- [ ] `@webcvt/container-flac` — fixture ready; decode via WebCodecs Chrome 124+/Safari 17+; encode routed to `@webcvt/backend-wasm` stub
+- [ ] `@webcvt/container-ogg` — fixture ready (sine-1s-44100-mono.ogg, Vorbis, 6,098 bytes); +sequential chaining (~1,130 LOC)
 - [ ] Demo: WAV ↔ MP3 ↔ FLAC ↔ OGG conversion using our containers + WebCodecs (depends on all 5 containers)
 
 ### Phase 3 — Core containers, set 2 (Weeks 6–16) · **hardest phase, 2.5 months**
