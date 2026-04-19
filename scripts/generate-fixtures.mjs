@@ -139,6 +139,25 @@ const FIXTURES = [
       '96k',
     ],
   },
+  {
+    out: 'audio/sine-1s-44100-mono.m4a',
+    args: [
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=440:duration=1:sample_rate=44100',
+      '-ac',
+      '1',
+      '-c:a',
+      'aac',
+      '-profile:a',
+      'aac_low',
+      '-b:a',
+      '96k',
+      '-movflags',
+      '+faststart',
+    ],
+  },
 ];
 
 async function runFfmpeg(outputPath, args) {
