@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 7/8 (5/5 audio containers done — Phase-2 demo deferred to Phase 5) · Phase 3: 4/6 (all 4 first-pass containers done — mp4/webm/mkv/ts; ebml extraction + mp4 second-pass + interop tests remain)** · CI green · 1,786 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1: 7/8 (1 deferred to Phase 5) · Phase 2: 7/8 (5/5 audio containers done) · Phase 3: 4/6 (all 4 first-pass containers — mp4/webm/mkv/ts) · Phase 4: 1/5 (archive-zip first-pass done; image-svg/image-animation/image-legacy/data-text remain)** · CI green · 1,923 tests passing · last revised 2026-04-19
 
 ---
 
@@ -532,7 +532,7 @@ A 3rd-party dep gets in **only if**:
 - [ ] `@webcvt/image-svg`
 - [ ] `@webcvt/image-animation` — GIF/APNG/animated WebP (self-written)
 - [ ] `@webcvt/image-legacy` — 13 formats: TIFF/TGA/QOI/PCX/PBM/PGM/PNM/PPM/PFM/XBM/XPM/ICNS/CUR
-- [ ] `@webcvt/archive-zip` — ZIP/TAR/GZ/BZ2/XZ (using `DecompressionStream`)
+- [x] `@webcvt/archive-zip` **first-pass** (ZIP stored+Deflate, POSIX ustar TAR, gzip envelope; bz2/xz route to backend-wasm) — ~3,000 LOC across 15 source files + 3 test helpers; 132 tests, ~89% line / 87% branch coverage. ZIP: EOCD backward search (4 KiB cap), central directory walk, lazy entry decompression via `DecompressionStream('deflate-raw')` with `makeSizeCapTransform` enforcing per-entry 256 MiB + cumulative 512 MiB caps + 1000:1 ratio cap incrementally. TAR: 512-byte ustar block walk, octal-string parser (now THROWS on non-octal bytes per Sec-H-3), checksum verification, EOA detection (two consecutive zero blocks + tolerate trailing zero padding). GZip: single-member only, multi-member detection scans for `0x1F 0x8B 0x08` re-occurrence past first member's CRC+ISIZE trailer (Trap §14). bz2/xz: detect magic + throw typed errors so registry routes to backend-wasm. All-synthetic fixture strategy via `src/_test-helpers/build-{zip,tar,gzip}.ts` — no committed binaries. Path-traversal validator rejects `..`/absolute/NUL/backslash-normalized paths. zlib CRC-32 variant (3rd in the codebase). Also added `zip`, `tar`, `gz`, `tgz` to `@webcvt/core/formats.ts` + ZIP/gzip/bz2/xz/ustar(@offset 257) magic detection in `@webcvt/core/detect.ts` (HEADER_BYTES_TO_READ bumped 189→264 for ustar offset). Code-reviewed (4 HIGH fixed: `MAX_ZIP_ENTRIES` agent unilaterally lowered to 1000 — restored to spec value 65536; missing `ZipCommentTooLargeError` enforcement; missing `parseTar` zero-entries guard; missing tgz→tgz canHandle test + dead branches removed). Security-reviewed (4 CRITICAL + 3 HIGH + 2 MEDIUM all fixed: `parseArchive` had NO MAX_INPUT_BYTES guard — direct importers bypassed cap entirely; `gunzip` UNCAPPED — gzip bomb succeeded; `parseTar` had NO cumulative size cap — adversarial 200×256MiB tar = 50GiB references; multi-member gzip detection NEVER IMPLEMENTED — error class was dead code; zip-parser `getPayloadSlice` no bounds check before subarray; TAR entry count off-by-one allowed entry 65537; `parseOctal` silently returned 0 for non-octal bytes → silent block-walk misalignment; TAR name-length cap block was empty; serializer `decompressGzip` also uncapped). canHandle HIGH **沒第 9 次累犯** (5-of-9 prior had it). Out of scope (Phase 4.5+): ZIP64, encryption, compression methods other than 0+8, multi-disk, PAX, GNU tar extensions, multi-member gzip, native bz2/xz, streaming append-mode writes.
 - [ ] `@webcvt/data-text` — JSON/YAML/TOML/CSV/TSV/XML/INI/JSONL/TOON/FWF/ENV
 - [ ] Test coverage ≥ 80%
 
@@ -658,7 +658,7 @@ Note: format count grows slowly up to launch, then jumps hard in Waves D–E whe
 
 ### Where we are
 
-Repo live at https://github.com/Junhui20/webcvt. Phase 1 + Phase 2 library code complete; demo deferred to Phase 5. **Phase 3 first-passes ALL shipped 2026-04-19** (mp4 + webm + mkv + ts). 15 packages, 1,786 tests, lint+typecheck+build all green in CI. Remaining Phase-3 wrap-up tasks: extract `@webcvt/ebml` from webm + mkv duplicated primitives; interop tests with FFmpeg; second-passes (mp4 fragmented/video, webm/mkv multi-track + AV1 + subtitles) deferred to Phase 3.5.
+Repo live at https://github.com/Junhui20/webcvt. Phase 1 + Phase 2 + Phase 3 first-passes all shipped. **Phase 4 in progress: archive-zip first-pass shipped 2026-04-19 (autonomous-mode session).** 16 packages, 1,923 tests, lint+typecheck+build all green in CI. Phase 3 wrap-up tasks (EBML extraction, interop, second-passes) deferred per user direction — went straight to Phase 4 instead.
 
 ### Proven per-package pipeline (from container-mp3)
 
@@ -676,10 +676,7 @@ container-mp3 numbers from this loop: 120 → 124 → 131 tests, 97.09% → 96.8
 
 ### Immediate next step
 
-**Phase 3 wrap-up** — pick one of three:
-- **(a) Extract `@webcvt/ebml`** from container-webm + container-mkv duplicated primitives (~370 LOC). Now that two working consumers exist, the shared API is observable. Lowest risk + cleanest payoff.
-- **(b) Interop tests**: write tests that pipe our serializer output through ffmpeg-static and assert successful demux. Validates round-trip semantic equivalence against an external implementation.
-- **(c) Phase 3.5 first** — start mp4 second-pass (~4,500 LOC: video tracks, fragmented MP4, edit lists, multi-track, DRM). The biggest remaining block; would mean another design note + 5-stage pipeline.
+**`image-svg` first-pass** — smallest Phase-4 package (~200 LOC). SVG is XML; "support" means recognize + pass through unchanged (we don't render SVG). Same 5-stage pipeline. After: data-text (12 text format parsers, can split into sub-passes), image-legacy (13 bitmap formats), image-animation (GIF/APNG/animated WebP — most complex).
 
 ### Phase 3 remaining
 

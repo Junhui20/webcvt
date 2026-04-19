@@ -19,7 +19,11 @@ import type { FormatDescriptor } from './types.ts';
  * - OGG: "OggS" at offset 0
  * - MP3: ID3 tag ("ID3") or MPEG frame sync (0xFF 0xFB/0xFA/0xF3/0xF2)
  * - FLAC: "fLaC" at offset 0
- * - ZIP: "PK\x03\x04" at offset 0
+ * - ZIP: "PK\x03\x04" at offset 0 (PKWARE APPNOTE.TXT)
+ * - GZip: 0x1F 0x8B at offset 0 (RFC 1952)
+ * - bzip2: "BZh" (0x42 0x5A 0x68) at offset 0
+ * - xz: 0xFD 0x37 0x7A 0x58 0x5A 0x00 at offset 0 (XZ file format spec)
+ * - TAR (ustar): "ustar\0" at offset 257 (POSIX 1003.1); requires reading 263+ bytes
  */
 interface Signature {
   readonly ext: string;
@@ -41,10 +45,18 @@ const SIGNATURES: readonly Signature[] = [
   { ext: 'mp3', offset: 0, bytes: [0x49, 0x44, 0x33] }, // ID3v2
   { ext: 'flac', offset: 0, bytes: [0x66, 0x4c, 0x61, 0x43] },
   { ext: 'zip', offset: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
+  { ext: 'gz', offset: 0, bytes: [0x1f, 0x8b] },
+  { ext: 'bz2', offset: 0, bytes: [0x42, 0x5a, 0x68] }, // 'BZh'
+  { ext: 'xz', offset: 0, bytes: [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00] },
+  // TAR ustar: magic "ustar\0" at offset 257 (POSIX 1003.1).
+  // HEADER_BYTES_TO_READ must be >= 263 to reach this offset.
+  { ext: 'tar', offset: 257, bytes: [0x75, 0x73, 0x74, 0x61, 0x72, 0x00] }, // "ustar\0"
 ];
 
 // For MPEG-TS detection we need 189 bytes (offset 0 + offset 188).
-const HEADER_BYTES_TO_READ = 189;
+// For TAR ustar detection we need 263 bytes (offset 257 + 6-byte magic = 263).
+// Bumped to 264 to provide one byte of safety margin.
+const HEADER_BYTES_TO_READ = 264;
 
 function matchesAt(buf: Uint8Array, offset: number, bytes: readonly number[]): boolean {
   if (buf.length < offset + bytes.length) return false;

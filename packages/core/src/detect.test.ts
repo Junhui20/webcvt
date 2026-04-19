@@ -148,6 +148,49 @@ describe('detectFormat', () => {
     expect(result?.ext).toBe('gif');
   });
 
+  it('detects ZIP by PK\\x03\\x04 magic', async () => {
+    const zip = bytes(0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0);
+    const result = await detectFormat(zip);
+    expect(result?.ext).toBe('zip');
+    expect(result?.mime).toBe('application/zip');
+  });
+
+  it('detects gzip by 0x1F 0x8B magic', async () => {
+    const gz = bytes(0x1f, 0x8b, 0x08, 0x00, 0, 0, 0, 0, 0, 0xff);
+    const result = await detectFormat(gz);
+    expect(result?.ext).toBe('gz');
+    expect(result?.mime).toBe('application/gzip');
+  });
+
+  it('detects bzip2 by "BZh" magic', async () => {
+    const bz2 = bytes(0x42, 0x5a, 0x68, 0x39, 0x31, 0x41, 0x59);
+    const result = await detectFormat(bz2);
+    expect(result?.ext).toBe('bz2');
+    expect(result?.mime).toBe('application/x-bzip2');
+  });
+
+  it('detects xz by 0xFD 0x37 0x7A 0x58 0x5A 0x00 magic', async () => {
+    const xz = bytes(0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00, 0x00, 0x04);
+    const result = await detectFormat(xz);
+    expect(result?.ext).toBe('xz');
+    expect(result?.mime).toBe('application/x-xz');
+  });
+
+  it('detects TAR ustar by "ustar\\0" at offset 257', async () => {
+    // Build a 264-byte buffer with ustar magic at offset 257
+    const tar = new Uint8Array(264);
+    // "ustar\0" at offset 257
+    tar[257] = 0x75; // u
+    tar[258] = 0x73; // s
+    tar[259] = 0x74; // t
+    tar[260] = 0x61; // a
+    tar[261] = 0x72; // r
+    tar[262] = 0x00; // \0
+    const result = await detectFormat(tar);
+    expect(result?.ext).toBe('tar');
+    expect(result?.mime).toBe('application/x-tar');
+  });
+
   it('returns undefined for unknown magic bytes', async () => {
     const unknown = bytes(0x00, 0x01, 0x02, 0x03);
     expect(await detectFormat(unknown)).toBeUndefined();

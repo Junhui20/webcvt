@@ -35,8 +35,33 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'webm', mime: 'video/webm', category: 'video', description: 'WebM' },
   { ext: 'mkv', mime: 'video/x-matroska', category: 'video', description: 'Matroska container' },
   { ext: 'ts', mime: 'video/mp2t', category: 'video', description: 'MPEG-2 Transport Stream' },
-  // Archive (format detection only for now)
-  { ext: 'zip', mime: 'application/zip', category: 'archive', description: 'Zip Archive' },
+  // Archive (Phase 4: archive-zip package)
+  {
+    ext: 'zip',
+    mime: 'application/zip',
+    category: 'archive',
+    description: 'ZIP Archive (stored + Deflate)',
+  },
+  {
+    ext: 'tar',
+    mime: 'application/x-tar',
+    category: 'archive',
+    description: 'POSIX ustar TAR Archive',
+  },
+  // gz is the canonical entry for application/gzip MIME (findByMime returns this)
+  { ext: 'gz', mime: 'application/gzip', category: 'archive', description: 'GZip Compressed File' },
+  {
+    ext: 'bz2',
+    mime: 'application/x-bzip2',
+    category: 'archive',
+    description: 'bzip2 Compressed File (backend-wasm required)',
+  },
+  {
+    ext: 'xz',
+    mime: 'application/x-xz',
+    category: 'archive',
+    description: 'XZ Compressed File (backend-wasm required)',
+  },
 ];
 
 /**
@@ -45,6 +70,8 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
  */
 const EXT_ALIASES: Readonly<Record<string, string>> = {
   jpg: 'jpeg',
+  // .tgz is an alias for .gz (both are gzip-compressed; the tar layer is detected by content)
+  tgz: 'gz',
 };
 
 const BY_EXT = new Map<string, FormatDescriptor>(
