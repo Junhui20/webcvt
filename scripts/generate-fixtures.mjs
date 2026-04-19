@@ -206,6 +206,32 @@ const FIXTURES = [
       'matroska',
     ],
   },
+  {
+    out: 'video/testsrc-1s-160x120-h264-aac.ts',
+    args: [
+      '-f',
+      'lavfi',
+      '-i',
+      'testsrc=duration=1:size=160x120:rate=10',
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=440:duration=1:sample_rate=44100',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'ultrafast',
+      '-crf',
+      '30',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '64k',
+      '-shortest',
+      '-f',
+      'mpegts',
+    ],
+  },
 ];
 
 async function runFfmpeg(outputPath, args) {

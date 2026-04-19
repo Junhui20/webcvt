@@ -43,7 +43,8 @@ const SIGNATURES: readonly Signature[] = [
   { ext: 'zip', offset: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
 ];
 
-const HEADER_BYTES_TO_READ = 32;
+// For MPEG-TS detection we need 189 bytes (offset 0 + offset 188).
+const HEADER_BYTES_TO_READ = 189;
 
 function matchesAt(buf: Uint8Array, offset: number, bytes: readonly number[]): boolean {
   if (buf.length < offset + bytes.length) return false;
@@ -85,6 +86,13 @@ export async function detectFormat(
     if (matchesAt(head, sig.offset, sig.bytes)) {
       return findByExt(sig.ext);
     }
+  }
+
+  // MPEG-TS: sync byte 0x47 at offset 0 AND at offset 188 (two-anchor confirmation).
+  // This disambiguates from GIF ('GIF8' starts with 0x47 = 'G') and other 0x47-starting formats.
+  // Note: GIF is already checked above; but GIF[188] is unlikely to also be 0x47 in random data.
+  if (head[0] === 0x47 && head.length >= 189 && head[188] === 0x47) {
+    return findByExt('ts');
   }
 
   // MP3 fallback: frame sync 0xFF 0xFB/0xFA/0xF3/0xF2

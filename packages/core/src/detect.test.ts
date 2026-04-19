@@ -114,6 +114,40 @@ describe('detectFormat', () => {
     expect(result?.ext).toBe('mp3');
   });
 
+  it('detects MPEG-TS by sync byte 0x47 at offset 0 and offset 188', async () => {
+    // Build a 189-byte buffer with 0x47 at positions 0 and 188
+    const ts = new Uint8Array(189);
+    ts[0] = 0x47;
+    ts[188] = 0x47;
+    const result = await detectFormat(ts);
+    expect(result?.ext).toBe('ts');
+    expect(result?.mime).toBe('video/mp2t');
+  });
+
+  it('does NOT detect MPEG-TS when 0x47 only at offset 0 (too short for confirmation)', async () => {
+    // Only 100 bytes (< 189 needed for second anchor)
+    const buf = new Uint8Array(100);
+    buf[0] = 0x47;
+    // Should not detect as TS — head.length < 189
+    const result = await detectFormat(buf);
+    // 0x47 = 'G' from GIF but other bytes don't match GIF magic
+    expect(result?.ext).not.toBe('ts');
+  });
+
+  it('detects GIF before TS even though GIF starts with 0x47', async () => {
+    // GIF89a: 0x47 0x49 0x46 0x38 0x39 0x61
+    const gif = new Uint8Array(189);
+    gif[0] = 0x47;
+    gif[1] = 0x49;
+    gif[2] = 0x46;
+    gif[3] = 0x38;
+    gif[4] = 0x39;
+    gif[5] = 0x61;
+    gif[188] = 0x47; // could look like TS second anchor
+    const result = await detectFormat(gif);
+    expect(result?.ext).toBe('gif');
+  });
+
   it('returns undefined for unknown magic bytes', async () => {
     const unknown = bytes(0x00, 0x01, 0x02, 0x03);
     expect(await detectFormat(unknown)).toBeUndefined();
