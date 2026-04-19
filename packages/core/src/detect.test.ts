@@ -191,6 +191,36 @@ describe('detectFormat', () => {
     expect(result?.mime).toBe('application/x-tar');
   });
 
+  it('detects SVG by <svg root element', async () => {
+    const src = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>';
+    const buf = new TextEncoder().encode(src);
+    const result = await detectFormat(buf);
+    expect(result?.ext).toBe('svg');
+    expect(result?.mime).toBe('image/svg+xml');
+  });
+
+  it('detects SVG with XML declaration prefix', async () => {
+    const src =
+      '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    const buf = new TextEncoder().encode(src);
+    const result = await detectFormat(buf);
+    expect(result?.ext).toBe('svg');
+  });
+
+  it('detects SVG with UTF-8 BOM', async () => {
+    const src = '\uFEFF<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    const buf = new TextEncoder().encode(src);
+    const result = await detectFormat(buf);
+    expect(result?.ext).toBe('svg');
+  });
+
+  it('does NOT detect PNG as SVG', async () => {
+    const png = bytes(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a);
+    const result = await detectFormat(png);
+    expect(result?.ext).toBe('png');
+    expect(result?.mime).not.toBe('image/svg+xml');
+  });
+
   it('returns undefined for unknown magic bytes', async () => {
     const unknown = bytes(0x00, 0x01, 0x02, 0x03);
     expect(await detectFormat(unknown)).toBeUndefined();

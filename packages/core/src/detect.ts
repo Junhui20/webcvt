@@ -56,7 +56,15 @@ const SIGNATURES: readonly Signature[] = [
 // For MPEG-TS detection we need 189 bytes (offset 0 + offset 188).
 // For TAR ustar detection we need 263 bytes (offset 257 + 6-byte magic = 263).
 // Bumped to 264 to provide one byte of safety margin.
-const HEADER_BYTES_TO_READ = 264;
+// Bumped to 1024 so SVG detection can scan the full SVG_SCAN_BYTES window.
+// Previously 264 (just enough for ustar magic at offset 257); SVGs with long
+// XML preambles + comments would push <svg past byte 264 and silently fail
+// core format detection.
+const HEADER_BYTES_TO_READ = 1024;
+
+// Number of bytes decoded as UTF-8 text for SVG root-element scanning.
+// 1024 characters is more than enough to encompass a BOM + XML decl + comments + <svg.
+const SVG_SCAN_BYTES = 1024;
 
 function matchesAt(buf: Uint8Array, offset: number, bytes: readonly number[]): boolean {
   if (buf.length < offset + bytes.length) return false;
@@ -64,6 +72,52 @@ function matchesAt(buf: Uint8Array, offset: number, bytes: readonly number[]): b
     if (buf[offset + i] !== bytes[i]) return false;
   }
   return true;
+}
+
+/**
+ * Detect SVG from a byte buffer by scanning the first SVG_SCAN_BYTES bytes as UTF-8
+ * text for an `<svg` root element preceded only by BOM, XML declaration, whitespace,
+ * or XML/HTML comments.
+ *
+ * SVG has no fixed-offset binary magic signature. We decode the head of the buffer
+ * with a replacement-mode TextDecoder (non-fatal — we only need ASCII text matching,
+ * not strict UTF-8 validation) and look for the structural preamble.
+ *
+ * Returns the SVG FormatDescriptor when detected, undefined otherwise.
+ */
+function detectSvgFromBytes(buf: Uint8Array): FormatDescriptor | undefined {
+  // Quick heuristic: first byte must be printable ASCII or BOM (0xEF for UTF-8 BOM,
+  // 0x3C for '<', 0x20/0x09/0x0A/0x0D for whitespace, 0x3F for '?').
+  // Binary formats (PNG, JPEG, etc.) will have high bytes or non-text bytes here.
+  const first = buf[0];
+  if (first === undefined) return undefined;
+  const isLikelyText =
+    first === 0x3c || // '<'
+    first === 0x20 || // space
+    first === 0x09 || // tab
+    first === 0x0a || // LF
+    first === 0x0d || // CR
+    first === 0xef || // UTF-8 BOM byte 1
+    first === 0xff || // UTF-16 BOM — handled by replacement decode
+    first === 0xfe; // UTF-16 BOM BE
+  if (!isLikelyText) return undefined;
+
+  const sliceLen = Math.min(buf.length, SVG_SCAN_BYTES);
+  // Use replacement mode so malformed UTF-8 does not throw.
+  const text = new TextDecoder('utf-8', { fatal: false }).decode(buf.subarray(0, sliceLen));
+
+  // Strip UTF-8 BOM (U+FEFF).
+  const stripped = text.replace(/^\uFEFF/, '');
+  // Strip XML declaration: <?xml ... ?>
+  const afterXml = stripped.replace(/^<\?xml[^?]*\?>\s*/i, '');
+  // Strip leading XML/HTML comments.
+  const afterComments = afterXml.replace(/^(<!--[\s\S]*?-->\s*)*/g, '');
+  const trimmed = afterComments.trimStart();
+
+  if (trimmed.startsWith('<svg') || trimmed.startsWith('<SVG')) {
+    return findByExt('svg');
+  }
+  return undefined;
 }
 
 function disambiguateRiff(buf: Uint8Array): 'webp' | 'wav' | undefined {
@@ -105,6 +159,15 @@ export async function detectFormat(
   // Note: GIF is already checked above; but GIF[188] is unlikely to also be 0x47 in random data.
   if (head[0] === 0x47 && head.length >= 189 && head[188] === 0x47) {
     return findByExt('ts');
+  }
+
+  // SVG detection: text-based XML format — no fixed-offset binary magic.
+  // Scan the first 1 KiB for `<svg` preceded only by BOM, XML declaration,
+  // whitespace, or XML/HTML comments. Must come BEFORE the MP3 fallback so
+  // that text inputs never accidentally match a byte-level pattern.
+  {
+    const svgResult = detectSvgFromBytes(head);
+    if (svgResult) return svgResult;
   }
 
   // MP3 fallback: frame sync 0xFF 0xFB/0xFA/0xF3/0xF2
