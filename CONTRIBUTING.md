@@ -121,6 +121,32 @@ See [`plan.md` §6 Roadmap](./plan.md) for the canonical checklist. Summary:
 - [ ] Phase 8 — PDF + ebooks + binary data (Months 7–8)
 - [ ] Phase 9 — API server + Tier 3 (Months 9+)
 
+## Test fixtures
+
+Reference files live under `tests/fixtures/` and are committed to the repo
+(treated as binary via `.gitattributes`, excluded from npm via `.npmignore`).
+
+To regenerate after changing what fixtures are needed:
+
+```bash
+pnpm fixtures
+```
+
+This invokes `scripts/generate-fixtures.mjs`, which uses a pinned
+`ffmpeg-static` binary so output is deterministic across Linux / macOS /
+Windows. CI never runs ffmpeg — it relies on the committed bytes.
+
+Use the helpers in `@webcvt/test-utils` from any package's tests:
+
+```ts
+import { loadFixture } from '@webcvt/test-utils/fixtures';
+import { assertBytesEqual } from '@webcvt/test-utils/bytes';
+import { sineInt16 } from '@webcvt/test-utils/audio-synth';
+
+const reference = await loadFixture('audio/sine-1s-44100-mono.wav');
+assertBytesEqual(reference, await myWavMuxer(samples), 'WAV mono');
+```
+
 ## Quality gates
 
 Enforced by CI. Cannot be bypassed without explicit justification in PR.

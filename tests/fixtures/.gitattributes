@@ -1,0 +1,2 @@
+# Treat all fixture files as binary so git doesn't try to LF/CRLF-normalise them.
+* binary

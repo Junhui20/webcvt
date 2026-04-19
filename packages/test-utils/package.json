@@ -1,0 +1,40 @@
+{
+  "name": "@webcvt/test-utils",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Internal test helpers: fixture loading, byte-exact comparison, synthetic data generators",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./fixtures": {
+      "types": "./src/fixtures.ts",
+      "import": "./src/fixtures.ts"
+    },
+    "./bytes": {
+      "types": "./src/bytes.ts",
+      "import": "./src/bytes.ts"
+    },
+    "./audio-synth": {
+      "types": "./src/audio-synth.ts",
+      "import": "./src/audio-synth.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "build": "echo 'no build — internal source-only package'",
+    "clean": "rm -rf coverage .turbo"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
+  },
+  "license": "MIT"
+}
