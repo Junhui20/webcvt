@@ -87,6 +87,33 @@ describe('detectFormat', () => {
     expect(result?.ext).toBe('mp3');
   });
 
+  it('detects AAC ADTS by sync word 0xFF 0xF1 (id=0, pa=1)', async () => {
+    // 0xFF 0xF1 = sync (top 12 bits) + id=0 + layer=00 + protection_absent=1
+    const aac = bytes(0xff, 0xf1, 0x50, 0x80);
+    const result = await detectFormat(aac);
+    expect(result?.ext).toBe('aac');
+    expect(result?.mime).toBe('audio/aac');
+  });
+
+  it('detects AAC ADTS by sync word 0xFF 0xF0 (id=0, pa=0, with CRC)', async () => {
+    const aac = bytes(0xff, 0xf0, 0x50, 0x80);
+    const result = await detectFormat(aac);
+    expect(result?.ext).toBe('aac');
+  });
+
+  it('detects AAC ADTS by sync word 0xFF 0xF9 (id=1, pa=1)', async () => {
+    // 0xFF 0xF9 = sync + id=1 (MPEG-2) + layer=00 + protection_absent=1
+    const aac = bytes(0xff, 0xf9, 0x50, 0x80);
+    const result = await detectFormat(aac);
+    expect(result?.ext).toBe('aac');
+  });
+
+  it('does NOT detect AAC for 0xFF 0xFB (MP3 frame sync — higher priority)', async () => {
+    const mp3 = bytes(0xff, 0xfb, 0x90, 0x00);
+    const result = await detectFormat(mp3);
+    expect(result?.ext).toBe('mp3');
+  });
+
   it('returns undefined for unknown magic bytes', async () => {
     const unknown = bytes(0x00, 0x01, 0x02, 0x03);
     expect(await detectFormat(unknown)).toBeUndefined();

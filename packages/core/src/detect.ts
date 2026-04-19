@@ -90,8 +90,25 @@ export async function detectFormat(
   // MP3 fallback: frame sync 0xFF 0xFB/0xFA/0xF3/0xF2
   if (head[0] === 0xff) {
     const b1 = head[1];
-    if (b1 === 0xfb || b1 === 0xfa || b1 === 0xf3 || b1 === 0xf2) {
+    if (b1 !== undefined && (b1 === 0xfb || b1 === 0xfa || b1 === 0xf3 || b1 === 0xf2)) {
       return findByExt('mp3');
+    }
+  }
+
+  // AAC ADTS fallback: sync word is top 12 bits = 0xFFF.
+  // Allowed low nibbles of byte 1 for ADTS: {0x0, 0x1, 0x8, 0x9}
+  // (12-bit sync + id(1 bit) + layer=00(2 bits) + protection_absent(1 bit))
+  // These do NOT overlap with the MP3 fallback nibbles above (0xFB/0xFA/0xF3/0xF2).
+  if (head[0] === 0xff) {
+    const b1 = head[1];
+    if (b1 !== undefined && (b1 & 0xf0) === 0xf0) {
+      const lowNibble = b1 & 0x0f;
+      // Valid ADTS low nibbles: layer=0 means bits 2-1 of b1 = 0b00, so nibble & 0x06 === 0.
+      // Combined with protection_absent bit: nibbles 0x0 (id=0,pa=0), 0x1 (id=0,pa=1),
+      // 0x8 (id=1,pa=0), 0x9 (id=1,pa=1) are valid ADTS.
+      if (lowNibble === 0x0 || lowNibble === 0x1 || lowNibble === 0x8 || lowNibble === 0x9) {
+        return findByExt('aac');
+      }
     }
   }
 

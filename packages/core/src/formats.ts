@@ -25,6 +25,7 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'sub', mime: 'text/x-microdvd', category: 'subtitle', description: 'MicroDVD / VobSub' },
   { ext: 'mpl', mime: 'text/x-mpl2', category: 'subtitle', description: 'MPL2' },
   // Audio/Video registered for format-detection even though backends arrive in later phases
+  { ext: 'aac', mime: 'audio/aac', category: 'audio', description: 'Advanced Audio Coding (ADTS)' },
   { ext: 'mp3', mime: 'audio/mpeg', category: 'audio', description: 'MPEG Audio Layer III' },
   { ext: 'wav', mime: 'audio/wav', category: 'audio', description: 'Waveform Audio File' },
   { ext: 'ogg', mime: 'audio/ogg', category: 'audio', description: 'Ogg' },
