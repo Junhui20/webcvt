@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { parseVtt, serializeVtt } from './vtt.ts';
+import { describe, expect, it } from 'vitest';
 import { SubtitleParseError } from './srt.ts';
+import { parseVtt, serializeVtt } from './vtt.ts';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -56,7 +56,7 @@ Short timestamp
 `;
 
 const CRLF_VTT = BASIC_VTT.replace(/\n/g, '\r\n');
-const BOM_VTT = '\uFEFF' + BASIC_VTT;
+const BOM_VTT = `\uFEFF${BASIC_VTT}`;
 
 // ---------------------------------------------------------------------------
 // parseVtt
@@ -66,9 +66,9 @@ describe('parseVtt', () => {
   it('parses basic VTT with two cues', () => {
     const track = parseVtt(BASIC_VTT);
     expect(track.cues).toHaveLength(2);
-    expect(track.cues[0]!.startMs).toBe(1000);
-    expect(track.cues[0]!.endMs).toBe(3500);
-    expect(track.cues[0]!.text).toBe('Hello world');
+    expect(track.cues[0]?.startMs).toBe(1000);
+    expect(track.cues[0]?.endMs).toBe(3500);
+    expect(track.cues[0]?.text).toBe('Hello world');
   });
 
   it('throws SubtitleParseError without WEBVTT header', () => {
@@ -92,7 +92,7 @@ describe('parseVtt', () => {
   it('parses cue settings and stores them in id', () => {
     const track = parseVtt(VTT_WITH_SETTINGS);
     expect(track.cues).toHaveLength(2);
-    const raw = JSON.parse(track.cues[0]!.id ?? '{}') as { settings: { align: string } };
+    const raw = JSON.parse(track.cues[0]?.id ?? '{}') as { settings: { align: string } };
     expect(raw.settings.align).toBe('center');
     expect(raw.settings.position).toBe('50%');
   });
@@ -100,19 +100,19 @@ describe('parseVtt', () => {
   it('skips NOTE blocks', () => {
     const track = parseVtt(VTT_WITH_NOTES);
     expect(track.cues).toHaveLength(1);
-    expect(track.cues[0]!.text).toBe('Test');
+    expect(track.cues[0]?.text).toBe('Test');
   });
 
   it('parses cues without IDs', () => {
     const track = parseVtt(VTT_NO_IDS);
     expect(track.cues).toHaveLength(1);
-    expect(track.cues[0]!.text).toBe('No ID cue');
+    expect(track.cues[0]?.text).toBe('No ID cue');
   });
 
   it('parses short (MM:SS.mmm) timestamps', () => {
     const track = parseVtt(VTT_SHORT_TS);
-    expect(track.cues[0]!.startMs).toBe(1000);
-    expect(track.cues[0]!.endMs).toBe(2000);
+    expect(track.cues[0]?.startMs).toBe(1000);
+    expect(track.cues[0]?.endMs).toBe(2000);
   });
 
   it('returns empty cues for WEBVTT with no cues', () => {
@@ -123,7 +123,7 @@ describe('parseVtt', () => {
   it('strips VTT markup tags from text', () => {
     const vtt = 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\n<v Speaker>Hello <b>world</b>\n\n';
     const track = parseVtt(vtt);
-    expect(track.cues[0]!.text).toBe('Hello world');
+    expect(track.cues[0]?.text).toBe('Hello world');
   });
 });
 
@@ -166,16 +166,16 @@ describe('VTT round-trip', () => {
     const reparsed = parseVtt(serializeVtt(original));
     expect(reparsed.cues).toHaveLength(original.cues.length);
     for (let i = 0; i < original.cues.length; i++) {
-      expect(reparsed.cues[i]!.startMs).toBe(original.cues[i]!.startMs);
-      expect(reparsed.cues[i]!.endMs).toBe(original.cues[i]!.endMs);
-      expect(reparsed.cues[i]!.text).toBe(original.cues[i]!.text);
+      expect(reparsed.cues[i]?.startMs).toBe(original.cues[i]?.startMs);
+      expect(reparsed.cues[i]?.endMs).toBe(original.cues[i]?.endMs);
+      expect(reparsed.cues[i]?.text).toBe(original.cues[i]?.text);
     }
   });
 
   it('round-trips cue settings', () => {
     const original = parseVtt(VTT_WITH_SETTINGS);
     const reparsed = parseVtt(serializeVtt(original));
-    const raw = JSON.parse(reparsed.cues[0]!.id ?? '{}') as { settings: { align: string } };
+    const raw = JSON.parse(reparsed.cues[0]?.id ?? '{}') as { settings: { align: string } };
     expect(raw.settings.align).toBe('center');
   });
 });

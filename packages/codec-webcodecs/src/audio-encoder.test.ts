@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WebCodecsNotSupportedError, CodecOperationError } from './errors.ts';
 import { WebCodecsAudioEncoder } from './audio-encoder.ts';
+import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 
 // ---------------------------------------------------------------------------
 // Mock AudioEncoder global
@@ -22,13 +22,11 @@ function makeMockAudioEncoder() {
     _errorCb: null as ((err: Error) => void) | null,
   };
 
-  const AudioEncoderMock = vi.fn().mockImplementation(
-    (init: AudioEncoderInit) => {
-      instance._outputCb = init.output;
-      instance._errorCb = init.error;
-      return instance;
-    },
-  );
+  const AudioEncoderMock = vi.fn().mockImplementation((init: AudioEncoderInit) => {
+    instance._outputCb = init.output;
+    instance._errorCb = init.error;
+    return instance;
+  });
   (AudioEncoderMock as unknown as { isConfigSupported: () => void }).isConfigSupported = vi.fn();
 
   return { AudioEncoderMock, instance };
@@ -54,9 +52,9 @@ describe('WebCodecsAudioEncoder', () => {
     it('throws WebCodecsNotSupportedError when AudioEncoder global is absent', () => {
       vi.stubGlobal('AudioEncoder', undefined);
 
-      expect(
-        () => new WebCodecsAudioEncoder({ config: baseConfig }, vi.fn()),
-      ).toThrow(WebCodecsNotSupportedError);
+      expect(() => new WebCodecsAudioEncoder({ config: baseConfig }, vi.fn())).toThrow(
+        WebCodecsNotSupportedError,
+      );
     });
 
     it('calls configure with the provided config', () => {
@@ -137,7 +135,7 @@ describe('WebCodecsAudioEncoder', () => {
 
       const fakeChunk = {} as EncodedAudioChunk;
       const fakeMeta = {} as EncodedAudioChunkMetadata;
-      instance._outputCb!(fakeChunk, fakeMeta);
+      instance._outputCb?.(fakeChunk, fakeMeta);
 
       expect(onChunk).toHaveBeenCalledWith(fakeChunk, fakeMeta);
     });
@@ -150,7 +148,7 @@ describe('WebCodecsAudioEncoder', () => {
       new WebCodecsAudioEncoder({ config: baseConfig }, onChunk);
 
       const fakeChunk = {} as EncodedAudioChunk;
-      instance._outputCb!(fakeChunk, undefined as unknown as EncodedAudioChunkMetadata);
+      instance._outputCb?.(fakeChunk, undefined as unknown as EncodedAudioChunkMetadata);
 
       expect(onChunk).toHaveBeenCalledWith(fakeChunk, {});
     });
@@ -162,7 +160,7 @@ describe('WebCodecsAudioEncoder', () => {
       vi.stubGlobal('AudioEncoder', AudioEncoderMock);
 
       const enc = new WebCodecsAudioEncoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Audio pipeline error'));
+      instance._errorCb?.(new Error('Audio pipeline error'));
 
       expect(() => enc.encode(makeAudioData())).toThrow(CodecOperationError);
     });
@@ -172,7 +170,7 @@ describe('WebCodecsAudioEncoder', () => {
       vi.stubGlobal('AudioEncoder', AudioEncoderMock);
 
       const enc = new WebCodecsAudioEncoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Codec crash'));
+      instance._errorCb?.(new Error('Codec crash'));
 
       await expect(enc.flush()).rejects.toThrow(CodecOperationError);
     });

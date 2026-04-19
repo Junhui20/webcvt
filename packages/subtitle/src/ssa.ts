@@ -10,8 +10,8 @@
  * section name and emitting the appropriate ScriptType on serialize.
  */
 
-import type { SubtitleTrack } from './cue.ts';
 import { parseAss, serializeAss } from './ass.ts';
+import type { SubtitleTrack } from './cue.ts';
 
 // ---------------------------------------------------------------------------
 // Parser

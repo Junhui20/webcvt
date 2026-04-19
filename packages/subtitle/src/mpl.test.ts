@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseMpl, serializeMpl } from './mpl.ts';
 import { SubtitleParseError } from './srt.ts';
 
@@ -17,7 +17,7 @@ const ITALIC_MPL = `[10][35]/Italic text
 [40][60]Normal|/Italic second line
 `;
 
-const BOM_MPL = '\uFEFF' + BASIC_MPL;
+const BOM_MPL = `\uFEFF${BASIC_MPL}`;
 const CRLF_MPL = BASIC_MPL.replace(/\n/g, '\r\n');
 
 const COMMENT_MPL = `# This is a comment
@@ -32,32 +32,32 @@ describe('parseMpl', () => {
   it('parses basic MPL2 with two cues', () => {
     const track = parseMpl(BASIC_MPL);
     expect(track.cues).toHaveLength(2);
-    expect(track.cues[0]!.text).toBe('Hello world');
-    expect(track.cues[1]!.text).toBe('Second cue');
+    expect(track.cues[0]?.text).toBe('Hello world');
+    expect(track.cues[1]?.text).toBe('Second cue');
   });
 
   it('converts deciseconds to milliseconds', () => {
     const track = parseMpl(BASIC_MPL);
     // [10] → 10 * 100 = 1000ms; [35] → 3500ms
-    expect(track.cues[0]!.startMs).toBe(1000);
-    expect(track.cues[0]!.endMs).toBe(3500);
+    expect(track.cues[0]?.startMs).toBe(1000);
+    expect(track.cues[0]?.endMs).toBe(3500);
   });
 
   it('converts pipe-separated segments to newlines', () => {
     const track = parseMpl(MULTILINE_MPL);
-    expect(track.cues[0]!.text).toBe('Line one\nLine two');
+    expect(track.cues[0]?.text).toBe('Line one\nLine two');
   });
 
   it('strips leading / italic markers', () => {
     const track = parseMpl(ITALIC_MPL);
-    expect(track.cues[0]!.text).toBe('Italic text');
-    expect(track.cues[1]!.text).toBe('Normal\nItalic second line');
+    expect(track.cues[0]?.text).toBe('Italic text');
+    expect(track.cues[1]?.text).toBe('Normal\nItalic second line');
   });
 
   it('skips comment lines starting with #', () => {
     const track = parseMpl(COMMENT_MPL);
     expect(track.cues).toHaveLength(1);
-    expect(track.cues[0]!.text).toBe('After comment');
+    expect(track.cues[0]?.text).toBe('After comment');
   });
 
   it('handles BOM', () => {
@@ -83,13 +83,13 @@ describe('parseMpl', () => {
   it('handles single cue', () => {
     const track = parseMpl('[5][10]Single cue\n');
     expect(track.cues).toHaveLength(1);
-    expect(track.cues[0]!.text).toBe('Single cue');
+    expect(track.cues[0]?.text).toBe('Single cue');
   });
 
   it('handles zero timestamps', () => {
     const track = parseMpl('[0][10]From zero\n');
-    expect(track.cues[0]!.startMs).toBe(0);
-    expect(track.cues[0]!.endMs).toBe(1000);
+    expect(track.cues[0]?.startMs).toBe(0);
+    expect(track.cues[0]?.endMs).toBe(1000);
   });
 
   it('ignores non-matching lines without throwing', () => {
@@ -131,15 +131,15 @@ describe('MPL2 round-trip', () => {
     const reparsed = parseMpl(serializeMpl(original));
     expect(reparsed.cues).toHaveLength(original.cues.length);
     for (let i = 0; i < original.cues.length; i++) {
-      expect(reparsed.cues[i]!.startMs).toBe(original.cues[i]!.startMs);
-      expect(reparsed.cues[i]!.endMs).toBe(original.cues[i]!.endMs);
-      expect(reparsed.cues[i]!.text).toBe(original.cues[i]!.text);
+      expect(reparsed.cues[i]?.startMs).toBe(original.cues[i]?.startMs);
+      expect(reparsed.cues[i]?.endMs).toBe(original.cues[i]?.endMs);
+      expect(reparsed.cues[i]?.text).toBe(original.cues[i]?.text);
     }
   });
 
   it('round-trips multiline text', () => {
     const original = parseMpl(MULTILINE_MPL);
     const reparsed = parseMpl(serializeMpl(original));
-    expect(reparsed.cues[0]!.text).toBe('Line one\nLine two');
+    expect(reparsed.cues[0]?.text).toBe('Line one\nLine two');
   });
 });

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { convert } from './convert.ts';
 import { BackendRegistry } from './registry.ts';
 import {
-  NoBackendError,
-  UnsupportedFormatError,
   type Backend,
   type ConvertResult,
   type FormatDescriptor,
+  NoBackendError,
+  UnsupportedFormatError,
 } from './types.ts';
 
 function pngBlob(): Blob {
@@ -51,9 +51,9 @@ describe('convert', () => {
 
   it('throws NoBackendError when no backend matches', async () => {
     const registry = new BackendRegistry();
-    await expect(
-      convert(pngBlob(), { format: 'webp' }, { registry }),
-    ).rejects.toBeInstanceOf(NoBackendError);
+    await expect(convert(pngBlob(), { format: 'webp' }, { registry })).rejects.toBeInstanceOf(
+      NoBackendError,
+    );
   });
 
   it('delegates to a matching backend', async () => {

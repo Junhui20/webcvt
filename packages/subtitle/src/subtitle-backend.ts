@@ -9,13 +9,13 @@
 
 import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
 import { UnsupportedFormatError, WebcvtError } from '@webcvt/core';
-import type { SubtitleTrack } from './cue.ts';
-import { parseSrt, serializeSrt } from './srt.ts';
-import { parseVtt, serializeVtt } from './vtt.ts';
 import { parseAss, serializeAss } from './ass.ts';
+import type { SubtitleTrack } from './cue.ts';
+import { parseMpl, serializeMpl } from './mpl.ts';
+import { parseSrt, serializeSrt } from './srt.ts';
 import { parseSsa, serializeSsa } from './ssa.ts';
 import { parseSub, serializeSub } from './sub.ts';
-import { parseMpl, serializeMpl } from './mpl.ts';
+import { parseVtt, serializeVtt } from './vtt.ts';
 
 // ---------------------------------------------------------------------------
 // Supported MIME types
@@ -23,11 +23,11 @@ import { parseMpl, serializeMpl } from './mpl.ts';
 
 const SUBTITLE_MIMES = new Set([
   'application/x-subrip', // .srt
-  'text/vtt',             // .vtt
-  'text/x-ass',           // .ass
-  'text/x-ssa',           // .ssa
-  'text/x-microdvd',      // .sub (text MicroDVD only)
-  'text/x-mpl2',          // .mpl
+  'text/vtt', // .vtt
+  'text/x-ass', // .ass
+  'text/x-ssa', // .ssa
+  'text/x-microdvd', // .sub (text MicroDVD only)
+  'text/x-mpl2', // .mpl
 ]);
 
 // ---------------------------------------------------------------------------

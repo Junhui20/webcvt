@@ -29,7 +29,7 @@ import { writeBmp } from './bmp-writer.ts';
 // ---------------------------------------------------------------------------
 
 function readUint16LE(buf: Uint8Array, offset: number): number {
-  return (buf[offset] ?? 0) | (((buf[offset + 1] ?? 0)) << 8);
+  return (buf[offset] ?? 0) | ((buf[offset + 1] ?? 0) << 8);
 }
 
 function readUint32LE(buf: Uint8Array, offset: number): number {
@@ -57,10 +57,22 @@ function readInt32LE(buf: Uint8Array, offset: number): number {
 // Row 1: blue(0,0,255,255), white(255,255,255,255)
 // ---------------------------------------------------------------------------
 const TWO_BY_TWO = new Uint8ClampedArray([
-  255, 0, 0, 255, // (0,0) red
-  0, 255, 0, 255, // (0,1) green
-  0, 0, 255, 255, // (1,0) blue
-  255, 255, 255, 255, // (1,1) white
+  255,
+  0,
+  0,
+  255, // (0,0) red
+  0,
+  255,
+  0,
+  255, // (0,1) green
+  0,
+  0,
+  255,
+  255, // (1,0) blue
+  255,
+  255,
+  255,
+  255, // (1,1) white
 ]);
 
 describe('writeBmp', () => {

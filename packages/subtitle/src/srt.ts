@@ -18,8 +18,8 @@
  *   - Sequence numbers are re-generated on serialize (1-based, monotonic)
  */
 
-import type { Cue, SubtitleTrack } from './cue.ts';
 import { WebcvtError } from '@webcvt/core';
+import type { Cue, SubtitleTrack } from './cue.ts';
 
 // ---------------------------------------------------------------------------
 // Time helpers
@@ -36,10 +36,10 @@ function parseSrtTimestamp(raw: string): number {
   }
   const [, hh, mm, ss, ms] = m as unknown as [string, string, string, string, string];
   return (
-    parseInt(hh, 10) * 3_600_000 +
-    parseInt(mm, 10) * 60_000 +
-    parseInt(ss, 10) * 1_000 +
-    parseInt(ms, 10)
+    Number.parseInt(hh, 10) * 3_600_000 +
+    Number.parseInt(mm, 10) * 60_000 +
+    Number.parseInt(ss, 10) * 1_000 +
+    Number.parseInt(ms, 10)
   );
 }
 
@@ -50,15 +50,7 @@ function formatSrtTimestamp(ms: number): string {
   const hh = Math.floor(totalSec / 3600);
   const mm = Math.floor((totalSec % 3600) / 60);
   const ss = totalSec % 60;
-  return (
-    String(hh).padStart(2, '0') +
-    ':' +
-    String(mm).padStart(2, '0') +
-    ':' +
-    String(ss).padStart(2, '0') +
-    ',' +
-    String(millis).padStart(3, '0')
-  );
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')},${String(millis).padStart(3, '0')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,11 +98,11 @@ export function parseSrt(text: string): SubtitleTrack {
 
   while (i < lines.length) {
     // Skip blank lines between blocks.
-    while (i < lines.length && lines[i]!.trim() === '') i++;
+    while (i < lines.length && lines[i]?.trim() === '') i++;
     if (i >= lines.length) break;
 
     // Sequence number line.
-    const seqLine = lines[i]!.trim();
+    const seqLine = lines[i]?.trim() ?? '';
     if (!/^\d+$/.test(seqLine)) {
       // Tolerate files that start without a number (some tools omit it).
       // Skip until we find a timing line.
@@ -123,7 +115,7 @@ export function parseSrt(text: string): SubtitleTrack {
     if (i >= lines.length) break;
 
     // Timing line.
-    const timingLine = lines[i]!.trim();
+    const timingLine = lines[i]?.trim() ?? '';
     const arrowIdx = timingLine.indexOf(' --> ');
     if (arrowIdx === -1) {
       throw new SubtitleParseError(
@@ -139,8 +131,10 @@ export function parseSrt(text: string): SubtitleTrack {
 
     // Text lines (until blank line or EOF).
     const textLines: string[] = [];
-    while (i < lines.length && lines[i]!.trim() !== '') {
-      textLines.push(lines[i]!);
+    while (i < lines.length) {
+      const line = lines[i];
+      if (line === undefined || line.trim() === '') break;
+      textLines.push(line);
       i++;
     }
 
@@ -175,5 +169,5 @@ export function serializeSrt(track: SubtitleTrack): string {
     return `${seq}\n${timing}\n${cue.text}`;
   });
 
-  return blocks.join('\n\n') + '\n';
+  return `${blocks.join('\n\n')}\n`;
 }

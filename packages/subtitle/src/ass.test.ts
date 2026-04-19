@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseAss, serializeAss } from './ass.ts';
 
 // ---------------------------------------------------------------------------
@@ -65,43 +65,43 @@ describe('parseAss', () => {
   it('parses basic ASS with two dialogue lines', () => {
     const track = parseAss(BASIC_ASS);
     expect(track.cues).toHaveLength(2);
-    expect(track.cues[0]!.startMs).toBe(1000);
-    expect(track.cues[0]!.endMs).toBe(3500);
-    expect(track.cues[0]!.text).toBe('Hello world');
+    expect(track.cues[0]?.startMs).toBe(1000);
+    expect(track.cues[0]?.endMs).toBe(3500);
+    expect(track.cues[0]?.text).toBe('Hello world');
   });
 
   it('strips override tags {\\...} from text', () => {
     const track = parseAss(ASS_WITH_TAGS);
-    expect(track.cues[0]!.text).toBe('Positioned text');
+    expect(track.cues[0]?.text).toBe('Positioned text');
   });
 
   it('converts \\N soft break to \\n in text', () => {
     const track = parseAss(ASS_MULTILINE);
-    expect(track.cues[0]!.text).toBe('Line one\nLine two');
+    expect(track.cues[0]?.text).toBe('Line one\nLine two');
   });
 
   it('stores Script Info fields in metadata', () => {
     const track = parseAss(BASIC_ASS);
-    expect(track.metadata?.['PlayResX']).toBe('640');
-    expect(track.metadata?.['PlayResY']).toBe('480');
+    expect(track.metadata?.PlayResX).toBe('640');
+    expect(track.metadata?.PlayResY).toBe('480');
   });
 
   it('preserves raw style block in metadata for round-trip', () => {
     const track = parseAss(BASIC_ASS);
-    expect(track.metadata?.['__assStyles__']).toBeDefined();
+    expect(track.metadata?.__assStyles__).toBeDefined();
   });
 
   it('parses style properties onto cue.style', () => {
     const track = parseAss(BASIC_ASS);
-    expect(track.cues[0]!.style?.fontName).toBe('Arial');
-    expect(track.cues[0]!.style?.fontSize).toBe(20);
+    expect(track.cues[0]?.style?.fontName).toBe('Arial');
+    expect(track.cues[0]?.style?.fontSize).toBe(20);
   });
 
   it('applies named style properties', () => {
     const track = parseAss(ASS_WITH_CUSTOM_STYLE);
-    expect(track.cues[0]!.style?.fontName).toBe('Times New Roman');
-    expect(track.cues[0]!.style?.bold).toBe(true);
-    expect(track.cues[0]!.style?.alignment).toBe(8);
+    expect(track.cues[0]?.style?.fontName).toBe('Times New Roman');
+    expect(track.cues[0]?.style?.bold).toBe(true);
+    expect(track.cues[0]?.style?.alignment).toBe(8);
   });
 
   it('handles empty input gracefully', () => {
@@ -110,7 +110,7 @@ describe('parseAss', () => {
   });
 
   it('handles BOM', () => {
-    const track = parseAss('\uFEFF' + BASIC_ASS);
+    const track = parseAss(`\uFEFF${BASIC_ASS}`);
     expect(track.cues).toHaveLength(2);
   });
 
@@ -174,21 +174,21 @@ describe('ASS round-trip', () => {
     const reparsed = parseAss(serializeAss(original));
     expect(reparsed.cues).toHaveLength(original.cues.length);
     for (let i = 0; i < original.cues.length; i++) {
-      expect(reparsed.cues[i]!.startMs).toBe(original.cues[i]!.startMs);
-      expect(reparsed.cues[i]!.endMs).toBe(original.cues[i]!.endMs);
-      expect(reparsed.cues[i]!.text).toBe(original.cues[i]!.text);
+      expect(reparsed.cues[i]?.startMs).toBe(original.cues[i]?.startMs);
+      expect(reparsed.cues[i]?.endMs).toBe(original.cues[i]?.endMs);
+      expect(reparsed.cues[i]?.text).toBe(original.cues[i]?.text);
     }
   });
 
   it('round-trips multi-line text', () => {
     const original = parseAss(ASS_MULTILINE);
     const reparsed = parseAss(serializeAss(original));
-    expect(reparsed.cues[0]!.text).toBe('Line one\nLine two');
+    expect(reparsed.cues[0]?.text).toBe('Line one\nLine two');
   });
 
   it('round-trips custom style data', () => {
     const original = parseAss(ASS_WITH_CUSTOM_STYLE);
     const reparsed = parseAss(serializeAss(original));
-    expect(reparsed.cues[0]!.style?.fontName).toBe('Times New Roman');
+    expect(reparsed.cues[0]?.style?.fontName).toBe('Times New Roman');
   });
 });

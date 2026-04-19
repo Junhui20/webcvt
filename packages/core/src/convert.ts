@@ -1,11 +1,11 @@
 import { detectFormat } from './detect.ts';
 import { resolveFormat } from './formats.ts';
-import { defaultRegistry, type BackendRegistry } from './registry.ts';
+import { type BackendRegistry, defaultRegistry } from './registry.ts';
 import {
-  NoBackendError,
-  UnsupportedFormatError,
   type ConvertOptions,
   type ConvertResult,
+  NoBackendError,
+  UnsupportedFormatError,
 } from './types.ts';
 
 export interface ConvertContext {

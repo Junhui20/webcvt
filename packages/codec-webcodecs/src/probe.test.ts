@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { WebCodecsNotSupportedError, UnsupportedCodecError } from './errors.ts';
-import { probeVideoCodec, probeAudioCodec } from './probe.ts';
+import { UnsupportedCodecError, WebCodecsNotSupportedError } from './errors.ts';
+import { probeAudioCodec, probeVideoCodec } from './probe.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers to build mock isConfigSupported responses
@@ -93,9 +93,7 @@ describe('probeVideoCodec', () => {
   });
 
   it('returns supported=false when browser rejects config', async () => {
-    vi.mocked(globalThis.VideoEncoder.isConfigSupported).mockResolvedValue(
-      makeVideoUnsupported(),
-    );
+    vi.mocked(globalThis.VideoEncoder.isConfigSupported).mockResolvedValue(makeVideoUnsupported());
 
     const result = await probeVideoCodec({ codec: 'hevc' });
 
@@ -121,7 +119,13 @@ describe('probeVideoCodec', () => {
       makeVideoSupported('avc1.42001E'),
     );
 
-    await probeVideoCodec({ codec: 'h264', width: 1920, height: 1080, bitrate: 8_000_000, framerate: 60 });
+    await probeVideoCodec({
+      codec: 'h264',
+      width: 1920,
+      height: 1080,
+      bitrate: 8_000_000,
+      framerate: 60,
+    });
 
     const call = vi.mocked(globalThis.VideoEncoder.isConfigSupported).mock.calls[0];
     expect(call?.[0].width).toBe(1920);
@@ -135,9 +139,7 @@ describe('probeVideoCodec', () => {
     // Explicitly remove the global
     vi.stubGlobal('VideoEncoder', undefined);
 
-    await expect(probeVideoCodec({ codec: 'h264' })).rejects.toThrow(
-      WebCodecsNotSupportedError,
-    );
+    await expect(probeVideoCodec({ codec: 'h264' })).rejects.toThrow(WebCodecsNotSupportedError);
   });
 });
 
@@ -181,9 +183,7 @@ describe('probeAudioCodec', () => {
   });
 
   it('returns supported=false when browser rejects config', async () => {
-    vi.mocked(globalThis.AudioEncoder.isConfigSupported).mockResolvedValue(
-      makeAudioUnsupported(),
-    );
+    vi.mocked(globalThis.AudioEncoder.isConfigSupported).mockResolvedValue(makeAudioUnsupported());
 
     const result = await probeAudioCodec({ codec: 'vorbis' });
 
@@ -195,9 +195,7 @@ describe('probeAudioCodec', () => {
     vi.unstubAllGlobals();
     vi.stubGlobal('AudioEncoder', undefined);
 
-    await expect(probeAudioCodec({ codec: 'aac' })).rejects.toThrow(
-      WebCodecsNotSupportedError,
-    );
+    await expect(probeAudioCodec({ codec: 'aac' })).rejects.toThrow(WebCodecsNotSupportedError);
   });
 
   it('uses custom codecString when provided', async () => {
@@ -216,7 +214,12 @@ describe('probeAudioCodec', () => {
       makeAudioSupported('opus'),
     );
 
-    await probeAudioCodec({ codec: 'opus', sampleRate: 44_100, numberOfChannels: 1, bitrate: 64_000 });
+    await probeAudioCodec({
+      codec: 'opus',
+      sampleRate: 44_100,
+      numberOfChannels: 1,
+      bitrate: 64_000,
+    });
 
     const call = vi.mocked(globalThis.AudioEncoder.isConfigSupported).mock.calls[0];
     expect(call?.[0].sampleRate).toBe(44_100);

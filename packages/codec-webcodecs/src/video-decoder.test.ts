@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WebCodecsNotSupportedError, CodecOperationError } from './errors.ts';
+import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 import { WebCodecsVideoDecoder } from './video-decoder.ts';
 
 // ---------------------------------------------------------------------------
@@ -22,13 +22,11 @@ function makeMockDecoder() {
     _errorCb: null as ((err: Error) => void) | null,
   };
 
-  const VideoDecoderMock = vi.fn().mockImplementation(
-    (init: VideoDecoderInit) => {
-      instance._outputCb = init.output;
-      instance._errorCb = init.error;
-      return instance;
-    },
-  );
+  const VideoDecoderMock = vi.fn().mockImplementation((init: VideoDecoderInit) => {
+    instance._outputCb = init.output;
+    instance._errorCb = init.error;
+    return instance;
+  });
 
   return { VideoDecoderMock, instance };
 }
@@ -52,9 +50,9 @@ describe('WebCodecsVideoDecoder', () => {
     it('throws WebCodecsNotSupportedError when VideoDecoder global is absent', () => {
       vi.stubGlobal('VideoDecoder', undefined);
 
-      expect(
-        () => new WebCodecsVideoDecoder({ config: baseConfig }, vi.fn()),
-      ).toThrow(WebCodecsNotSupportedError);
+      expect(() => new WebCodecsVideoDecoder({ config: baseConfig }, vi.fn())).toThrow(
+        WebCodecsNotSupportedError,
+      );
     });
 
     it('calls configure with the provided config', () => {
@@ -144,7 +142,7 @@ describe('WebCodecsVideoDecoder', () => {
       new WebCodecsVideoDecoder({ config: baseConfig }, onFrame);
 
       const fakeFrame = {} as VideoFrame;
-      instance._outputCb!(fakeFrame);
+      instance._outputCb?.(fakeFrame);
 
       expect(onFrame).toHaveBeenCalledWith(fakeFrame);
     });
@@ -156,7 +154,7 @@ describe('WebCodecsVideoDecoder', () => {
       vi.stubGlobal('VideoDecoder', VideoDecoderMock);
 
       const dec = new WebCodecsVideoDecoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Corrupt NAL unit'));
+      instance._errorCb?.(new Error('Corrupt NAL unit'));
 
       expect(() => dec.decode(makeChunk())).toThrow(CodecOperationError);
     });
@@ -166,7 +164,7 @@ describe('WebCodecsVideoDecoder', () => {
       vi.stubGlobal('VideoDecoder', VideoDecoderMock);
 
       const dec = new WebCodecsVideoDecoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Driver error'));
+      instance._errorCb?.(new Error('Driver error'));
 
       await expect(dec.flush()).rejects.toThrow(CodecOperationError);
     });

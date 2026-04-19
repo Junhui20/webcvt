@@ -15,7 +15,12 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   // Subtitle (Phase 1)
   { ext: 'srt', mime: 'application/x-subrip', category: 'subtitle', description: 'SubRip' },
   { ext: 'vtt', mime: 'text/vtt', category: 'subtitle', description: 'WebVTT' },
-  { ext: 'ass', mime: 'text/x-ass', category: 'subtitle', description: 'Advanced SubStation Alpha' },
+  {
+    ext: 'ass',
+    mime: 'text/x-ass',
+    category: 'subtitle',
+    description: 'Advanced SubStation Alpha',
+  },
   { ext: 'ssa', mime: 'text/x-ssa', category: 'subtitle', description: 'SubStation Alpha' },
   { ext: 'sub', mime: 'text/x-microdvd', category: 'subtitle', description: 'MicroDVD / VobSub' },
   { ext: 'mpl', mime: 'text/x-mpl2', category: 'subtitle', description: 'MPL2' },

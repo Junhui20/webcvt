@@ -30,7 +30,7 @@ function fakePng(size: number): Uint8Array {
 // ---------------------------------------------------------------------------
 
 function readUint16LE(buf: Uint8Array, offset: number): number {
-  return (buf[offset] ?? 0) | (((buf[offset + 1] ?? 0)) << 8);
+  return (buf[offset] ?? 0) | ((buf[offset + 1] ?? 0) << 8);
 }
 
 function readUint32LE(buf: Uint8Array, offset: number): number {

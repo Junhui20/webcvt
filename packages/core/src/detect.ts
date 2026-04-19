@@ -66,7 +66,9 @@ function disambiguateRiff(buf: Uint8Array): 'webp' | 'wav' | undefined {
  * Detect the format of a Blob or byte buffer by inspecting magic bytes.
  * Returns the matching FormatDescriptor or undefined if unknown.
  */
-export async function detectFormat(input: Blob | Uint8Array): Promise<FormatDescriptor | undefined> {
+export async function detectFormat(
+  input: Blob | Uint8Array,
+): Promise<FormatDescriptor | undefined> {
   const head =
     input instanceof Uint8Array
       ? input.subarray(0, HEADER_BYTES_TO_READ)

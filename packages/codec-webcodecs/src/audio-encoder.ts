@@ -1,4 +1,4 @@
-import { WebCodecsNotSupportedError, CodecOperationError } from './errors.ts';
+import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 
 // ---------------------------------------------------------------------------
 // Public types

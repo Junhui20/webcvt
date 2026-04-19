@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseSrt, serializeSrt, SubtitleParseError } from './srt.ts';
+import { describe, expect, it } from 'vitest';
+import { SubtitleParseError, parseSrt, serializeSrt } from './srt.ts';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -16,7 +16,7 @@ Second cue
 `;
 
 const CRLF_SRT = BASIC_SRT.replace(/\n/g, '\r\n');
-const BOM_SRT = '\uFEFF' + BASIC_SRT;
+const BOM_SRT = `\uFEFF${BASIC_SRT}`;
 
 const MULTILINE_SRT = `1
 00:00:01,000 --> 00:00:03,000
@@ -54,14 +54,24 @@ describe('parseSrt', () => {
   it('parses a basic two-cue SRT', () => {
     const track = parseSrt(BASIC_SRT);
     expect(track.cues).toHaveLength(2);
-    expect(track.cues[0]).toMatchObject({ id: '1', startMs: 1000, endMs: 3500, text: 'Hello world' });
-    expect(track.cues[1]).toMatchObject({ id: '2', startMs: 5000, endMs: 7000, text: 'Second cue' });
+    expect(track.cues[0]).toMatchObject({
+      id: '1',
+      startMs: 1000,
+      endMs: 3500,
+      text: 'Hello world',
+    });
+    expect(track.cues[1]).toMatchObject({
+      id: '2',
+      startMs: 5000,
+      endMs: 7000,
+      text: 'Second cue',
+    });
   });
 
   it('handles CRLF line endings', () => {
     const track = parseSrt(CRLF_SRT);
     expect(track.cues).toHaveLength(2);
-    expect(track.cues[0]!.text).toBe('Hello world');
+    expect(track.cues[0]?.text).toBe('Hello world');
   });
 
   it('strips UTF-8 BOM', () => {
@@ -82,35 +92,33 @@ describe('parseSrt', () => {
   it('handles single cue', () => {
     const track = parseSrt('1\n00:00:00,000 --> 00:00:01,000\nHi\n');
     expect(track.cues).toHaveLength(1);
-    expect(track.cues[0]!.text).toBe('Hi');
+    expect(track.cues[0]?.text).toBe('Hi');
   });
 
   it('parses multi-line cue text', () => {
     const track = parseSrt(MULTILINE_SRT);
-    expect(track.cues[0]!.text).toBe('Line one\nLine two\nLine three');
+    expect(track.cues[0]?.text).toBe('Line one\nLine two\nLine three');
   });
 
   it('strips <i>, <b>, <u> HTML tags', () => {
     const track = parseSrt(HTML_SRT);
-    expect(track.cues[0]!.text).toBe('Italic text');
-    expect(track.cues[1]!.text).toBe('Bold and underline');
-    expect(track.cues[2]!.text).toBe('Red text');
+    expect(track.cues[0]?.text).toBe('Italic text');
+    expect(track.cues[1]?.text).toBe('Bold and underline');
+    expect(track.cues[2]?.text).toBe('Red text');
   });
 
   it('preserves speaker labels in text', () => {
     const track = parseSrt(SPEAKER_SRT);
-    expect(track.cues[0]!.text).toBe('JOHN: Hello there');
+    expect(track.cues[0]?.text).toBe('JOHN: Hello there');
   });
 
   it('parses timestamps with dot separator (lenient)', () => {
     const track = parseSrt('1\n00:00:01.500 --> 00:00:02.000\nDot sep\n');
-    expect(track.cues[0]!.startMs).toBe(1500);
+    expect(track.cues[0]?.startMs).toBe(1500);
   });
 
   it('throws SubtitleParseError on invalid timestamp', () => {
-    expect(() =>
-      parseSrt('1\n00:00:INVALID --> 00:00:02,000\nText\n'),
-    ).toThrow(SubtitleParseError);
+    expect(() => parseSrt('1\n00:00:INVALID --> 00:00:02,000\nText\n')).toThrow(SubtitleParseError);
   });
 
   it('throws SubtitleParseError when timing line is missing after sequence', () => {
@@ -119,7 +127,7 @@ describe('parseSrt', () => {
 
   it('handles hours > 99 in timestamps', () => {
     const track = parseSrt('1\n100:00:00,000 --> 100:01:00,000\nFar future\n');
-    expect(track.cues[0]!.startMs).toBe(100 * 3_600_000);
+    expect(track.cues[0]?.startMs).toBe(100 * 3_600_000);
   });
 });
 
@@ -169,15 +177,15 @@ describe('SRT round-trip', () => {
     const reparsed = parseSrt(serialized);
     expect(reparsed.cues).toHaveLength(original.cues.length);
     for (let i = 0; i < original.cues.length; i++) {
-      expect(reparsed.cues[i]!.startMs).toBe(original.cues[i]!.startMs);
-      expect(reparsed.cues[i]!.endMs).toBe(original.cues[i]!.endMs);
-      expect(reparsed.cues[i]!.text).toBe(original.cues[i]!.text);
+      expect(reparsed.cues[i]?.startMs).toBe(original.cues[i]?.startMs);
+      expect(reparsed.cues[i]?.endMs).toBe(original.cues[i]?.endMs);
+      expect(reparsed.cues[i]?.text).toBe(original.cues[i]?.text);
     }
   });
 
   it('round-trips multiline cue text', () => {
     const original = parseSrt(MULTILINE_SRT);
     const reparsed = parseSrt(serializeSrt(original));
-    expect(reparsed.cues[0]!.text).toBe(original.cues[0]!.text);
+    expect(reparsed.cues[0]?.text).toBe(original.cues[0]?.text);
   });
 });

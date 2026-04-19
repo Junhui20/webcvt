@@ -1,4 +1,4 @@
-import { WebCodecsNotSupportedError, UnsupportedCodecError } from './errors.ts';
+import { UnsupportedCodecError, WebCodecsNotSupportedError } from './errors.ts';
 
 // ---------------------------------------------------------------------------
 // Codec name literals
@@ -161,8 +161,6 @@ export async function probeAudioCodec(config: AudioProbeConfig): Promise<ProbeRe
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-function isHardwareAccelerated(
-  accel: HardwareAcceleration | undefined | null,
-): boolean {
+function isHardwareAccelerated(accel: HardwareAcceleration | undefined | null): boolean {
   return accel === 'prefer-hardware';
 }

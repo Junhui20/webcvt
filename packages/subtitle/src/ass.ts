@@ -67,10 +67,10 @@ function parseAssTimestamp(raw: string): number {
   }
   const [, hh, mm, ss, cc] = m as unknown as [string, string, string, string, string];
   return (
-    parseInt(hh, 10) * 3_600_000 +
-    parseInt(mm, 10) * 60_000 +
-    parseInt(ss, 10) * 1_000 +
-    Math.round(parseInt(cc, 10) * 10)
+    Number.parseInt(hh, 10) * 3_600_000 +
+    Number.parseInt(mm, 10) * 60_000 +
+    Number.parseInt(ss, 10) * 1_000 +
+    Math.round(Number.parseInt(cc, 10) * 10)
   );
 }
 
@@ -82,15 +82,7 @@ function formatAssTimestamp(ms: number): string {
   const hh = Math.floor(totalSec / 3600);
   const mm = Math.floor((totalSec % 3600) / 60);
   const ss = totalSec % 60;
-  return (
-    String(hh) +
-    ':' +
-    String(mm).padStart(2, '0') +
-    ':' +
-    String(ss).padStart(2, '0') +
-    '.' +
-    String(cc).padStart(2, '0')
-  );
+  return `${String(hh)}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}.${String(cc).padStart(2, '0')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -150,7 +142,7 @@ function parseAssStyle(formatCols: string[], styleLine: string): AssStyle {
         style.fontName = val;
         break;
       case 'Fontsize':
-        style.fontSize = parseInt(val, 10) || 20;
+        style.fontSize = Number.parseInt(val, 10) || 20;
         break;
       case 'PrimaryColour':
       case 'PrimaryColor':
@@ -173,16 +165,16 @@ function parseAssStyle(formatCols: string[], styleLine: string): AssStyle {
         style.strikeOut = val === '-1' || val === '1';
         break;
       case 'Alignment':
-        style.alignment = parseInt(val, 10) || 2;
+        style.alignment = Number.parseInt(val, 10) || 2;
         break;
       case 'MarginL':
-        style.marginL = parseInt(val, 10) || 0;
+        style.marginL = Number.parseInt(val, 10) || 0;
         break;
       case 'MarginR':
-        style.marginR = parseInt(val, 10) || 0;
+        style.marginR = Number.parseInt(val, 10) || 0;
         break;
       case 'MarginV':
-        style.marginV = parseInt(val, 10) || 0;
+        style.marginV = Number.parseInt(val, 10) || 0;
         break;
       default:
         style[col] = val;
@@ -256,7 +248,7 @@ function parseDialogueLine(formatCols: string[], line: string): ParsedEvent {
     const val = (parts[i] ?? '').trim();
     switch (col) {
       case 'Layer':
-        event.layer = parseInt(val, 10) || 0;
+        event.layer = Number.parseInt(val, 10) || 0;
         break;
       case 'Start':
         event.startMs = parseAssTimestamp(val);
@@ -271,13 +263,13 @@ function parseDialogueLine(formatCols: string[], line: string): ParsedEvent {
         event.name = val;
         break;
       case 'MarginL':
-        event.marginL = parseInt(val, 10) || 0;
+        event.marginL = Number.parseInt(val, 10) || 0;
         break;
       case 'MarginR':
-        event.marginR = parseInt(val, 10) || 0;
+        event.marginR = Number.parseInt(val, 10) || 0;
         break;
       case 'MarginV':
-        event.marginV = parseInt(val, 10) || 0;
+        event.marginV = Number.parseInt(val, 10) || 0;
         break;
       case 'Effect':
         event.effect = val;
@@ -403,8 +395,8 @@ export function parseAss(text: string, options: AssParseOptions = {}): SubtitleT
 
   // Preserve raw style block for round-trip.
   if (rawStyleLines.length > 0) {
-    metadata['__assStyles__'] = rawStyleLines.join('\n');
-    metadata['__assStylesSectionName__'] = stylesSectionName;
+    metadata.__assStyles__ = rawStyleLines.join('\n');
+    metadata.__assStylesSectionName__ = stylesSectionName;
   }
 
   return {
@@ -462,8 +454,8 @@ export function serializeAss(
 
   // Styles section.
   const stylesLines: string[] = [stylesSectionName];
-  if (meta['__assStyles__']) {
-    stylesLines.push(...meta['__assStyles__'].split('\n'));
+  if (meta.__assStyles__) {
+    stylesLines.push(...meta.__assStyles__.split('\n'));
   } else {
     stylesLines.push(DEFAULT_STYLE_FORMAT);
     stylesLines.push(DEFAULT_STYLE_LINE);
@@ -476,17 +468,8 @@ export function serializeAss(
     const start = formatAssTimestamp(cue.startMs);
     const end = formatAssTimestamp(cue.endMs);
     const assText = escapeAssText(cue.text);
-    eventLines.push(
-      `Dialogue: 0,${start},${end},${styleName},,0,0,0,,${assText}`,
-    );
+    eventLines.push(`Dialogue: 0,${start},${end},${styleName},,0,0,0,,${assText}`);
   }
 
-  return [
-    ...scriptInfoLines,
-    '',
-    ...stylesLines,
-    '',
-    ...eventLines,
-    '',
-  ].join('\n');
+  return [...scriptInfoLines, '', ...stylesLines, '', ...eventLines, ''].join('\n');
 }

@@ -44,10 +44,10 @@ function parseVttTimestamp(raw: string): number {
   }
   const [, hh, mm, ss, ms] = m as unknown as [string, string | undefined, string, string, string];
   return (
-    (hh !== undefined ? parseInt(hh, 10) : 0) * 3_600_000 +
-    parseInt(mm, 10) * 60_000 +
-    parseInt(ss, 10) * 1_000 +
-    parseInt(ms, 10)
+    (hh !== undefined ? Number.parseInt(hh, 10) : 0) * 3_600_000 +
+    Number.parseInt(mm, 10) * 60_000 +
+    Number.parseInt(ss, 10) * 1_000 +
+    Number.parseInt(ms, 10)
   );
 }
 
@@ -58,15 +58,7 @@ function formatVttTimestamp(ms: number): string {
   const hh = Math.floor(totalSec / 3600);
   const mm = Math.floor((totalSec % 3600) / 60);
   const ss = totalSec % 60;
-  return (
-    String(hh).padStart(2, '0') +
-    ':' +
-    String(mm).padStart(2, '0') +
-    ':' +
-    String(ss).padStart(2, '0') +
-    '.' +
-    String(millis).padStart(3, '0')
-  );
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +102,7 @@ function serializeCueSettings(s: VttCueSettings): string {
   if (s.position !== undefined) parts.push(`position:${s.position}`);
   if (s.size !== undefined) parts.push(`size:${s.size}`);
   if (s.align !== undefined) parts.push(`align:${s.align}`);
-  return parts.length > 0 ? ' ' + parts.join(' ') : '';
+  return parts.length > 0 ? ` ${parts.join(' ')}` : '';
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +132,7 @@ export function parseVtt(text: string): SubtitleTrack {
   const normalized = text.startsWith('\uFEFF') ? text.slice(1) : text;
   const lines = normalized.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
 
-  if (lines.length === 0 || !lines[0]!.startsWith('WEBVTT')) {
+  if (lines.length === 0 || !lines[0]?.startsWith('WEBVTT')) {
     throw new SubtitleParseError('VTT file must start with "WEBVTT"');
   }
 
@@ -149,8 +141,9 @@ export function parseVtt(text: string): SubtitleTrack {
   let i = 1;
 
   // Skip optional header block (lines until first blank line after WEBVTT).
-  while (i < lines.length && lines[i]!.trim() !== '') {
-    const line = lines[i]!;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line === undefined || line.trim() === '') break;
     const colonIdx = line.indexOf(':');
     if (colonIdx !== -1) {
       const key = line.slice(0, colonIdx).trim();
@@ -162,15 +155,15 @@ export function parseVtt(text: string): SubtitleTrack {
 
   while (i < lines.length) {
     // Skip blank lines.
-    while (i < lines.length && lines[i]!.trim() === '') i++;
+    while (i < lines.length && lines[i]?.trim() === '') i++;
     if (i >= lines.length) break;
 
-    const firstLine = lines[i]!.trim();
+    const firstLine = lines[i]?.trim() ?? '';
 
     // NOTE block.
     if (firstLine.startsWith('NOTE')) {
       i++;
-      while (i < lines.length && lines[i]!.trim() !== '') i++;
+      while (i < lines.length && lines[i]?.trim() !== '') i++;
       continue;
     }
 
@@ -178,18 +171,20 @@ export function parseVtt(text: string): SubtitleTrack {
     if (firstLine.startsWith('STYLE')) {
       i++;
       const styleLines: string[] = [];
-      while (i < lines.length && lines[i]!.trim() !== '') {
-        styleLines.push(lines[i]!);
+      while (i < lines.length) {
+        const styleLine = lines[i];
+        if (styleLine === undefined || styleLine.trim() === '') break;
+        styleLines.push(styleLine);
         i++;
       }
-      metadata['__style__'] = (metadata['__style__'] ?? '') + styleLines.join('\n');
+      metadata.__style__ = (metadata.__style__ ?? '') + styleLines.join('\n');
       continue;
     }
 
     // REGION block.
     if (firstLine.startsWith('REGION')) {
       i++;
-      while (i < lines.length && lines[i]!.trim() !== '') i++;
+      while (i < lines.length && lines[i]?.trim() !== '') i++;
       continue;
     }
 
@@ -205,7 +200,7 @@ export function parseVtt(text: string): SubtitleTrack {
       cueId = firstLine;
       i++;
       if (i >= lines.length) break;
-      timingLine = lines[i]!.trim();
+      timingLine = lines[i]?.trim() ?? '';
       if (!timingLine.includes(' --> ')) {
         // Not a valid cue — skip.
         i++;
@@ -229,14 +224,14 @@ export function parseVtt(text: string): SubtitleTrack {
 
     // Store settings in metadata on the cue's id field as JSON if present.
     const hasSettings = Object.keys(settings).length > 0;
-    const storedId = hasSettings
-      ? JSON.stringify({ id: cueId, settings })
-      : cueId;
+    const storedId = hasSettings ? JSON.stringify({ id: cueId, settings }) : cueId;
 
     // Text lines.
     const textLines: string[] = [];
-    while (i < lines.length && lines[i]!.trim() !== '') {
-      textLines.push(lines[i]!);
+    while (i < lines.length) {
+      const textLine = lines[i];
+      if (textLine === undefined || textLine.trim() === '') break;
+      textLines.push(textLine);
       i++;
     }
 
@@ -262,7 +257,7 @@ export function parseVtt(text: string): SubtitleTrack {
  */
 export function serializeVtt(track: SubtitleTrack): string {
   const header = 'WEBVTT\n';
-  if (track.cues.length === 0) return header + '\n';
+  if (track.cues.length === 0) return `${header}\n`;
 
   const blocks = track.cues.map((cue) => {
     let cueId: string | undefined;
@@ -290,5 +285,5 @@ export function serializeVtt(track: SubtitleTrack): string {
     return lines.join('\n');
   });
 
-  return header + '\n' + blocks.join('\n\n') + '\n';
+  return `${header}\n${blocks.join('\n\n')}\n`;
 }

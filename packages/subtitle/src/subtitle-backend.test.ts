@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { SubtitleBackend, detectSubtitleFormat } from './subtitle-backend.ts';
 import type { FormatDescriptor } from '@webcvt/core';
+import { describe, expect, it } from 'vitest';
+import { SubtitleBackend, detectSubtitleFormat } from './subtitle-backend.ts';
 
 // ---------------------------------------------------------------------------
 // Format descriptors

@@ -64,14 +64,9 @@ export function parseMpl(text: string): SubtitleTrack {
     const m = /^\[(\d+)\]\[(\d+)\](.*)$/.exec(line);
     if (!m) continue;
 
-    const [, startDsStr, endDsStr, rest] = m as unknown as [
-      string,
-      string,
-      string,
-      string,
-    ];
-    const startDs = parseInt(startDsStr, 10);
-    const endDs = parseInt(endDsStr, 10);
+    const [, startDsStr, endDsStr, rest] = m as unknown as [string, string, string, string];
+    const startDs = Number.parseInt(startDsStr, 10);
+    const endDs = Number.parseInt(endDsStr, 10);
 
     if (Number.isNaN(startDs) || Number.isNaN(endDs)) {
       throw new SubtitleParseError(`Invalid MPL2 timestamps in: "${line}"`);
@@ -107,5 +102,5 @@ export function serializeMpl(track: SubtitleTrack): string {
     return `[${startDs}][${endDs}]${text}`;
   });
 
-  return lines.join('\n') + '\n';
+  return `${lines.join('\n')}\n`;
 }

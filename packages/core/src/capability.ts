@@ -15,10 +15,9 @@ export interface Capabilities {
   readonly sharedArrayBuffer: boolean;
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: runtime feature detection
 function hasGlobal(name: string): boolean {
   try {
-    return typeof (globalThis as any)[name] !== 'undefined';
+    return typeof (globalThis as Record<string, unknown>)[name] !== 'undefined';
   } catch {
     return false;
   }

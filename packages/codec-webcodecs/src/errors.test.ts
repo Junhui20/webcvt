@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import { WebcvtError } from '@webcvt/core';
+import { describe, expect, it } from 'vitest';
 import {
-  WebCodecsNotSupportedError,
-  UnsupportedCodecError,
   CodecOperationError,
+  UnsupportedCodecError,
+  WebCodecsNotSupportedError,
 } from './errors.ts';
 
 describe('WebCodecsNotSupportedError', () => {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { WebCodecsNotSupportedError, CodecOperationError } from './errors.ts';
+import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 import { WebCodecsVideoEncoder } from './video-encoder.ts';
 
 // ---------------------------------------------------------------------------
@@ -23,13 +23,11 @@ function makeMockEncoder() {
     _errorCb: null as ((err: Error) => void) | null,
   };
 
-  const VideoEncoderMock = vi.fn().mockImplementation(
-    (init: VideoEncoderInit) => {
-      instance._outputCb = init.output;
-      instance._errorCb = init.error;
-      return instance;
-    },
-  );
+  const VideoEncoderMock = vi.fn().mockImplementation((init: VideoEncoderInit) => {
+    instance._outputCb = init.output;
+    instance._errorCb = init.error;
+    return instance;
+  });
   (VideoEncoderMock as unknown as { isConfigSupported: () => void }).isConfigSupported = vi.fn();
 
   return { VideoEncoderMock, instance };
@@ -56,9 +54,9 @@ describe('WebCodecsVideoEncoder', () => {
     it('throws WebCodecsNotSupportedError when VideoEncoder global is absent', () => {
       vi.stubGlobal('VideoEncoder', undefined);
 
-      expect(
-        () => new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn()),
-      ).toThrow(WebCodecsNotSupportedError);
+      expect(() => new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn())).toThrow(
+        WebCodecsNotSupportedError,
+      );
     });
 
     it('calls configure with the provided config', () => {
@@ -165,7 +163,7 @@ describe('WebCodecsVideoEncoder', () => {
 
       const fakeChunk = {} as EncodedVideoChunk;
       const fakeMeta = {} as EncodedVideoChunkMetadata;
-      instance._outputCb!(fakeChunk, fakeMeta);
+      instance._outputCb?.(fakeChunk, fakeMeta);
 
       expect(onChunk).toHaveBeenCalledWith(fakeChunk, fakeMeta);
     });
@@ -179,7 +177,7 @@ describe('WebCodecsVideoEncoder', () => {
 
       const fakeChunk = {} as EncodedVideoChunk;
       // Simulate browser passing undefined metadata
-      instance._outputCb!(fakeChunk, undefined as unknown as EncodedVideoChunkMetadata);
+      instance._outputCb?.(fakeChunk, undefined as unknown as EncodedVideoChunkMetadata);
 
       expect(onChunk).toHaveBeenCalledWith(fakeChunk, {});
     });
@@ -193,7 +191,7 @@ describe('WebCodecsVideoEncoder', () => {
       const enc = new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn());
 
       // Simulate async encoder error
-      instance._errorCb!(new Error('GPU hang'));
+      instance._errorCb?.(new Error('GPU hang'));
 
       expect(() => enc.encode(makeFrame())).toThrow(CodecOperationError);
     });
@@ -203,7 +201,7 @@ describe('WebCodecsVideoEncoder', () => {
       vi.stubGlobal('VideoEncoder', VideoEncoderMock);
 
       const enc = new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Driver crash'));
+      instance._errorCb?.(new Error('Driver crash'));
 
       await expect(enc.flush()).rejects.toThrow(CodecOperationError);
     });

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseSsa, serializeSsa } from './ssa.ts';
 
 // ---------------------------------------------------------------------------
@@ -28,25 +28,25 @@ describe('parseSsa', () => {
   it('parses basic SSA with two dialogue lines', () => {
     const track = parseSsa(BASIC_SSA);
     expect(track.cues).toHaveLength(2);
-    expect(track.cues[0]!.text).toBe('Hello from SSA');
-    expect(track.cues[0]!.startMs).toBe(1000);
-    expect(track.cues[0]!.endMs).toBe(3500);
+    expect(track.cues[0]?.text).toBe('Hello from SSA');
+    expect(track.cues[0]?.startMs).toBe(1000);
+    expect(track.cues[0]?.endMs).toBe(3500);
   });
 
   it('reads [V4 Styles] section (not V4+)', () => {
     const track = parseSsa(BASIC_SSA);
     // Styles should have been parsed (cueStyle present on cue).
-    expect(track.cues[0]!.style).toBeDefined();
+    expect(track.cues[0]?.style).toBeDefined();
   });
 
   it('stores Script Info in metadata', () => {
     const track = parseSsa(BASIC_SSA);
-    expect(track.metadata?.['PlayResX']).toBe('640');
+    expect(track.metadata?.PlayResX).toBe('640');
   });
 
   it('preserves style block for round-trip', () => {
     const track = parseSsa(BASIC_SSA);
-    expect(track.metadata?.['__assStyles__']).toBeDefined();
+    expect(track.metadata?.__assStyles__).toBeDefined();
   });
 
   it('handles empty input', () => {
@@ -91,9 +91,9 @@ describe('SSA round-trip', () => {
     const reparsed = parseSsa(serializeSsa(original));
     expect(reparsed.cues).toHaveLength(original.cues.length);
     for (let i = 0; i < original.cues.length; i++) {
-      expect(reparsed.cues[i]!.startMs).toBe(original.cues[i]!.startMs);
-      expect(reparsed.cues[i]!.endMs).toBe(original.cues[i]!.endMs);
-      expect(reparsed.cues[i]!.text).toBe(original.cues[i]!.text);
+      expect(reparsed.cues[i]?.startMs).toBe(original.cues[i]?.startMs);
+      expect(reparsed.cues[i]?.endMs).toBe(original.cues[i]?.endMs);
+      expect(reparsed.cues[i]?.text).toBe(original.cues[i]?.text);
     }
   });
 });

@@ -1,4 +1,4 @@
-import { WebCodecsNotSupportedError, CodecOperationError } from './errors.ts';
+import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -10,7 +10,10 @@ export interface VideoEncoderOptions {
   readonly queueSize?: number;
 }
 
-export type EncodedVideoChunkCallback = (chunk: EncodedVideoChunk, metadata: EncodedVideoChunkMetadata) => void;
+export type EncodedVideoChunkCallback = (
+  chunk: EncodedVideoChunk,
+  metadata: EncodedVideoChunkMetadata,
+) => void;
 
 // ---------------------------------------------------------------------------
 // WebCodecsVideoEncoder

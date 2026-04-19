@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WebCodecsNotSupportedError, CodecOperationError } from './errors.ts';
 import { WebCodecsAudioDecoder } from './audio-decoder.ts';
+import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 
 // ---------------------------------------------------------------------------
 // Mock AudioDecoder global
@@ -22,13 +22,11 @@ function makeMockAudioDecoder() {
     _errorCb: null as ((err: Error) => void) | null,
   };
 
-  const AudioDecoderMock = vi.fn().mockImplementation(
-    (init: AudioDecoderInit) => {
-      instance._outputCb = init.output;
-      instance._errorCb = init.error;
-      return instance;
-    },
-  );
+  const AudioDecoderMock = vi.fn().mockImplementation((init: AudioDecoderInit) => {
+    instance._outputCb = init.output;
+    instance._errorCb = init.error;
+    return instance;
+  });
 
   return { AudioDecoderMock, instance };
 }
@@ -52,9 +50,9 @@ describe('WebCodecsAudioDecoder', () => {
     it('throws WebCodecsNotSupportedError when AudioDecoder global is absent', () => {
       vi.stubGlobal('AudioDecoder', undefined);
 
-      expect(
-        () => new WebCodecsAudioDecoder({ config: baseConfig }, vi.fn()),
-      ).toThrow(WebCodecsNotSupportedError);
+      expect(() => new WebCodecsAudioDecoder({ config: baseConfig }, vi.fn())).toThrow(
+        WebCodecsNotSupportedError,
+      );
     });
 
     it('calls configure with the provided config', () => {
@@ -134,7 +132,7 @@ describe('WebCodecsAudioDecoder', () => {
       new WebCodecsAudioDecoder({ config: baseConfig }, onData);
 
       const fakeData = {} as AudioData;
-      instance._outputCb!(fakeData);
+      instance._outputCb?.(fakeData);
 
       expect(onData).toHaveBeenCalledWith(fakeData);
     });
@@ -146,7 +144,7 @@ describe('WebCodecsAudioDecoder', () => {
       vi.stubGlobal('AudioDecoder', AudioDecoderMock);
 
       const dec = new WebCodecsAudioDecoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Corrupt frame'));
+      instance._errorCb?.(new Error('Corrupt frame'));
 
       expect(() => dec.decode(makeChunk())).toThrow(CodecOperationError);
     });
@@ -156,7 +154,7 @@ describe('WebCodecsAudioDecoder', () => {
       vi.stubGlobal('AudioDecoder', AudioDecoderMock);
 
       const dec = new WebCodecsAudioDecoder({ config: baseConfig }, vi.fn());
-      instance._errorCb!(new Error('Decoder reset'));
+      instance._errorCb?.(new Error('Decoder reset'));
 
       await expect(dec.flush()).rejects.toThrow(CodecOperationError);
     });

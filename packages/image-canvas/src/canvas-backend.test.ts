@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FormatDescriptor } from '@webcvt/core';
 import { UnsupportedFormatError } from '@webcvt/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasBackend } from './canvas-backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -129,7 +129,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/webp');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -146,7 +149,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/webp');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -163,7 +169,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/jpeg');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -178,7 +187,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/jpeg');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -195,7 +207,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/png');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/webp');
@@ -212,7 +227,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/png');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/jpeg');
@@ -231,7 +249,10 @@ describe('CanvasBackend.convert', () => {
       // convertToBlob returns a PNG that gets wrapped in ICO
       const pngBlob = new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: 'image/png' });
       const { canvas } = makeOffscreenCanvas(pngBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -248,7 +269,10 @@ describe('CanvasBackend.convert', () => {
       const pngPayload = new Uint8Array(100);
       const pngBlob = new Blob([pngPayload], { type: 'image/png' });
       const { canvas } = makeOffscreenCanvas(pngBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -267,7 +291,10 @@ describe('CanvasBackend.convert', () => {
       const fallbackBlob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' });
       const pixelData = new Uint8ClampedArray(2 * 2 * 4);
       const { canvas } = makeOffscreenCanvas(fallbackBlob, pixelData);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -288,7 +315,10 @@ describe('CanvasBackend.convert', () => {
       pixelData[2] = 0; // B
       pixelData[3] = 255; // A
       const { canvas } = makeOffscreenCanvas(fallbackBlob, pixelData);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const inputBlob = makeBlob('image/png');
@@ -334,7 +364,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/png');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const result = await backend.convert(makeBlob(), PNG, { format: PNG });
@@ -348,7 +381,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/png');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const result = await backend.convert(makeBlob(), PNG, { format: PNG });
@@ -362,7 +398,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/png');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       const result = await backend.convert(makeBlob(), PNG, { format: PNG });
@@ -376,7 +415,10 @@ describe('CanvasBackend.convert', () => {
 
       const outputBlob = makeBlob('image/png');
       const { canvas } = makeOffscreenCanvas(outputBlob);
-      vi.stubGlobal('OffscreenCanvas', vi.fn().mockImplementation(() => canvas));
+      vi.stubGlobal(
+        'OffscreenCanvas',
+        vi.fn().mockImplementation(() => canvas),
+      );
 
       const backend = new CanvasBackend();
       await backend.convert(makeBlob(), PNG, { format: PNG });
@@ -406,10 +448,7 @@ describe('CanvasBackend.convert', () => {
         getContext: vi.fn().mockReturnValue(ctx),
         toBlob: vi.fn().mockImplementation((cb: (b: Blob) => void) => cb(outputBlob)),
       };
-      vi.stubGlobal(
-        'document',
-        { createElement: vi.fn().mockReturnValue(htmlCanvas) },
-      );
+      vi.stubGlobal('document', { createElement: vi.fn().mockReturnValue(htmlCanvas) });
 
       const backend = new CanvasBackend();
       const result = await backend.convert(makeBlob(), PNG, { format: PNG });

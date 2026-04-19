@@ -21,9 +21,18 @@ describe('detectFormat', () => {
 
   it('detects WebP (RIFF + WEBP)', async () => {
     const webp = bytes(
-      0x52, 0x49, 0x46, 0x46, // RIFF
-      0, 0, 0, 0, // size
-      0x57, 0x45, 0x42, 0x50, // WEBP
+      0x52,
+      0x49,
+      0x46,
+      0x46, // RIFF
+      0,
+      0,
+      0,
+      0, // size
+      0x57,
+      0x45,
+      0x42,
+      0x50, // WEBP
     );
     const result = await detectFormat(webp);
     expect(result?.ext).toBe('webp');
@@ -31,9 +40,18 @@ describe('detectFormat', () => {
 
   it('detects WAV (RIFF + WAVE)', async () => {
     const wav = bytes(
-      0x52, 0x49, 0x46, 0x46,
-      0, 0, 0, 0,
-      0x57, 0x41, 0x56, 0x45, // WAVE
+      0x52,
+      0x49,
+      0x46,
+      0x46,
+      0,
+      0,
+      0,
+      0,
+      0x57,
+      0x41,
+      0x56,
+      0x45, // WAVE
     );
     const result = await detectFormat(wav);
     expect(result?.ext).toBe('wav');

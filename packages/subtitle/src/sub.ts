@@ -18,9 +18,9 @@
  * If binary magic is detected in the first 4 bytes, a clear error is thrown.
  */
 
+import { WebcvtError } from '@webcvt/core';
 import type { Cue, SubtitleTrack } from './cue.ts';
 import { SubtitleParseError } from './srt.ts';
-import { WebcvtError } from '@webcvt/core';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -122,21 +122,16 @@ export function parseSub(text: string, fps: number = DEFAULT_FPS): SubtitleTrack
       continue;
     }
 
-    const [, startFrameStr, endFrameStr, rest] = m as unknown as [
-      string,
-      string,
-      string,
-      string,
-    ];
-    const startFrame = parseInt(startFrameStr, 10);
-    const endFrame = parseInt(endFrameStr, 10);
+    const [, startFrameStr, endFrameStr, rest] = m as unknown as [string, string, string, string];
+    const startFrame = Number.parseInt(startFrameStr, 10);
+    const endFrame = Number.parseInt(endFrameStr, 10);
 
     // FPS header: {0}{0}23.976
     if (startFrame === 0 && endFrame === 0) {
-      const parsedFps = parseFloat(rest);
+      const parsedFps = Number.parseFloat(rest);
       if (!Number.isNaN(parsedFps) && parsedFps > 0) {
         effectiveFps = parsedFps;
-        metadata['fps'] = String(parsedFps);
+        metadata.fps = String(parsedFps);
       }
       continue;
     }
@@ -154,7 +149,7 @@ export function parseSub(text: string, fps: number = DEFAULT_FPS): SubtitleTrack
     });
   }
 
-  metadata['fps'] = metadata['fps'] ?? String(effectiveFps);
+  metadata.fps = metadata.fps ?? String(effectiveFps);
 
   return { cues, metadata };
 }
@@ -173,7 +168,7 @@ export function parseSub(text: string, fps: number = DEFAULT_FPS): SubtitleTrack
 export function serializeSub(track: SubtitleTrack, fps?: number): string {
   const effectiveFps =
     fps ??
-    (track.metadata?.['fps'] !== undefined ? parseFloat(track.metadata['fps']) : DEFAULT_FPS);
+    (track.metadata?.fps !== undefined ? Number.parseFloat(track.metadata.fps) : DEFAULT_FPS);
 
   const lines: string[] = [];
   lines.push(`{0}{0}${effectiveFps}`);
@@ -185,5 +180,5 @@ export function serializeSub(track: SubtitleTrack, fps?: number): string {
     lines.push(`{${startFrame}}{${endFrame}}${text}`);
   }
 
-  return lines.join('\n') + '\n';
+  return `${lines.join('\n')}\n`;
 }
