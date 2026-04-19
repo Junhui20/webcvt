@@ -1,0 +1,41 @@
+{
+  "name": "@webcvt/container-flac",
+  "version": "0.0.0",
+  "description": "FLAC (Free Lossless Audio Codec) container muxer and demuxer for webcvt — pure TypeScript, no native dependencies",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .turbo"
+  },
+  "dependencies": {
+    "@webcvt/core": "workspace:*",
+    "@webcvt/codec-webcodecs": "workspace:*"
+  },
+  "devDependencies": {
+    "@webcvt/test-utils": "workspace:*",
+    "@vitest/coverage-v8": "^2.1.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
