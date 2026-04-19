@@ -33,6 +33,7 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'mp4', mime: 'video/mp4', category: 'video', description: 'MPEG-4 Part 14' },
   { ext: 'm4a', mime: 'audio/mp4', category: 'audio', description: 'MP4 audio (AAC-in-M4A)' },
   { ext: 'webm', mime: 'video/webm', category: 'video', description: 'WebM' },
+  { ext: 'mkv', mime: 'video/x-matroska', category: 'video', description: 'Matroska container' },
   // Archive (format detection only for now)
   { ext: 'zip', mime: 'application/zip', category: 'archive', description: 'Zip Archive' },
 ];
