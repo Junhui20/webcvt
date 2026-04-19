@@ -245,8 +245,8 @@ export function serializeOgg(file: OggFile, options?: {
 - `rejects file with missing OggS capture pattern`
 - `rejects file with non-zero stream_structure_version`
 - `rejects file with page sequence number gap (simulated lost page)`
-- `rejects multi-stream (chained) file with OggMultiStreamNotSupportedError`
-- `rejects multiplexed file (two concurrent serial numbers) with same error`
+- `parses chained file (two sequential streams concatenated) — both decoded in order`
+- `rejects multiplexed file (two concurrent serial numbers) with OggMultiplexNotSupportedError`
 - `round-trip: parse → serialize → byte-identical pages, including CRC`
 - `serializer sets BOS on first page and EOS on last page`
 - `serializer splits oversized packet across pages with continued-packet flag`
@@ -266,14 +266,15 @@ export function serializeOgg(file: OggFile, options?: {
 3. **Page sequence gaps are errors, not tolerated skips**. RFC 3533
    §6. A gap means lost pages = lost audio. Do not pretend to
    recover; raise `OggSequenceGapError` with the missing range.
-4. **Multiple logical streams** — two forms both out of Phase 1 scope:
-   a. Multiplexed: two streams with different serial numbers
-      interleaved within the file, both BOS at start, both EOS at end.
-   b. Chained: one stream ends (EOS) and another begins (BOS) later
-      in the same file. Think concatenated Opus podcasts.
-   **→ ARCHITECTURAL DECISION NEEDED** (see report): should Phase 2
-   support chaining at minimum? Real-world Opus streaming uses
-   chaining for live playlists.
+4. **Multiple logical streams** — two forms, treated differently:
+   a. **Multiplexed (out of Phase 2 scope)**: two streams with different
+      serial numbers interleaved within the file, both BOS at start,
+      both EOS at end. Throw `OggMultiplexNotSupportedError`.
+   b. **Chained (Phase 2 SUPPORTED, +~150 LOC)**: one stream ends (EOS)
+      and another begins (BOS) later in the same file. Think
+      concatenated Opus podcasts. Decoder iterates streams in sequence,
+      yielding each one's packets to the caller. State resets between
+      streams; downstream codec must reinit on each new logical stream.
 5. **BOS / EOS flags MUST be set correctly**. First page of a stream
    has BOS. Last page has EOS. Without these, decoders may refuse or
    behave unpredictably.
@@ -307,17 +308,17 @@ export function serializeOgg(file: OggFile, options?: {
 | `packet.ts` (lacing reassembly state machine) | 100 |
 | `vorbis.ts` (identification + comment + setup header decode) | 120 |
 | `opus.ts` (OpusHead + OpusTags decode) | 100 |
-| `parser.ts` (file-level scan, stream discovery, Phase 1 enforcement) | 150 |
+| `parser.ts` (file-level scan, stream discovery, multiplex rejection) | 130 |
+| `chain.ts` (sequential chained-stream iteration, state reset) | 150 |
 | `serializer.ts` (build pages from packets, pagination, CRC patching) | 150 |
 | `backend.ts` (Backend impl, codec-webcodecs integration, encode for Opus) | 120 |
 | `errors.ts` | 40 |
 | `index.ts` | 20 |
-| **total** | **~1000** |
-| tests | ~500 |
+| **total** | **~1130** |
+| tests | ~550 |
 
-Headline plan.md budget: ~800. Realistic with both Vorbis and Opus
-codec headers: ~1000. Flag as overrun; consider splitting Vorbis into a
-separate sub-package if LOC pressure becomes real.
+Headline plan.md budget: ~800. Realistic with Vorbis + Opus codec
+headers AND sequential chaining: ~1130. plan.md §5 to be revised.
 
 ## Implementation references (for the published README)
 

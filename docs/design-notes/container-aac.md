@@ -202,9 +202,14 @@ straight 5-byte pack.
 7. **HE-AAC v1/v2 (SBR / PS)**: identified by object_type 5 and 29.
    The ADTS header itself does NOT change; the payload contains
    SBR/PS extension data and the *effective* output sample rate is
-   2× the ADTS `sampleRateIndex` value. WebCodecs decoder handles this
-   if you pass the right codec string. Phase 1 scope: AAC-LC only,
-   defer HE-AAC detection to Phase 2.
+   2× the ADTS `sampleRateIndex` value. **Decision: detect HE-AAC v1/v2
+   in our parser (set `Mp4aAudioObjectType` correctly) but route those
+   frames to the `@webcvt/backend-wasm` (ffmpeg.wasm) backend for
+   decode.** The container layer is responsible for identification only;
+   actual SBR/PS reconstruction belongs in the codec layer, and
+   WebCodecs support is inconsistent across browsers. This keeps the
+   public Backend selector working: HE-AAC files go via wasm fallback
+   and "just work" for users.
 8. **Multiple raw_data_blocks per frame**: the 2-bit field at byte 6
    bits 1-0 encodes `N-1` blocks, so value 0 means one block (the
    common case). ≥ 2 blocks per frame is rare (DAB+). Phase 1 scope:

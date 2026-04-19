@@ -340,24 +340,32 @@ Browser-primitive used in each row indicates what makes self-writing feasible.
 | Web Worker pool / scheduling | `Worker` | ~400 |
 | CLI wrapper | Node's `fs` | ~200 |
 
-#### AV containers + codec adapter (~15,000 LOC) — the Mediabunny-style core
+#### AV containers + codec adapter (~16,000 LOC) — the Mediabunny-style core
 
 MP4 / Matroska estimates revised upward after planner review: Mediabunny's `mp4-muxer` alone is ~2,500 LOC and its author had years of spec experience — our first-pass implementation with edit lists, fragmented MP4, and proper sample tables is realistically **2× that**.
 
-| Component | Browser primitive | Est. LOC |
-|---|---|---|
-| `container-mp4` (MP4/MOV/M4A/M4V, ISOBMFF) | — | **~6,000** |
-| `container-webm` (WebM subset of Matroska) | — | ~2,500 |
-| `container-mkv` (full Matroska, EBML) | — | **~2,000** |
-| `container-ts` (MPEG-TS + PSI/PAT/PMT) | — | ~1,000 |
-| `container-mp3` (frames + ID3v2 tags) | — | ~600 |
-| `container-flac` (stream + metadata blocks) | — | ~600 |
-| `container-ogg` (Ogg pages + packets) | — | ~800 |
-| `container-aac` (ADTS framing) | — | ~200 |
-| `container-wav` (RIFF) | — | ~150 |
-| `codec-webcodecs` adapter (encode/decode abstraction, config negotiation) | **WebCodecs API** | ~1,500 |
+Phase 2 audio container estimates revised after design notes (2026-04-19):
+the per-spec design exercise revealed every container is bigger than the
+initial back-of-envelope. MP3 needs both ID3v2/v1 + Xing/LAME headers; FLAC
+needs full subframe metadata block coverage; OGG needs Vorbis + Opus codec
+heads + sequential chaining (architectural decision: support chained
+streams in Phase 2); AAC needs HE-AAC v1/v2 detection (decode delegated
+to backend-wasm).
 
-Subtotal: **~15,350 LOC**
+| Component | Browser primitive | Est. LOC | Phase 2 actual / source |
+|---|---|---|---|
+| `container-mp4` (MP4/MOV/M4A/M4V, ISOBMFF) | — | **~6,000** | not yet |
+| `container-webm` (WebM subset of Matroska) | — | ~2,500 | not yet |
+| `container-mkv` (full Matroska, EBML) | — | **~2,000** | not yet |
+| `container-ts` (MPEG-TS + PSI/PAT/PMT) | — | ~1,000 | not yet |
+| `container-mp3` (frames + ID3v2/v1 + Xing/LAME, MPEG 2.5 read-only) | — | **~700** ⬆ | design note |
+| `container-flac` (stream + metadata blocks; encode → backend-wasm) | — | **~720** ⬆ | design note |
+| `container-ogg` (pages + packets + Vorbis/Opus heads + chaining) | — | **~1,130** ⬆ | design note (was ~800; +Opus/Vorbis +chain) |
+| `container-aac` (ADTS framing; HE-AAC v1/v2 → backend-wasm) | — | **~330** ⬆ | design note |
+| `container-wav` (RIFF, EXTENSIBLE, RF64 reject) | — | ~240 | **shipped: 65 tests, 94.8% cov** |
+| `codec-webcodecs` adapter (encode/decode abstraction, config negotiation) | **WebCodecs API** | ~1,500 | **shipped: 81 tests, 98.8% cov** |
+
+Subtotal: **~16,120 LOC** (was 15,350)
 
 #### Image (~5,500 LOC)
 
@@ -396,11 +404,15 @@ Subtotal: **~1,500 LOC**
 
 ---
 
-### Total self-written: **~28,000 LOC**
+### Total self-written: **~28,500 LOC**
 
-Breakdown: Core 1,600 + AV 15,350 + Image 5,500 + Data/etc 5,800 + Integrations 1,500 ≈ **28,000 LOC**
+Breakdown: Core 1,600 + AV 16,120 + Image 5,500 + Data/etc 5,800 + Integrations 1,500 ≈ **28,500 LOC**
 
-The earlier ~15,000 LOC headline undercounted by almost 2×. Committing to the revised figure to set honest expectations.
+Audio container per-spec design exercise (2026-04-19) raised the AV
+sub-total from 15,350 to 16,120 LOC. Earlier ~15,000 LOC headline
+undercounted by ~2×. Estimates now grounded in design notes, not guesses.
+
+**Phase 2 LOC progress**: shipped ~1,740 LOC (codec-webcodecs 1,500 + container-wav 240) of ~3,120 budget. Remaining: mp3 700 + flac 720 + ogg 1,130 + aac 330 = ~2,880 LOC.
 
 ### 🤝 Third-party dependencies (Option B trimmed list — only what's irreducible)
 

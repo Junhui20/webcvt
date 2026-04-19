@@ -174,8 +174,13 @@ scan-for-next-sync as a fallback.
   Chrome 124+ / Safari 17+. Use `probeAudioCodec({codec: 'flac',
   sampleRate, numberOfChannels})` to check.
 - **Encode**: FLAC is not a WebCodecs encode target anywhere in 2026.
-  Phase 1 scope: decode-only backend; encode throws
-  `FlacEncodeNotImplementedError` pointing to ffmpeg-wasm fallback.
+  **Decision: route encode requests to `@webcvt/backend-wasm` (ffmpeg.wasm)
+  via the core BackendRegistry's fallback chain.** The `FlacBackend.canHandle`
+  returns `false` for encode (output FLAC) so the registry tries the next
+  backend. `backend-wasm` has FLAC encode via libFLAC compiled in. Users
+  see seamless encode without our package shipping a JS encoder. Document
+  this in the README so consumers know to also install `@webcvt/backend-wasm`
+  if they want FLAC encode.
 
 ## Test plan
 

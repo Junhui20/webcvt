@@ -202,7 +202,7 @@ bytes verbatim. This guarantees lossless round-trip.
 - `counts frame sample offsets correctly for MPEG-1 Layer III (1152 samples/frame)`
 - `parses MPEG-2 Layer III (576 samples/frame, half sample rates)`
 - `rejects free-format frames (bitrate_index == 0) with Mp3FreeFormatError`
-- `rejects MPEG 2.5 frames with Mp3Mpeg25UnsupportedError` (or parses them, document the choice)
+- `parses MPEG 2.5 frames read-only (sample rates 11025/12000/8000 Hz); serializer rejects them with Mp3Mpeg25EncodeNotSupportedError`
 - `survives random 0xFF bytes in tag payload without matching them as frame sync`
 - `round-trips: parse then serialize → byte-identical audio region`
 - `removes unsynchronisation bytes on ID3v2 read and does not emit them on write`
@@ -214,8 +214,12 @@ bytes verbatim. This guarantees lossless round-trip.
    for the next sync word. Phase 1 scope: throw; Phase 2: optional
    forward-scan. Spec §2.4.2.3.
 2. **MPEG 2.5 unofficial extension** (version bits `00`): defined by
-   Fraunhofer, not in ISO. Adds sample rates 11025/12000/8000 Hz. Either
-   reject with a clear error or support read-only. Pick one and document.
+   Fraunhofer, not in ISO. Adds sample rates 11025/12000/8000 Hz.
+   **Decision: read-only support.** ~5% of in-the-wild MP3 files use
+   this extension; rejecting them would surprise users. The parser
+   accepts version `00` and reports `version: '2.5'` on `Mp3Frame`. The
+   serializer rejects writing 2.5 frames with `Mp3Mpeg25EncodeNotSupportedError`
+   so we never produce non-standard output ourselves.
 3. **Xing/Info/VBRI header in first audio frame**: looks like a real
    frame (valid sync, valid header) but its payload is all zeros
    except for the Xing/Info/VBRI signature at a known offset. Treating
