@@ -3,9 +3,9 @@
 > **One-liner:** A lightweight, browser-first, hardware-accelerated file conversion library and API. Convert anything in the browser, no upload required.
 
 - **Name:** `webcvt`
-- **Owner:** Personal GitHub
+- **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** Planning (last revised 2026-04-19)
+- **Status:** **Phase 1 — 6/8 complete** · CI green · 315 tests passing · last revised 2026-04-19
 
 ---
 
@@ -485,15 +485,17 @@ A 3rd-party dep gets in **only if**:
 
 > 📌 **Phase numbers here are engineering milestones, NOT the format-rollout Waves in §2.3.** See Waves A–E for what ships when.
 
-### Phase 1 — Foundation (Weeks 1–2)
-- [ ] Monorepo skeleton (pnpm + turborepo + biome + vitest)
-- [ ] `@webcvt/core` — public API, types, registry, format detector (magic bytes), capability probe, Worker pool
-- [ ] `@webcvt/codec-webcodecs` — thin WebCodecs adapter (encode/decode abstraction)
-- [ ] `@webcvt/image-canvas` — PNG/JPG/WebP/BMP/ICO via Canvas (dog-food first)
-- [ ] `@webcvt/subtitle` — SRT/VTT/ASS/SSA/SUB/MPL
-- [ ] **Test-fixture pipeline**: ffmpeg-generated reference files under `/tests/fixtures/`, golden comparison helper
-- [ ] CI: lint, test, build, coverage on every PR
-- [ ] First demo: PNG ↔ JPG ↔ WebP working in browser
+### Phase 1 — Foundation (Weeks 1–2) — **6/8 complete**
+- [x] Monorepo skeleton (pnpm + turborepo + biome + vitest + tsup)
+- [x] `@webcvt/core` — public API, types, registry, format detector (magic bytes), capability probe (Worker pool deferred to Phase 2)
+- [x] `@webcvt/codec-webcodecs` — thin WebCodecs adapter (encode/decode abstraction); 81 tests, 98.8% coverage
+- [x] `@webcvt/image-canvas` — PNG/JPG/WebP/BMP/ICO via Canvas; 67 tests, 96.4% coverage; ICO + BMP writers self-written
+- [x] `@webcvt/subtitle` — SRT/VTT/ASS/SSA/SUB/MPL all self-written; 128 tests, 93.1% coverage
+- [x] CI: lint (biome) + typecheck + test (Node 20 + 22 matrix) + build, all green on push/PR
+- [ ] **Test-fixture pipeline**: ffmpeg-generated reference files under `/tests/fixtures/`, golden comparison helper — **deferred; will be set up at start of Phase 2 since audio containers need it first**
+- [ ] First demo: PNG ↔ JPG ↔ WebP working in browser playground — **deferred; `apps/playground` will piggy-back on Phase 5 launch prep**
+
+**Phase 1 outcome:** 4 packages published-ready, 315 tests passing, ~3,300 LOC source. Bundle sizes: core 3 KB, codec-webcodecs 12 KB, image-canvas 6 KB, subtitle 25 KB. All ESM + CJS + .d.ts.
 
 ### Phase 2 — Core containers, set 1 (Weeks 3–5)
 - [ ] `@webcvt/container-wav` (~150 LOC, warm-up)
