@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { crc8, crc8Update, crc16, crc16Update } from './crc.ts';
+import { encodeVarint } from './frame.ts';
 
 // ---------------------------------------------------------------------------
 // CRC-8 tests (poly 0x07, init 0, non-reflected)
@@ -70,10 +71,6 @@ describe('verifies CRC-8 on frame header', () => {
   });
 
   it('CRC-8 of a real FLAC frame header matches stored byte', () => {
-    // Build a frame header with known values and compute CRC-8
-    // Then verify the stored CRC matches
-    const { encodeVarint } = require('./frame.ts') as typeof import('./frame.ts');
-
     const frameNum = encodeVarint(0); // frame number = 0
     const headerWithoutCrc = new Uint8Array(4 + frameNum.length);
     headerWithoutCrc[0] = 0xff;
