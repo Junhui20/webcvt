@@ -42,5 +42,17 @@
       "**/.turbo/**",
       "**/tests/fixtures/**"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "include": ["**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    }
+  ]
 }

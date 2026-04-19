@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1 done · Phase 2 in progress (1/5 containers)** · CI green · 398 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1 done · Phase 2 in progress (2/5 containers)** · CI green · 529 tests passing · last revised 2026-04-19
 
 ---
 
@@ -513,7 +513,7 @@ A 3rd-party dep gets in **only if**:
 - [x] **Test-fixture pipeline** — `@webcvt/test-utils` package (bytes/fixtures/audio-synth helpers, 18 tests) + `scripts/generate-fixtures.mjs` using pinned `ffmpeg-static` + 4 reference fixtures committed under `tests/fixtures/audio/` + `.gitattributes` (binary)
 - [x] **Design notes** — `docs/design-notes/container-{wav,mp3,flac,ogg,aac}.md` written from official specs (clean-room per §11)
 - [x] `@webcvt/container-wav` — RIFF/WAV muxer + demuxer, 65 tests, 94.8% coverage, ~12 KB bundle. Includes WAVEFORMATEXTENSIBLE recognition; RF64 throws `WavTooLargeError` (deferred)
-- [ ] `@webcvt/container-mp3` (frame parsing + ID3v2)
+- [x] `@webcvt/container-mp3` — MPEG-1/2/2.5 Layer III + ID3v2/v1 + Xing/LAME/VBRI; 131 tests, 96.87% coverage, ~22 KB bundle. Code-reviewed (3 HIGH fixed: APE skip clarity, encodeUnsynchronisation un-export, dead branch). Security-reviewed (3 HIGH + 3 MED DoS vectors fixed: ext-header bounds, APE underflow, 200 MiB input cap, 64 MiB ID3 body cap, frameBytes guard, matchMagic bounds). MPEG 2.5 read-only; free-format throws.
 - [ ] `@webcvt/container-aac` (ADTS)
 - [ ] `@webcvt/container-ogg` (pages + packets)
 - [ ] `@webcvt/container-flac`
