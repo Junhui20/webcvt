@@ -538,6 +538,84 @@ export class TiffDeflateDecodeError extends WebcvtError {
 }
 
 // ---------------------------------------------------------------------------
+// ICNS errors
+// ---------------------------------------------------------------------------
+
+/** Thrown when the first 4 bytes do not match 'icns' (0x69 0x63 0x6E 0x73). */
+export class IcnsBadMagicError extends WebcvtError {
+  constructor() {
+    super('ICNS_BAD_MAGIC', "ICNS: first 4 bytes do not match 'icns' (0x69 0x63 0x6E 0x73).");
+    this.name = 'IcnsBadMagicError';
+  }
+}
+
+/**
+ * Thrown when the declared totalSize in the header does not match
+ * input.length (only when totalSize is non-zero).
+ */
+export class IcnsBadHeaderSizeError extends WebcvtError {
+  constructor(declared: number, actual: number) {
+    super(
+      'ICNS_BAD_HEADER_SIZE',
+      `ICNS: header declares totalSize ${declared} but input is ${actual} bytes.`,
+    );
+    this.name = 'IcnsBadHeaderSizeError';
+  }
+}
+
+/**
+ * Thrown when an element record is structurally invalid:
+ * header does not fit, size < 8, or element extends past EOF.
+ */
+export class IcnsBadElementError extends WebcvtError {
+  constructor(message: string) {
+    super('ICNS_BAD_ELEMENT', `ICNS: bad element — ${message}`);
+    this.name = 'IcnsBadElementError';
+  }
+}
+
+/** Thrown when element count exceeds MAX_ICNS_ELEMENTS. */
+export class IcnsTooManyElementsError extends WebcvtError {
+  constructor(max: number) {
+    super('ICNS_TOO_MANY_ELEMENTS', `ICNS: element count exceeds maximum (${max}).`);
+    this.name = 'IcnsTooManyElementsError';
+  }
+}
+
+/**
+ * Thrown when an unsupported ICNS feature is encountered,
+ * e.g. classic 'icon' type or unknown high-res sub-format.
+ */
+export class IcnsUnsupportedFeatureError extends WebcvtError {
+  constructor(feature: string) {
+    super('ICNS_UNSUPPORTED_FEATURE', `ICNS: unsupported feature "${feature}".`);
+    this.name = 'IcnsUnsupportedFeatureError';
+  }
+}
+
+/** Thrown when PackBits decompression encounters corrupt ICNS data. */
+export class IcnsPackBitsDecodeError extends WebcvtError {
+  constructor(message: string) {
+    super('ICNS_PACKBITS_DECODE', `ICNS PackBits: ${message}`);
+    this.name = 'IcnsPackBitsDecodeError';
+  }
+}
+
+/**
+ * Thrown when a mask element's byte count does not match the expected
+ * uncompressed size for the icon dimensions.
+ */
+export class IcnsMaskSizeMismatchError extends WebcvtError {
+  constructor(fourcc: string, got: number, expected: number) {
+    super(
+      'ICNS_MASK_SIZE_MISMATCH',
+      `ICNS: mask element '${fourcc}' is ${got} bytes but expected ${expected}.`,
+    );
+    this.name = 'IcnsMaskSizeMismatchError';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // TGA errors
 // ---------------------------------------------------------------------------
 

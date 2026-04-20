@@ -16,6 +16,7 @@
  */
 
 import {
+  ICNS_MAGIC,
   PCX_ENCODING_RLE,
   PCX_HEADER_SIZE,
   PCX_MAGIC,
@@ -36,7 +37,8 @@ export type ImageFormat =
   | 'tga'
   | 'xbm'
   | 'pcx'
-  | 'xpm';
+  | 'xpm'
+  | 'icns';
 
 /**
  * Sniff the format of input and return the matching ImageFormat or null.
@@ -75,6 +77,19 @@ export function detectImageFormat(input: Uint8Array): ImageFormat | null {
       version === 0 || version === 2 || version === 3 || version === 4 || version === 5;
     if (validVersion && encoding === PCX_ENCODING_RLE) {
       return 'pcx';
+    }
+  }
+
+  // ICNS: 4-byte magic 'icns' (0x69 0x63 0x6E 0x73)
+  if (input.length >= 4) {
+    /* v8 ignore next */
+    if (
+      b0 === (ICNS_MAGIC[0] ?? 0) &&
+      b1 === (ICNS_MAGIC[1] ?? 0) &&
+      (input[2] ?? 0) === (ICNS_MAGIC[2] ?? 0) &&
+      (input[3] ?? 0) === (ICNS_MAGIC[3] ?? 0)
+    ) {
+      return 'icns';
     }
   }
 

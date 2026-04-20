@@ -210,6 +210,36 @@ export const PCX_MIME = 'image/x-pcx';
 export const PCX_MIME_ALT = 'image/pcx';
 
 // ---------------------------------------------------------------------------
+// ICNS constants
+// ---------------------------------------------------------------------------
+
+/** Primary MIME type for ICNS images. */
+export const ICNS_MIME = 'image/icns';
+
+/** Alternative MIME type accepted by the backend. */
+export const ICNS_MIME_ALT = 'image/x-icns';
+
+/** ICNS magic bytes: 'icns' (0x69 0x63 0x6E 0x73). */
+export const ICNS_MAGIC = new Uint8Array([0x69, 0x63, 0x6e, 0x73]);
+
+/** ICNS file header size in bytes (FourCC + uint32 totalSize). */
+export const ICNS_HEADER_SIZE = 8;
+
+/** FourCC for the optional Table of Contents element (byte-exact, trailing space). */
+export const ICNS_TOC_FOURCC = 'TOC ';
+
+/** Maximum number of ICNS elements to parse (security cap). */
+export const MAX_ICNS_ELEMENTS = 64;
+
+/** PNG signature: 8 bytes identifying a PNG payload. */
+export const PNG_SIGNATURE = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+/** JPEG 2000 signature: 12 bytes identifying a JP2 payload. */
+export const JP2_SIGNATURE = new Uint8Array([
+  0x00, 0x00, 0x00, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a,
+]);
+
+// ---------------------------------------------------------------------------
 // XPM constants
 // ---------------------------------------------------------------------------
 

@@ -1,10 +1,10 @@
 /**
  * @webcvt/image-legacy — Public API
  *
- * Supported formats (sixth pass — Phase 4.6):
- *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA, XBM, PCX, XPM.
+ * Supported formats (seventh pass — Phase 4.7):
+ *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA, XBM, PCX, XPM, ICNS.
  *
- * Deferred (Phase 4.6+): ICNS, CUR.
+ * Deferred (Phase 4.7+): CUR.
  *
  * No cross-format conversion: each format is parse/serialize-only within its type.
  * No auto-detection inside parseImage: pass format explicitly.
@@ -32,6 +32,7 @@ export type {
   XbmFile,
   PcxFile,
   XpmFile,
+  IcnsFile,
 } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,19 @@ export type {
   PcxKind,
   PcxNormalisation,
 } from './pcx.ts';
+
+// ---------------------------------------------------------------------------
+// ICNS types (direct from icns.ts)
+// ---------------------------------------------------------------------------
+
+export type {
+  IcnsIconKind,
+  IcnsHighResSubFormat,
+  IcnsFourCC,
+  IcnsOpaqueElement,
+  IcnsIcon,
+  IcnsNormalisation,
+} from './icns.ts';
 
 // ---------------------------------------------------------------------------
 // PBM API
@@ -154,6 +168,12 @@ export { parsePcx, serializePcx, decodePcxRle } from './pcx.ts';
 export { parseXpm, serializeXpm, isXpmHeader, isCIdentifier } from './xpm.ts';
 
 // ---------------------------------------------------------------------------
+// ICNS API
+// ---------------------------------------------------------------------------
+
+export { parseIcns, serializeIcns } from './icns.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -177,6 +197,7 @@ export {
   XBM_FORMAT,
   PCX_FORMAT,
   XPM_FORMAT,
+  ICNS_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -239,4 +260,11 @@ export {
   XpmSizeMismatchError,
   XpmUnknownKeyError,
   XpmTooManyColorsError,
+  IcnsBadMagicError,
+  IcnsBadHeaderSizeError,
+  IcnsBadElementError,
+  IcnsTooManyElementsError,
+  IcnsUnsupportedFeatureError,
+  IcnsPackBitsDecodeError,
+  IcnsMaskSizeMismatchError,
 } from './errors.ts';

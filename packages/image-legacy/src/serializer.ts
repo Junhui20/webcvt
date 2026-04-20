@@ -5,6 +5,7 @@
  * per-format serializer.
  */
 
+import { serializeIcns } from './icns.ts';
 import { serializePbm, serializePgm, serializePpm } from './netpbm.ts';
 import type { ImageFile } from './parser.ts';
 import { serializePcx } from './pcx.ts';
@@ -37,5 +38,7 @@ export function serializeImage(file: ImageFile): Uint8Array {
       return serializePcx(file);
     case 'xpm':
       return serializeXpm(file);
+    case 'icns':
+      return serializeIcns(file);
   }
 }

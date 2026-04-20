@@ -10,6 +10,8 @@
 
 import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
 import {
+  ICNS_MIME,
+  ICNS_MIME_ALT,
   MAX_INPUT_BYTES,
   PBM_MIME,
   PCX_MIME,
@@ -52,6 +54,8 @@ const MIME_TO_FORMAT = new Map<string, ImageFormat>([
   [PCX_MIME_ALT, 'pcx'],
   [XPM_MIME, 'xpm'],
   [XPM_MIME_ALT, 'xpm'],
+  [ICNS_MIME, 'icns'],
+  [ICNS_MIME_ALT, 'icns'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -184,4 +188,11 @@ export const XPM_FORMAT: FormatDescriptor = {
   mime: XPM_MIME,
   category: 'image',
   description: 'X PixMap',
+};
+
+export const ICNS_FORMAT: FormatDescriptor = {
+  ext: 'icns',
+  mime: ICNS_MIME,
+  category: 'image',
+  description: 'Apple Icon Image',
 };

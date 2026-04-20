@@ -7,6 +7,7 @@
  */
 
 import type { ImageFormat } from './detect.ts';
+import { type IcnsFile, parseIcns } from './icns.ts';
 import {
   type PbmFile,
   type PgmFile,
@@ -37,7 +38,8 @@ export type ImageFile =
   | TgaFile
   | XbmFile
   | PcxFile
-  | XpmFile;
+  | XpmFile
+  | IcnsFile;
 
 // Re-export sub-types for consumers
 export type {
@@ -51,6 +53,7 @@ export type {
   XbmFile,
   PcxFile,
   XpmFile,
+  IcnsFile,
   ImageFormat,
 };
 
@@ -80,5 +83,7 @@ export function parseImage(input: Uint8Array, format: ImageFormat): ImageFile {
       return parsePcx(input);
     case 'xpm':
       return parseXpm(input);
+    case 'icns':
+      return parseIcns(input);
   }
 }
