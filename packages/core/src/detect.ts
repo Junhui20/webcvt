@@ -166,6 +166,37 @@ function disambiguateRiff(buf: Uint8Array): 'webp' | 'wav' | undefined {
 }
 
 /**
+ * Disambiguate PNG vs APNG by scanning for an 'acTL' chunk type within the
+ * first HEADER_BYTES_TO_READ bytes. APNG spec requires acTL before IDAT.
+ * Returns 'apng' if acTL found, 'png' otherwise.
+ */
+function disambiguatePng(buf: Uint8Array): 'apng' | 'png' {
+  // PNG signature is 8 bytes; chunks start at offset 8.
+  let offset = 8;
+  while (offset + 12 <= buf.length) {
+    // PNG chunk length is big-endian u32 at offset
+    const length =
+      (((buf[offset] ?? 0) << 24) |
+        ((buf[offset + 1] ?? 0) << 16) |
+        ((buf[offset + 2] ?? 0) << 8) |
+        (buf[offset + 3] ?? 0)) >>>
+      0;
+    const type = String.fromCharCode(
+      buf[offset + 4] ?? 0,
+      buf[offset + 5] ?? 0,
+      buf[offset + 6] ?? 0,
+      buf[offset + 7] ?? 0,
+    );
+    if (type === 'acTL') return 'apng';
+    // acTL must appear before IDAT per APNG spec
+    if (type === 'IDAT' || type === 'IEND') break;
+    // Advance past this chunk: length + type(4) + data(length) + crc(4)
+    offset += 4 + 4 + length + 4;
+  }
+  return 'png';
+}
+
+/**
  * Detect the format of a Blob or byte buffer by inspecting magic bytes.
  * Returns the matching FormatDescriptor or undefined if unknown.
  */
@@ -186,6 +217,8 @@ export async function detectFormat(
   for (const sig of SIGNATURES) {
     if (sig.ext === 'webp' || sig.ext === 'wav') continue; // handled above
     if (matchesAt(head, sig.offset, sig.bytes)) {
+      // PNG needs further disambiguation: APNG files contain an acTL chunk
+      if (sig.ext === 'png') return findByExt(disambiguatePng(head));
       return findByExt(sig.ext);
     }
   }

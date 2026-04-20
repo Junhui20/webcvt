@@ -35,6 +35,8 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'webm', mime: 'video/webm', category: 'video', description: 'WebM' },
   { ext: 'mkv', mime: 'video/x-matroska', category: 'video', description: 'Matroska container' },
   { ext: 'ts', mime: 'video/mp2t', category: 'video', description: 'MPEG-2 Transport Stream' },
+  // Image (Phase 4: image-animation package — animated variants)
+  { ext: 'apng', mime: 'image/apng', category: 'image', description: 'Animated PNG (APNG)' },
   // Image (Phase 4: image-svg package)
   { ext: 'svg', mime: 'image/svg+xml', category: 'image', description: 'Scalable Vector Graphics' },
   // Data-text (Phase 4: data-text package)
