@@ -20,6 +20,8 @@ import {
   TGA_MIME_ALT1,
   TGA_MIME_ALT2,
   TIFF_MIME,
+  XBM_MIME,
+  XBM_MIME_ALT,
 } from './constants.ts';
 import type { ImageFormat } from './detect.ts';
 import { ImageInputTooLargeError, ImageUnsupportedFormatError } from './errors.ts';
@@ -40,6 +42,8 @@ const MIME_TO_FORMAT = new Map<string, ImageFormat>([
   [TGA_MIME, 'tga'],
   [TGA_MIME_ALT1, 'tga'],
   [TGA_MIME_ALT2, 'tga'],
+  [XBM_MIME, 'xbm'],
+  [XBM_MIME_ALT, 'xbm'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -151,4 +155,11 @@ export const TGA_FORMAT: FormatDescriptor = {
   mime: TGA_MIME,
   category: 'image',
   description: 'Truevision TGA (Targa)',
+};
+
+export const XBM_FORMAT: FormatDescriptor = {
+  ext: 'xbm',
+  mime: XBM_MIME,
+  category: 'image',
+  description: 'X11 Bitmap',
 };

@@ -17,8 +17,9 @@
 
 import { TGA_FOOTER_SIGNATURE, TGA_FOOTER_SIZE } from './constants.ts';
 import { isTgaHeader } from './tga.ts';
+import { isXbmHeader } from './xbm.ts';
 
-export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff' | 'tga';
+export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff' | 'tga' | 'xbm';
 
 /**
  * Sniff the format of input and return the matching ImageFormat or null.
@@ -108,6 +109,13 @@ export function detectImageFormat(input: Uint8Array): ImageFormat | null {
   // Strategy (2): header heuristic for TGA 1.0 (no footer)
   if (isTgaHeader(input)) {
     return 'tga';
+  }
+
+  // XBM: no fixed magic bytes — lookahead-validated #define detection (Trap #6).
+  // Must come after TGA (which uses structural detection) because XBM files start
+  // with '#' which is unambiguous vs all other formats checked above.
+  if (isXbmHeader(input)) {
+    return 'xbm';
   }
 
   return null;

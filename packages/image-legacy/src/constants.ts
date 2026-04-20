@@ -149,3 +149,28 @@ export const TGA_FOOTER_SIZE = 26;
  * actual RLE bounds use the pre-allocated output buffer size.
  */
 export const MAX_RLE_EXPANSION_RATIO = 128;
+
+// ---------------------------------------------------------------------------
+// XBM constants
+// ---------------------------------------------------------------------------
+
+/** Primary MIME type for XBM images (X11 Bitmap). */
+export const XBM_MIME = 'image/x-xbitmap';
+
+/** Alternative MIME type accepted by the backend. */
+export const XBM_MIME_ALT = 'image/x-xbm';
+
+/**
+ * Default identifier prefix used by the serializer when XbmFile.prefix is
+ * empty or missing.
+ */
+export const XBM_DEFAULT_PREFIX = 'image';
+
+/** Number of hex-byte literals emitted per line in canonical serialized output. */
+export const XBM_BYTES_PER_LINE = 12;
+
+/**
+ * Maximum length for an XBM identifier prefix (extracted from the `_width`
+ * define). Defends against degenerate inputs with very long identifiers.
+ */
+export const XBM_MAX_IDENTIFIER_LENGTH = 256;

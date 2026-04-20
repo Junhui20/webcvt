@@ -187,6 +187,85 @@ export class QoiSizeMismatchError extends WebcvtError {
 }
 
 // ---------------------------------------------------------------------------
+// XBM errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when the first non-whitespace tokens in a candidate XBM file do not
+ * match `#define <prefix>_width <decimal>`.
+ */
+export class XbmBadHeaderError extends WebcvtError {
+  constructor(message: string) {
+    super('XBM_BAD_HEADER', `XBM: bad header — ${message}`);
+    this.name = 'XbmBadHeaderError';
+  }
+}
+
+/**
+ * Thrown when a required `#define` (`_width`, `_height`) is absent or appears
+ * out of order, or when exactly one of `_x_hot`/`_y_hot` is present (XOR).
+ */
+export class XbmMissingDefineError extends WebcvtError {
+  constructor(define: string) {
+    super('XBM_MISSING_DEFINE', `XBM: required #define "${define}" is missing or out of order.`);
+    this.name = 'XbmMissingDefineError';
+  }
+}
+
+/**
+ * Thrown when the identifier prefix extracted from `_width` does not match the
+ * prefix used in `_height`, `_bits`, `_x_hot`, or `_y_hot`.
+ */
+export class XbmPrefixMismatchError extends WebcvtError {
+  constructor(expected: string, got: string, define: string) {
+    super(
+      'XBM_PREFIX_MISMATCH',
+      `XBM: prefix mismatch in "${define}" — expected "${expected}", got "${got}".`,
+    );
+    this.name = 'XbmPrefixMismatchError';
+  }
+}
+
+/**
+ * Thrown when a token inside the `{...}` hex-byte array is not a valid
+ * `0x[0-9a-fA-F]{1,2}` literal, or its value exceeds 0xFF.
+ */
+export class XbmBadHexByteError extends WebcvtError {
+  constructor(token: string) {
+    super(
+      'XBM_BAD_HEX_BYTE',
+      `XBM: invalid hex byte token "${token}"; expected 0x00..0xFF (1-2 hex digits).`,
+    );
+    this.name = 'XbmBadHexByteError';
+  }
+}
+
+/**
+ * Thrown when the number of hex bytes in the array does not equal
+ * `height * ceil(width / 8)`.
+ */
+export class XbmSizeMismatchError extends WebcvtError {
+  constructor(got: number, expected: number) {
+    super(
+      'XBM_SIZE_MISMATCH',
+      `XBM: hex-byte count ${got} does not match expected ${expected} (height × ceil(width/8)).`,
+    );
+    this.name = 'XbmSizeMismatchError';
+  }
+}
+
+/**
+ * Thrown when the identifier prefix is empty, contains invalid characters, or
+ * exceeds XBM_MAX_IDENTIFIER_LENGTH.
+ */
+export class XbmBadIdentifierError extends WebcvtError {
+  constructor(message: string) {
+    super('XBM_BAD_IDENTIFIER', `XBM: invalid identifier — ${message}`);
+    this.name = 'XbmBadIdentifierError';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Backend error
 // ---------------------------------------------------------------------------
 

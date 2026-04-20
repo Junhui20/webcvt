@@ -19,15 +19,34 @@ import { type PfmFile, parsePfm } from './pfm.ts';
 import { type QoiFile, parseQoi } from './qoi.ts';
 import { type TgaFile, parseTga } from './tga.ts';
 import { type TiffFile, parseTiff } from './tiff.ts';
+import { type XbmFile, parseXbm } from './xbm.ts';
 
 // ---------------------------------------------------------------------------
 // Public discriminated union
 // ---------------------------------------------------------------------------
 
-export type ImageFile = PbmFile | PgmFile | PpmFile | PfmFile | QoiFile | TiffFile | TgaFile;
+export type ImageFile =
+  | PbmFile
+  | PgmFile
+  | PpmFile
+  | PfmFile
+  | QoiFile
+  | TiffFile
+  | TgaFile
+  | XbmFile;
 
 // Re-export sub-types for consumers
-export type { PbmFile, PgmFile, PpmFile, PfmFile, QoiFile, TiffFile, TgaFile, ImageFormat };
+export type {
+  PbmFile,
+  PgmFile,
+  PpmFile,
+  PfmFile,
+  QoiFile,
+  TiffFile,
+  TgaFile,
+  XbmFile,
+  ImageFormat,
+};
 
 // ---------------------------------------------------------------------------
 // Top-level dispatcher
@@ -49,5 +68,7 @@ export function parseImage(input: Uint8Array, format: ImageFormat): ImageFile {
       return parseTiff(input);
     case 'tga':
       return parseTga(input);
+    case 'xbm':
+      return parseXbm(input);
   }
 }

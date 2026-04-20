@@ -11,6 +11,7 @@ import { serializePfm } from './pfm.ts';
 import { serializeQoi } from './qoi.ts';
 import { serializeTga } from './tga.ts';
 import { serializeTiff } from './tiff.ts';
+import { serializeXbm } from './xbm.ts';
 
 export function serializeImage(file: ImageFile): Uint8Array {
   switch (file.format) {
@@ -28,5 +29,7 @@ export function serializeImage(file: ImageFile): Uint8Array {
       return serializeTiff(file);
     case 'tga':
       return serializeTga(file);
+    case 'xbm':
+      return serializeXbm(file);
   }
 }

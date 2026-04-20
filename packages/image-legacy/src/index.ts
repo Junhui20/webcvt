@@ -1,10 +1,10 @@
 /**
  * @webcvt/image-legacy — Public API
  *
- * Supported formats (third pass — Phase 4.5):
- *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA.
+ * Supported formats (fourth pass — Phase 4.5):
+ *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA, XBM.
  *
- * Deferred (Phase 4.5+): PCX, XBM, XPM, ICNS, CUR.
+ * Deferred (Phase 4.5+): PCX, XPM, ICNS, CUR.
  *
  * No cross-format conversion: each format is parse/serialize-only within its type.
  * No auto-detection inside parseImage: pass format explicitly.
@@ -29,6 +29,7 @@ export type {
   QoiFile,
   TiffFile,
   TgaFile,
+  XbmFile,
 } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -59,6 +60,12 @@ export type {
   TgaColorMap,
   TgaNormalisation,
 } from './tga.ts';
+
+// ---------------------------------------------------------------------------
+// XBM types (direct from xbm.ts)
+// ---------------------------------------------------------------------------
+
+export type { XbmHotspot } from './xbm.ts';
 
 // ---------------------------------------------------------------------------
 // PBM API
@@ -109,6 +116,12 @@ export { lzwDecode } from './tiff-lzw.ts';
 export { parseTga, serializeTga, decodeTgaRle, isTgaHeader } from './tga.ts';
 
 // ---------------------------------------------------------------------------
+// XBM API
+// ---------------------------------------------------------------------------
+
+export { parseXbm, serializeXbm, isXbmHeader } from './xbm.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -129,6 +142,7 @@ export {
   QOI_FORMAT,
   TIFF_FORMAT,
   TGA_FORMAT,
+  XBM_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -170,4 +184,10 @@ export {
   TgaTruncatedError,
   TgaRleDecodeError,
   TgaBadFooterError,
+  XbmBadHeaderError,
+  XbmMissingDefineError,
+  XbmPrefixMismatchError,
+  XbmBadHexByteError,
+  XbmSizeMismatchError,
+  XbmBadIdentifierError,
 } from './errors.ts';
