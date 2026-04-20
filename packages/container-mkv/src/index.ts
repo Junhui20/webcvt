@@ -35,17 +35,22 @@ export {
 // Backend registration.
 export { MkvBackend, MKV_FORMAT } from './backend.ts';
 
+// EBML generic error classes (re-exported from @webcvt/ebml for consumer convenience).
+export {
+  EbmlVintError,
+  EbmlElementTooLargeError,
+  EbmlTooManyElementsError,
+  EbmlDepthExceededError,
+  EbmlTruncatedError,
+  EbmlUnknownSizeError,
+} from '@webcvt/ebml';
+
 // Typed error classes (exported so callers can catch by type).
 export {
   MkvInputTooLargeError,
   MkvDocTypeNotSupportedError,
   MkvEbmlVersionError,
   MkvEbmlLimitError,
-  MkvVintError,
-  MkvElementTooLargeError,
-  MkvTooManyElementsError,
-  MkvDepthExceededError,
-  MkvUnknownSizeError,
   MkvMissingElementError,
   MkvUnsupportedCodecError,
   MkvLacingNotSupportedError,
@@ -56,7 +61,6 @@ export {
   MkvTooManyBlocksError,
   MkvCorruptStreamError,
   MkvMissingSegmentError,
-  MkvTruncatedError,
   MkvTooManyCuePointsError,
   MkvEncodeNotImplementedError,
   MkvEncryptionNotSupportedError,

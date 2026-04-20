@@ -2,6 +2,8 @@
  * Tests for SeekHead element decode/encode (seek-head.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import { concatBytes, readChildren } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_SEEK,
@@ -10,9 +12,6 @@ import {
   ID_SEEK_POSITION,
   SEEK_HEAD_RESERVED_BYTES,
 } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { readChildren } from '../ebml-element.ts';
-import { concatBytes } from '../ebml-types.ts';
 import { MkvCorruptStreamError } from '../errors.ts';
 import { encodeBinaryElement, encodeMasterElement, encodeUintElement } from './header.ts';
 import { decodeSeekHead, encodeSeekHead, idToBytes } from './seek-head.ts';

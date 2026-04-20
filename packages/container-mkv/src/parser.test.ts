@@ -21,6 +21,7 @@
  * - decodes 2-byte track_number VINT in SimpleBlock for trackNumber > 127
  */
 
+import { EbmlTooManyElementsError, EbmlUnknownSizeError } from '@webcvt/ebml';
 import { loadFixture } from '@webcvt/test-utils';
 import { describe, expect, it } from 'vitest';
 import {
@@ -31,8 +32,6 @@ import {
   MkvInputTooLargeError,
   MkvLacingNotSupportedError,
   MkvMultiTrackNotSupportedError,
-  MkvTooManyElementsError,
-  MkvUnknownSizeError,
   MkvUnsupportedCodecError,
 } from './errors.ts';
 import { parseMkv } from './parser.ts';
@@ -341,7 +340,7 @@ describe('parseMkv — security caps', () => {
     const segId = new Uint8Array([0x18, 0x53, 0x80, 0x67]);
     const unknownSizeVint = new Uint8Array([0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
     const input = concatUint8([header, segId, unknownSizeVint]);
-    expect(() => parseMkv(input)).toThrow(MkvUnknownSizeError);
+    expect(() => parseMkv(input)).toThrow(EbmlUnknownSizeError);
   });
 
   it('throws MkvCorruptStreamError when TimecodeScale is zero', () => {
@@ -371,7 +370,7 @@ describe('parseMkv — security caps', () => {
     expect(() => parseMkv(input)).toThrow(MkvCorruptStreamError);
   });
 
-  it('throws MkvTooManyElementsError for deeply nested track with many padding elements', () => {
+  it('throws EbmlTooManyElementsError for deeply nested track with many padding elements', () => {
     const ebmlHeader = buildEbmlHeader('matroska');
     const infoPayload = concatUint8([
       makeUintElement(0x2ad7b1, 1_000_000),
@@ -405,7 +404,7 @@ describe('parseMkv — security caps', () => {
     const segSize = encodeVintSize(segPayload.length);
     const input = concatUint8([ebmlHeader, segId, segSize, segPayload]);
 
-    expect(() => parseMkv(input)).toThrow(MkvTooManyElementsError);
+    expect(() => parseMkv(input)).toThrow(EbmlTooManyElementsError);
   });
 });
 

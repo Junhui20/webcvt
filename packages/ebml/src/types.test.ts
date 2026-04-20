@@ -1,5 +1,5 @@
 /**
- * Tests for EBML typed value readers (ebml-types.ts).
+ * Tests for EBML typed value readers (types.ts).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -16,7 +16,7 @@ import {
   writeString,
   writeUint,
   writeUtf8,
-} from './ebml-types.ts';
+} from './types.ts';
 
 describe('readUint', () => {
   it('reads 1-byte unsigned integer', () => {

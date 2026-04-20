@@ -2,6 +2,9 @@
  * Tests for Cluster/SimpleBlock decode/encode (cluster.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import { concatBytes, writeUint, writeVintId, writeVintSize } from '@webcvt/ebml';
+import { EbmlElementTooLargeError, EbmlTooManyElementsError } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_CLUSTER,
@@ -11,16 +14,11 @@ import {
   MAX_ELEMENTS_PER_FILE,
   MAX_ELEMENT_PAYLOAD_BYTES,
 } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, writeUint } from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   MkvCorruptStreamError,
-  MkvElementTooLargeError,
   MkvLacingNotSupportedError,
   MkvMissingTimecodeError,
   MkvTooManyBlocksError,
-  MkvTooManyElementsError,
 } from '../errors.ts';
 import { type MkvSimpleBlock, decodeCluster, encodeCluster } from './cluster.ts';
 
@@ -289,7 +287,7 @@ describe('decodeCluster', () => {
   // Sec-H-1: element count cap is enforced inside Cluster's inner loop
   // ---------------------------------------------------------------------------
 
-  it('Sec-H-1: throws MkvTooManyElementsError when inner-Cluster element count exceeds cap', () => {
+  it('Sec-H-1: throws EbmlTooManyElementsError when inner-Cluster element count exceeds cap', () => {
     // Build ~110,000 minimal Void elements (ID=0xEC, size=0x80 → 0 payload bytes).
     // Each Void element is 2 bytes: [0xEC][0x80].
     // 110,000 * 2 = 220,000 bytes of Cluster payload.
@@ -321,7 +319,7 @@ describe('decodeCluster', () => {
     // elementCount already at MAX_ELEMENTS_PER_FILE - 1 so first inner element tips it over.
     const elementCount = { value: MAX_ELEMENTS_PER_FILE - 1 };
     expect(() => decodeCluster(bytes, elem, 1_000_000, new Map(), elementCount)).toThrow(
-      MkvTooManyElementsError,
+      EbmlTooManyElementsError,
     );
   });
 
@@ -343,7 +341,7 @@ describe('decodeCluster', () => {
   // Sec-M-1: per-SimpleBlock element size cap inside Cluster
   // ---------------------------------------------------------------------------
 
-  it('Sec-M-1: throws MkvElementTooLargeError when SimpleBlock claims size > MAX_ELEMENT_PAYLOAD_BYTES', () => {
+  it('Sec-M-1: throws EbmlElementTooLargeError when SimpleBlock claims size > MAX_ELEMENT_PAYLOAD_BYTES', () => {
     // Construct a fake SimpleBlock element whose declared size is MAX_ELEMENT_PAYLOAD_BYTES + 1,
     // but the cluster nextOffset is set high enough that the bounds check passes.
     // We craft bytes manually: ID_CLUSTER wrapper with one Timecode + one oversized SimpleBlock header.
@@ -383,7 +381,7 @@ describe('decodeCluster', () => {
     };
 
     expect(() => decodeCluster(bytes, elem, 1_000_000, new Map(), { value: 0 })).toThrow(
-      MkvElementTooLargeError,
+      EbmlElementTooLargeError,
     );
   });
 

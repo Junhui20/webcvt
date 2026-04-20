@@ -10,15 +10,22 @@
  * and the deep descent into Info, Tracks, and Cluster elements.
  */
 
-import { MAX_ELEMENTS_PER_FILE, MAX_ELEMENT_PAYLOAD_BYTES, MAX_NEST_DEPTH } from './constants.ts';
-import { readVintId, readVintSize } from './ebml-vint.ts';
 import {
-  WebmDepthExceededError,
-  WebmElementTooLargeError,
-  WebmTooManyElementsError,
-  WebmTruncatedError,
-  WebmUnknownSizeError,
+  EbmlDepthExceededError,
+  EbmlElementTooLargeError,
+  EbmlTooManyElementsError,
+  EbmlTruncatedError,
+  EbmlUnknownSizeError,
 } from './errors.ts';
+import { readVintId, readVintSize } from './vint.ts';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const MAX_NEST_DEPTH = 8;
+const MAX_ELEMENTS_PER_FILE = 100_000;
+const MAX_ELEMENT_PAYLOAD_BYTES = 64 * 1024 * 1024;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,9 +56,9 @@ export interface EbmlElement {
  * Returns the element descriptor or null if fewer than 2 bytes remain
  * (tolerate trailing padding).
  *
- * @throws WebmVintError on malformed VINT.
- * @throws WebmUnknownSizeError if size VINT is the unknown-size pattern.
- * @throws WebmTruncatedError if claimed size exceeds remaining bytes in the file.
+ * @throws EbmlVintError on malformed VINT.
+ * @throws EbmlUnknownSizeError if size VINT is the unknown-size pattern.
+ * @throws EbmlTruncatedError if claimed size exceeds remaining bytes in the file.
  */
 export function readElementHeader(
   bytes: Uint8Array,
@@ -71,7 +78,7 @@ export function readElementHeader(
 
   if (sizeVint.value === -1n) {
     if (!allowUnknownSize) {
-      throw new WebmUnknownSizeError(idVint.value, offset);
+      throw new EbmlUnknownSizeError(idVint.value, offset);
     }
     // Unknown size: nextOffset set to containerEnd (consume to end).
     return {
@@ -88,7 +95,7 @@ export function readElementHeader(
 
   // Validate claimed size against the enclosing container boundary.
   if (nextOffset > containerEnd) {
-    throw new WebmTruncatedError(idVint.value, sizeVint.value, containerEnd - payloadOffset);
+    throw new EbmlTruncatedError(idVint.value, sizeVint.value, containerEnd - payloadOffset);
   }
 
   return {
@@ -137,7 +144,7 @@ export function* walkElements(
   segmentId: number,
 ): Generator<EbmlElement> {
   if (depth > MAX_NEST_DEPTH) {
-    throw new WebmDepthExceededError(MAX_NEST_DEPTH);
+    throw new EbmlDepthExceededError(MAX_NEST_DEPTH);
   }
 
   let cursor = start;
@@ -145,7 +152,7 @@ export function* walkElements(
   while (cursor < end) {
     elementCount.value += 1;
     if (elementCount.value > maxElements) {
-      throw new WebmTooManyElementsError(maxElements);
+      throw new EbmlTooManyElementsError(maxElements);
     }
 
     const elem = readElementHeader(bytes, cursor, end);
@@ -154,7 +161,7 @@ export function* walkElements(
     // Per-element size cap (Cluster and Segment have their own caps handled by caller).
     if (elem.id !== clusterId && elem.id !== segmentId) {
       if (elem.size > BigInt(maxElementPayloadBytes)) {
-        throw new WebmElementTooLargeError(elem.id, elem.size, maxElementPayloadBytes);
+        throw new EbmlElementTooLargeError(elem.id, elem.size, maxElementPayloadBytes);
       }
     }
 
@@ -260,11 +267,11 @@ export function parseFlatChildren(
 
     elementCount.value++;
     if (elementCount.value > maxElements) {
-      throw new WebmTooManyElementsError(maxElements);
+      throw new EbmlTooManyElementsError(maxElements);
     }
 
     if (sizeVint.value > BigInt(maxPayloadBytes)) {
-      throw new WebmElementTooLargeError(idVint.value, sizeVint.value, maxPayloadBytes);
+      throw new EbmlElementTooLargeError(idVint.value, sizeVint.value, maxPayloadBytes);
     }
 
     children.push({

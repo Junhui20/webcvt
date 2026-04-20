@@ -13,8 +13,13 @@
  * first byte determines the width. Width > 8 (all-zeros first byte) is invalid.
  */
 
-import { MAX_VINT_WIDTH } from './constants.ts';
-import { WebmVintError } from './errors.ts';
+import { EbmlVintError } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const MAX_VINT_WIDTH = 8;
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -40,7 +45,7 @@ export interface EbmlVintBig {
 
 function vintWidth(firstByte: number, offset: number): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
   if (firstByte === 0) {
-    throw new WebmVintError(offset, 'first byte is 0x00 (invalid VINT — exceeds 8-byte max width)');
+    throw new EbmlVintError(offset, 'first byte is 0x00 (invalid VINT — exceeds 8-byte max width)');
   }
   // Find highest set bit position (0-indexed from right).
   // Leading zeros count tells us the width.
@@ -64,23 +69,23 @@ function vintWidth(firstByte: number, offset: number): 1 | 2 | 3 | 4 | 5 | 6 | 7
  * The length-marker bit IS retained in the parsed value per the spec:
  * e.g. 0x1A 0x45 0xDF 0xA3 → ID = 0x1A45DFA3.
  *
- * @throws WebmVintError if the encoding is invalid.
+ * @throws EbmlVintError if the encoding is invalid.
  */
 export function readVintId(bytes: Uint8Array, offset: number): EbmlVint {
   if (offset >= bytes.length) {
-    throw new WebmVintError(offset, 'offset past end of buffer');
+    throw new EbmlVintError(offset, 'offset past end of buffer');
   }
   const first = bytes[offset] as number;
   const width = vintWidth(first, offset);
 
   if (offset + width > bytes.length) {
-    throw new WebmVintError(offset, `VINT width ${width} exceeds buffer length`);
+    throw new EbmlVintError(offset, `VINT width ${width} exceeds buffer length`);
   }
 
   // Assemble the numeric value — marker bit IS kept for IDs.
   // Limit to 4 bytes for element IDs per RFC 8794 (EBMLMaxIDLength default 4).
   if (width > 4) {
-    throw new WebmVintError(offset, `ID VINT width ${width} exceeds maximum ID width of 4`);
+    throw new EbmlVintError(offset, `ID VINT width ${width} exceeds maximum ID width of 4`);
   }
 
   let value = 0;
@@ -106,17 +111,17 @@ export function readVintId(bytes: Uint8Array, offset: number): EbmlVint {
  * Returns a bigint value because EBML sizes can reach 2^56-1 bytes.
  * The all-ones-payload pattern means "unknown size" — indicated by returning -1n.
  *
- * @throws WebmVintError if the encoding is invalid.
+ * @throws EbmlVintError if the encoding is invalid.
  */
 export function readVintSize(bytes: Uint8Array, offset: number): EbmlVintBig {
   if (offset >= bytes.length) {
-    throw new WebmVintError(offset, 'offset past end of buffer');
+    throw new EbmlVintError(offset, 'offset past end of buffer');
   }
   const first = bytes[offset] as number;
   const width = vintWidth(first, offset);
 
   if (offset + width > bytes.length) {
-    throw new WebmVintError(offset, `size VINT width ${width} exceeds buffer length`);
+    throw new EbmlVintError(offset, `size VINT width ${width} exceeds buffer length`);
   }
 
   // Marker bit mask for stripping: the first set bit in the first byte.
@@ -177,7 +182,7 @@ export function writeVintId(id: number): Uint8Array {
     // 1-byte ID
     return new Uint8Array([id]);
   }
-  throw new WebmVintError(0, `Cannot encode ID 0x${id.toString(16)} as VINT`);
+  throw new EbmlVintError(0, `Cannot encode ID 0x${id.toString(16)} as VINT`);
 }
 
 // ---------------------------------------------------------------------------
@@ -206,7 +211,7 @@ export function writeVintSize(size: bigint, width?: number): Uint8Array {
   const actualWidth = width !== undefined ? Math.max(width, minWidth) : minWidth;
 
   if (actualWidth > MAX_VINT_WIDTH) {
-    throw new WebmVintError(0, `Size ${size} requires VINT width > 8 bytes`);
+    throw new EbmlVintError(0, `Size ${size} requires VINT width > 8 bytes`);
   }
 
   // The marker bit position for this width: bit (8 - width) of the first byte.

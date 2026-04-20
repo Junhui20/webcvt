@@ -2,6 +2,8 @@
  * Tests for Cues element decode/encode (cues.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import { concatBytes, readChildren } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_CUES,
@@ -12,9 +14,6 @@ import {
   ID_CUE_TRACK_POSITIONS,
   MAX_CUE_POINTS,
 } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { readChildren } from '../ebml-element.ts';
-import { concatBytes } from '../ebml-types.ts';
 import {
   MkvCorruptStreamError,
   MkvMissingElementError,

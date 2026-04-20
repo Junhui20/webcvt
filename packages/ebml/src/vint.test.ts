@@ -1,5 +1,5 @@
 /**
- * Tests for EBML VINT codec (ebml-vint.ts).
+ * Tests for EBML VINT codec (vint.ts).
  *
  * Covers design note test cases:
  * - "decodes VINT IDs (1, 2, 3, 4-byte) preserving the marker bit"
@@ -8,8 +8,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { readVintId, readVintSize, writeVintId, writeVintSize } from './ebml-vint.ts';
-import { WebmVintError } from './errors.ts';
+import { EbmlVintError } from './errors.ts';
+import { readVintId, readVintSize, writeVintId, writeVintSize } from './vint.ts';
 
 describe('readVintId', () => {
   it('decodes 1-byte ID (0x80 form) preserving marker bit', () => {
@@ -55,20 +55,20 @@ describe('readVintId', () => {
     expect(result.width).toBe(2);
   });
 
-  it('throws WebmVintError on 0x00 first byte (invalid)', () => {
+  it('throws EbmlVintError on 0x00 first byte (invalid)', () => {
     const bytes = new Uint8Array([0x00]);
-    expect(() => readVintId(bytes, 0)).toThrow(WebmVintError);
+    expect(() => readVintId(bytes, 0)).toThrow(EbmlVintError);
   });
 
-  it('throws WebmVintError when offset >= buffer length', () => {
+  it('throws EbmlVintError when offset >= buffer length', () => {
     const bytes = new Uint8Array([0x42, 0x86]);
-    expect(() => readVintId(bytes, 2)).toThrow(WebmVintError);
+    expect(() => readVintId(bytes, 2)).toThrow(EbmlVintError);
   });
 
-  it('throws WebmVintError on 5-byte ID (exceeds max ID width 4)', () => {
+  it('throws EbmlVintError on 5-byte ID (exceeds max ID width 4)', () => {
     // 5-byte VINT starts with 0x08
     const bytes = new Uint8Array([0x08, 0x00, 0x00, 0x00, 0x00]);
-    expect(() => readVintId(bytes, 0)).toThrow(WebmVintError);
+    expect(() => readVintId(bytes, 0)).toThrow(EbmlVintError);
   });
 });
 
@@ -139,15 +139,15 @@ describe('readVintSize', () => {
     expect(result.width).toBe(2);
   });
 
-  it('throws WebmVintError on 0x00 first byte', () => {
+  it('throws EbmlVintError on 0x00 first byte', () => {
     const bytes = new Uint8Array([0x00]);
-    expect(() => readVintSize(bytes, 0)).toThrow(WebmVintError);
+    expect(() => readVintSize(bytes, 0)).toThrow(EbmlVintError);
   });
 
-  it('throws WebmVintError when buffer too short for declared width', () => {
+  it('throws EbmlVintError when buffer too short for declared width', () => {
     // 2-byte VINT but only 1 byte in buffer
     const bytes = new Uint8Array([0x40]);
-    expect(() => readVintSize(bytes, 0)).toThrow(WebmVintError);
+    expect(() => readVintSize(bytes, 0)).toThrow(EbmlVintError);
   });
 });
 

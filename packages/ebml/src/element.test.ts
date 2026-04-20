@@ -1,22 +1,30 @@
 /**
- * Tests for EBML element walker (ebml-element.ts).
+ * Tests for EBML element walker (element.ts).
  *
  * Covers security cap branches:
- * - WebmTooManyElementsError (maxElements exceeded)
- * - WebmElementTooLargeError (per-element payload size cap)
- * - WebmDepthExceededError (depth > MAX_NEST_DEPTH)
+ * - EbmlTooManyElementsError (maxElements exceeded)
+ * - EbmlElementTooLargeError (per-element payload size cap)
+ * - EbmlDepthExceededError (depth > MAX_NEST_DEPTH)
  */
 
 import { describe, expect, it } from 'vitest';
-import { MAX_NEST_DEPTH } from './constants.ts';
-import { readElementHeader, walkElements } from './ebml-element.ts';
 import {
-  WebmDepthExceededError,
-  WebmElementTooLargeError,
-  WebmTooManyElementsError,
-  WebmTruncatedError,
-  WebmUnknownSizeError,
+  findChild,
+  findChildren,
+  readChildren,
+  readElementHeader,
+  walkElements,
+} from './element.ts';
+import {
+  EbmlDepthExceededError,
+  EbmlElementTooLargeError,
+  EbmlTooManyElementsError,
+  EbmlTruncatedError,
+  EbmlUnknownSizeError,
 } from './errors.ts';
+import { writeVintId, writeVintSize } from './vint.ts';
+
+const MAX_NEST_DEPTH = 8;
 
 /**
  * Build a minimal EBML element header for a 1-byte ID element with payload.
@@ -53,10 +61,10 @@ describe('readElementHeader', () => {
     expect(readElementHeader(bytes, 0, 1)).toBeNull();
   });
 
-  it('throws WebmUnknownSizeError when size VINT is all-ones (unknown size)', () => {
+  it('throws EbmlUnknownSizeError when size VINT is all-ones (unknown size)', () => {
     // 0xA3 = 1-byte ID, 0xFF = 1-byte unknown-size VINT.
     const bytes = new Uint8Array([0xa3, 0xff]);
-    expect(() => readElementHeader(bytes, 0, bytes.length)).toThrow(WebmUnknownSizeError);
+    expect(() => readElementHeader(bytes, 0, bytes.length)).toThrow(EbmlUnknownSizeError);
   });
 
   it('returns element with size=-1n when allowUnknownSize=true', () => {
@@ -66,15 +74,15 @@ describe('readElementHeader', () => {
     expect(elem?.nextOffset).toBe(bytes.length);
   });
 
-  it('throws WebmTruncatedError when claimed size exceeds container boundary', () => {
+  it('throws EbmlTruncatedError when claimed size exceeds container boundary', () => {
     // 0xA3 (1-byte ID), 0x85 (size=5), but only 2 bytes of payload (not 5).
     const bytes = new Uint8Array([0xa3, 0x85, 0x01, 0x02]); // claims 5 bytes, only 2 available
-    expect(() => readElementHeader(bytes, 0, bytes.length)).toThrow(WebmTruncatedError);
+    expect(() => readElementHeader(bytes, 0, bytes.length)).toThrow(EbmlTruncatedError);
   });
 });
 
 describe('walkElements security caps', () => {
-  it('throws WebmTooManyElementsError when element count exceeds maxElements', () => {
+  it('throws EbmlTooManyElementsError when element count exceeds maxElements', () => {
     // Build 3 simple elements; set maxElements=2 so the third triggers the cap.
     const elem = makeSimpleElement(1);
     const bytes = concat([elem, elem, elem]);
@@ -86,10 +94,10 @@ describe('walkElements security caps', () => {
       for (const _ of gen) {
         // consume
       }
-    }).toThrow(WebmTooManyElementsError);
+    }).toThrow(EbmlTooManyElementsError);
   });
 
-  it('throws WebmElementTooLargeError when element payload exceeds maxElementPayloadBytes', () => {
+  it('throws EbmlElementTooLargeError when element payload exceeds maxElementPayloadBytes', () => {
     // Build an element with a large declared payload size.
     // Use a 2-byte size VINT to declare 200 bytes payload, but cap maxElementPayloadBytes=10.
     // ID: 0xA3 (1 byte), Size: 0x40 0xC8 (2-byte VINT → 200 - 0x4000... wait, need proper encoding)
@@ -104,10 +112,10 @@ describe('walkElements security caps', () => {
       for (const _ of gen) {
         // consume
       }
-    }).toThrow(WebmElementTooLargeError);
+    }).toThrow(EbmlElementTooLargeError);
   });
 
-  it('throws WebmDepthExceededError when depth exceeds MAX_NEST_DEPTH', () => {
+  it('throws EbmlDepthExceededError when depth exceeds MAX_NEST_DEPTH', () => {
     const elem = makeSimpleElement(1);
     const count = { value: 0 };
 
@@ -126,7 +134,7 @@ describe('walkElements security caps', () => {
       for (const _ of gen) {
         // consume
       }
-    }).toThrow(WebmDepthExceededError);
+    }).toThrow(EbmlDepthExceededError);
   });
 
   it('skips elements that are clusterId or segmentId (no size cap)', () => {
@@ -144,5 +152,82 @@ describe('walkElements security caps', () => {
     }
     expect(results).toHaveLength(1);
     expect(results[0]).toBe(clusterId);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// readChildren / findChild / findChildren — ported from container-mkv tests
+// during Phase 3 wrap-up extraction (these functions had 53% line coverage
+// in ebml without these tests because mkv was the only consumer testing them).
+// ---------------------------------------------------------------------------
+
+function makeElementWithId(id: number, payload: Uint8Array): Uint8Array {
+  return concat([writeVintId(id), writeVintSize(BigInt(payload.length)), payload]);
+}
+
+describe('readChildren', () => {
+  it('parses two sibling elements', () => {
+    const e1 = makeElementWithId(0x86, new Uint8Array([0xaa]));
+    const e2 = makeElementWithId(0x83, new Uint8Array([0x01]));
+    const payload = concat([e1, e2]);
+    const children = readChildren(
+      payload,
+      0,
+      payload.length,
+      1,
+      { value: 0 },
+      100,
+      64 * 1024 * 1024,
+      0x1f43b675,
+      0x18538067,
+    );
+    expect(children).toHaveLength(2);
+    expect(children[0]?.id).toBe(0x86);
+    expect(children[1]?.id).toBe(0x83);
+  });
+});
+
+describe('findChild / findChildren', () => {
+  it('finds a child by ID', () => {
+    const e1 = makeElementWithId(0x86, new Uint8Array([0xaa]));
+    const e2 = makeElementWithId(0x83, new Uint8Array([0x01]));
+    const payload = concat([e1, e2]);
+    const children = readChildren(
+      payload,
+      0,
+      payload.length,
+      1,
+      { value: 0 },
+      100,
+      64 * 1024 * 1024,
+      0x1f43b675,
+      0x18538067,
+    );
+    const found = findChild(children, 0x83);
+    expect(found).toBeDefined();
+    expect(found?.id).toBe(0x83);
+  });
+
+  it('returns undefined when child not found', () => {
+    expect(findChild([], 0x86)).toBeUndefined();
+  });
+
+  it('finds all children with a given ID', () => {
+    const e1 = makeElementWithId(0x86, new Uint8Array([0xaa]));
+    const e2 = makeElementWithId(0x86, new Uint8Array([0xbb]));
+    const payload = concat([e1, e2]);
+    const children = readChildren(
+      payload,
+      0,
+      payload.length,
+      1,
+      { value: 0 },
+      100,
+      64 * 1024 * 1024,
+      0x1f43b675,
+      0x18538067,
+    );
+    const found = findChildren(children, 0x86);
+    expect(found).toHaveLength(2);
   });
 });

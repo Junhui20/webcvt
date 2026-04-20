@@ -10,6 +10,17 @@
  * - Per-track block count cap
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import {
+  concatBytes,
+  readUint,
+  readVintId,
+  readVintSize,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import { EbmlElementTooLargeError, EbmlTooManyElementsError } from '@webcvt/ebml';
 import {
   ID_CLUSTER,
   ID_SIMPLE_BLOCK,
@@ -20,16 +31,11 @@ import {
   MAX_ELEMENTS_PER_FILE,
   MAX_ELEMENT_PAYLOAD_BYTES,
 } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, readUint, writeUint } from '../ebml-types.ts';
-import { readVintId, readVintSize, writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   MkvCorruptStreamError,
-  MkvElementTooLargeError,
   MkvLacingNotSupportedError,
   MkvMissingTimecodeError,
   MkvTooManyBlocksError,
-  MkvTooManyElementsError,
 } from '../errors.ts';
 import { encodeMasterElement, encodeUintElement } from './header.ts';
 
@@ -112,7 +118,7 @@ export function decodeCluster(
     // tiny 4-byte Void elements would spin the event loop indefinitely.
     elementCount.value++;
     if (elementCount.value > MAX_ELEMENTS_PER_FILE) {
-      throw new MkvTooManyElementsError(MAX_ELEMENTS_PER_FILE);
+      throw new EbmlTooManyElementsError(MAX_ELEMENTS_PER_FILE);
     }
 
     const id = idVint.value;
@@ -121,7 +127,7 @@ export function decodeCluster(
     // A single SimpleBlock with a 200 MiB payload size claim is already pathological;
     // 64 MiB matches MAX_ELEMENT_PAYLOAD_BYTES used for all other non-Cluster elements.
     if (id === ID_SIMPLE_BLOCK && elemSize > MAX_ELEMENT_PAYLOAD_BYTES) {
-      throw new MkvElementTooLargeError(id, BigInt(elemSize), MAX_ELEMENT_PAYLOAD_BYTES);
+      throw new EbmlElementTooLargeError(id, BigInt(elemSize), MAX_ELEMENT_PAYLOAD_BYTES);
     }
 
     if (id === ID_TIMECODE) {

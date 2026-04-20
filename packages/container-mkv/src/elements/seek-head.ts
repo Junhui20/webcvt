@@ -9,6 +9,15 @@
  */
 
 import {
+  concatBytes,
+  findChildren,
+  parseFlatChildren,
+  readUintNumber,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
   ID_SEEK,
   ID_SEEK_HEAD,
   ID_SEEK_ID,
@@ -16,10 +25,6 @@ import {
   ID_VOID,
   SEEK_HEAD_RESERVED_BYTES,
 } from '../constants.ts';
-import { findChildren, parseFlatChildren } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, readUintNumber } from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import { MkvCorruptStreamError } from '../errors.ts';
 import { encodeBinaryElement, encodeMasterElement, encodeUintElement } from './header.ts';
 

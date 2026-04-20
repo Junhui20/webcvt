@@ -21,6 +21,15 @@
  *   MAX_CUE_POINTS (1,000,000, enforced in cues.ts)
  */
 
+import { findChild, readChildren, readElementHeader } from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import { readVintId, readVintSize } from '@webcvt/ebml';
+import {
+  EbmlElementTooLargeError,
+  EbmlTooManyElementsError,
+  EbmlTruncatedError,
+  EbmlUnknownSizeError,
+} from '@webcvt/ebml';
 import {
   ID_CLUSTER,
   ID_CUES,
@@ -36,10 +45,6 @@ import {
   MAX_INPUT_BYTES,
   MAX_NEST_DEPTH,
 } from './constants.ts';
-import { readElementHeader } from './ebml-element.ts';
-import { findChild, readChildren } from './ebml-element.ts';
-import type { EbmlElement } from './ebml-element.ts';
-import { readVintId, readVintSize } from './ebml-vint.ts';
 import { decodeCluster } from './elements/cluster.ts';
 import type { WebmCluster } from './elements/cluster.ts';
 import { decodeCues } from './elements/cues.ts';
@@ -54,13 +59,9 @@ import { decodeTracks } from './elements/tracks.ts';
 import type { WebmTrack } from './elements/tracks.ts';
 import {
   WebmCorruptStreamError,
-  WebmElementTooLargeError,
   WebmInputTooLargeError,
   WebmMissingElementError,
   WebmMissingSegmentError,
-  WebmTooManyElementsError,
-  WebmTruncatedError,
-  WebmUnknownSizeError,
 } from './errors.ts';
 
 // ---------------------------------------------------------------------------
@@ -123,7 +124,7 @@ export function parseWebm(input: Uint8Array): WebmFile {
   const ebmlSizeOffset = ebmlIdVint.width;
   const ebmlSizeVint = readVintSize(input, ebmlSizeOffset);
   if (ebmlSizeVint.value === -1n) {
-    throw new WebmUnknownSizeError(ID_EBML, 0);
+    throw new EbmlUnknownSizeError(ID_EBML, 0);
   }
 
   elementCount.value++;
@@ -165,12 +166,12 @@ export function parseWebm(input: Uint8Array): WebmFile {
   if (segSizeVint.value === -1n) {
     // Sec-H-1: Unknown-size Segment is out of scope (design note Trap §2).
     // Live/streaming WebM with infinite Segment size is deferred.
-    throw new WebmUnknownSizeError(ID_SEGMENT, segOffset);
+    throw new EbmlUnknownSizeError(ID_SEGMENT, segOffset);
   }
   const segPayloadOffset = segSizeOffset + segSizeVint.width;
   const segEnd = segPayloadOffset + Number(segSizeVint.value);
   if (segEnd > input.length) {
-    throw new WebmTruncatedError(ID_SEGMENT, segSizeVint.value, input.length - segPayloadOffset);
+    throw new EbmlTruncatedError(ID_SEGMENT, segSizeVint.value, input.length - segPayloadOffset);
   }
 
   elementCount.value++;
@@ -212,7 +213,7 @@ export function parseWebm(input: Uint8Array): WebmFile {
 
     elementCount.value++;
     if (elementCount.value > MAX_ELEMENTS_PER_FILE) {
-      throw new WebmTooManyElementsError(MAX_ELEMENTS_PER_FILE);
+      throw new EbmlTooManyElementsError(MAX_ELEMENTS_PER_FILE);
     }
 
     const id = idVint.value;
@@ -220,11 +221,11 @@ export function parseWebm(input: Uint8Array): WebmFile {
     // Per-element size cap (Cluster has its own cap; Segment already handled).
     if (id !== ID_CLUSTER) {
       if (elemSize > MAX_ELEMENT_PAYLOAD_BYTES) {
-        throw new WebmElementTooLargeError(id, BigInt(elemSize), MAX_ELEMENT_PAYLOAD_BYTES);
+        throw new EbmlElementTooLargeError(id, BigInt(elemSize), MAX_ELEMENT_PAYLOAD_BYTES);
       }
     } else {
       if (elemSize > MAX_CLUSTER_BYTES) {
-        throw new WebmElementTooLargeError(id, BigInt(elemSize), MAX_CLUSTER_BYTES);
+        throw new EbmlElementTooLargeError(id, BigInt(elemSize), MAX_CLUSTER_BYTES);
       }
     }
 

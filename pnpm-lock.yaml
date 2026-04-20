@@ -150,6 +150,9 @@ importers:
       '@webcvt/core':
         specifier: workspace:*
         version: link:../core
+      '@webcvt/ebml':
+        specifier: workspace:*
+        version: link:../ebml
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^2.1.0
@@ -297,6 +300,9 @@ importers:
       '@webcvt/core':
         specifier: workspace:*
         version: link:../core
+      '@webcvt/ebml':
+        specifier: workspace:*
+        version: link:../ebml
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^2.1.0
@@ -338,6 +344,28 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
+
+  packages/ebml:
+    dependencies:
+      '@webcvt/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      '@webcvt/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)

@@ -19,6 +19,7 @@
  * SeekHead is padded to SEEK_HEAD_RESERVED_BYTES with a Void element (Trap §16).
  */
 
+import { concatBytes, writeVintId, writeVintSize } from '@webcvt/ebml';
 import {
   ID_CUES,
   ID_INFO,
@@ -27,8 +28,6 @@ import {
   SEEK_HEAD_RESERVED_BYTES,
   SEGMENT_SIZE_VINT_WIDTH,
 } from './constants.ts';
-import { concatBytes } from './ebml-types.ts';
-import { writeVintId, writeVintSize } from './ebml-vint.ts';
 import { encodeCluster } from './elements/cluster.ts';
 import type { MkvCluster } from './elements/cluster.ts';
 import { encodeCues } from './elements/cues.ts';

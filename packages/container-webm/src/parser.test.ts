@@ -21,6 +21,7 @@
  * - "enforces 200 MiB input cap, per-element 64 MiB cap, recursion depth 8"
  */
 
+import { EbmlTooManyElementsError, EbmlUnknownSizeError, EbmlVintError } from '@webcvt/ebml';
 import { loadFixture } from '@webcvt/test-utils';
 import { describe, expect, it } from 'vitest';
 import {
@@ -31,10 +32,7 @@ import {
   WebmLacingNotSupportedError,
   WebmMissingElementError,
   WebmMultiTrackNotSupportedError,
-  WebmTooManyElementsError,
-  WebmUnknownSizeError,
   WebmUnsupportedCodecError,
-  WebmVintError,
 } from './errors.ts';
 import { parseWebm } from './parser.ts';
 
@@ -672,11 +670,11 @@ function buildWebmWithTwoVideoTracks(): Uint8Array {
 }
 
 // ---------------------------------------------------------------------------
-// Sec-H-1 regression: Segment with unknown-size must throw WebmUnknownSizeError
+// Sec-H-1 regression: Segment with unknown-size must throw EbmlUnknownSizeError
 // ---------------------------------------------------------------------------
 
 describe('parseWebm — Sec-H-1 unknown-size Segment rejection', () => {
-  it('throws WebmUnknownSizeError when Segment uses all-ones VINT size (unknown-size)', () => {
+  it('throws EbmlUnknownSizeError when Segment uses all-ones VINT size (unknown-size)', () => {
     const header = buildEbmlHeader('webm');
 
     // Segment ID: 0x18 0x53 0x80 0x67
@@ -689,16 +687,16 @@ describe('parseWebm — Sec-H-1 unknown-size Segment rejection', () => {
     const unknownSizeVint = new Uint8Array([0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
 
     const input = concatUint8([header, segId, unknownSizeVint]);
-    expect(() => parseWebm(input)).toThrow(WebmUnknownSizeError);
+    expect(() => parseWebm(input)).toThrow(EbmlUnknownSizeError);
   });
 
-  it('throws WebmUnknownSizeError with 1-byte unknown-size VINT (0xFF) for Segment', () => {
+  it('throws EbmlUnknownSizeError with 1-byte unknown-size VINT (0xFF) for Segment', () => {
     const header = buildEbmlHeader('webm');
     const segId = new Uint8Array([0x18, 0x53, 0x80, 0x67]);
     // 0xFF is the 1-byte unknown-size VINT (all-ones payload).
     const unknownSizeVint = new Uint8Array([0xff]);
     const input = concatUint8([header, segId, unknownSizeVint]);
-    expect(() => parseWebm(input)).toThrow(WebmUnknownSizeError);
+    expect(() => parseWebm(input)).toThrow(EbmlUnknownSizeError);
   });
 });
 
@@ -707,7 +705,7 @@ describe('parseWebm — Sec-H-1 unknown-size Segment rejection', () => {
 // ---------------------------------------------------------------------------
 
 describe('parseWebm — Q-H-2/Sec-M-1 nested element count cap via shared parseFlatChildren', () => {
-  it('throws WebmTooManyElementsError when deeply-nested track children exceed MAX_ELEMENTS_PER_FILE', () => {
+  it('throws EbmlTooManyElementsError when deeply-nested track children exceed MAX_ELEMENTS_PER_FILE', () => {
     // Build a Tracks element with many TrackEntry children (each with multiple sub-elements),
     // such that total element count across EBML header + Segment + Tracks traversal exceeds 100,000.
     //
@@ -769,9 +767,9 @@ describe('parseWebm — Q-H-2/Sec-M-1 nested element count cap via shared parseF
     const segSize = encodeVintSize(segPayload.length);
     const input = concatUint8([ebmlHeader, segId, segSize, segPayload]);
 
-    // Should throw WebmTooManyElementsError since the padding children are counted
+    // Should throw EbmlTooManyElementsError since the padding children are counted
     // through the shared parseFlatChildren helper.
-    expect(() => parseWebm(input)).toThrow(WebmTooManyElementsError);
+    expect(() => parseWebm(input)).toThrow(EbmlTooManyElementsError);
   });
 });
 

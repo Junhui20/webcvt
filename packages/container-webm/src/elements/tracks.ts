@@ -7,6 +7,21 @@
  */
 
 import {
+  concatBytes,
+  findChild,
+  findChildren,
+  parseFlatChildren,
+  readFloat,
+  readString,
+  readUint,
+  readUintNumber,
+  writeFloat32,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
   ALLOWED_CODEC_IDS,
   ID_AUDIO,
   ID_BIT_DEPTH,
@@ -33,18 +48,6 @@ import {
   ID_VIDEO,
   MAX_CODEC_PRIVATE_BYTES,
 } from '../constants.ts';
-import { findChild, findChildren, parseFlatChildren } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import {
-  concatBytes,
-  readFloat,
-  readString,
-  readUint,
-  readUintNumber,
-  writeFloat32,
-  writeUint,
-} from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   WebmCodecPrivateTooLargeError,
   WebmCorruptStreamError,
@@ -103,7 +106,7 @@ export interface WebmAudioTrack {
 
 export type WebmTrack = WebmVideoTrack | WebmAudioTrack;
 
-// Note: parseFlatChildren is imported from '../ebml-element.ts' (Q-H-2 shared helper).
+// Note: parseFlatChildren is imported from '@webcvt/ebml' (Q-H-2 shared helper).
 
 // ---------------------------------------------------------------------------
 // Decoder

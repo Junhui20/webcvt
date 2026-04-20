@@ -2,8 +2,8 @@
  * Tests for segment-info decode/encode (elements/segment-info.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
-import type { EbmlElement } from '../ebml-element.ts';
 import { decodeInfo, encodeInfo } from './segment-info.ts';
 
 function buildInfoChildren(overrides: {

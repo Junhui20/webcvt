@@ -46,58 +46,6 @@ export class MkvEbmlLimitError extends WebcvtError {
   }
 }
 
-/** Thrown when an EBML VINT has an invalid encoding. */
-export class MkvVintError extends WebcvtError {
-  constructor(offset: number, reason: string) {
-    super('MKV_VINT_ERROR', `Invalid EBML VINT at offset ${offset}: ${reason}`);
-    this.name = 'MkvVintError';
-  }
-}
-
-/** Thrown when an element's declared size exceeds security caps. */
-export class MkvElementTooLargeError extends WebcvtError {
-  constructor(elementId: number, size: bigint, max: number) {
-    super(
-      'MKV_ELEMENT_TOO_LARGE',
-      `Element 0x${elementId.toString(16)} claims size ${size} bytes; maximum is ${max} bytes.`,
-    );
-    this.name = 'MkvElementTooLargeError';
-  }
-}
-
-/** Thrown when the total element count across the file exceeds MAX_ELEMENTS_PER_FILE. */
-export class MkvTooManyElementsError extends WebcvtError {
-  constructor(max: number) {
-    super(
-      'MKV_TOO_MANY_ELEMENTS',
-      `File contains more than ${max} EBML elements. The input may be corrupt or adversarially crafted.`,
-    );
-    this.name = 'MkvTooManyElementsError';
-  }
-}
-
-/** Thrown when the EBML nesting depth exceeds MAX_NEST_DEPTH. */
-export class MkvDepthExceededError extends WebcvtError {
-  constructor(max: number) {
-    super(
-      'MKV_DEPTH_EXCEEDED',
-      `EBML element nesting depth exceeds maximum of ${max}. The input may be corrupt or adversarially crafted.`,
-    );
-    this.name = 'MkvDepthExceededError';
-  }
-}
-
-/** Thrown when an unknown-size VINT is encountered. */
-export class MkvUnknownSizeError extends WebcvtError {
-  constructor(elementId: number, offset: number) {
-    super(
-      'MKV_UNKNOWN_SIZE',
-      `Element 0x${elementId.toString(16)} at offset ${offset} has unknown size. Unknown-size elements are only valid for live streaming (deferred).`,
-    );
-    this.name = 'MkvUnknownSizeError';
-  }
-}
-
 /** Thrown when a required EBML element is missing. */
 export class MkvMissingElementError extends WebcvtError {
   constructor(elementName: string, parent: string) {
@@ -199,17 +147,6 @@ export class MkvMissingSegmentError extends WebcvtError {
       'No Segment element found after EBML header. Not a valid Matroska file.',
     );
     this.name = 'MkvMissingSegmentError';
-  }
-}
-
-/** Thrown when an element's claimed size exceeds the remaining bytes in its container. */
-export class MkvTruncatedError extends WebcvtError {
-  constructor(elementId: number, claimed: bigint, remaining: number) {
-    super(
-      'MKV_TRUNCATED',
-      `Element 0x${elementId.toString(16)} claims ${claimed} bytes but only ${remaining} bytes remain. File may be truncated.`,
-    );
-    this.name = 'MkvTruncatedError';
   }
 }
 

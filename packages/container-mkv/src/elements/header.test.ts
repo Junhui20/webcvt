@@ -2,6 +2,15 @@
  * Tests for EBML header decode/encode (header.ts).
  */
 
+import {
+  concatBytes,
+  readChildren,
+  readElementHeader,
+  writeString,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_DOCTYPE,
@@ -13,9 +22,6 @@ import {
   ID_EBML_READ_VERSION,
   ID_EBML_VERSION,
 } from '../constants.ts';
-import { readChildren, readElementHeader } from '../ebml-element.ts';
-import { concatBytes, writeString, writeUint } from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   MkvDocTypeNotSupportedError,
   MkvEbmlLimitError,

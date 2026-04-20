@@ -9,9 +9,9 @@
  * - Missing timecode error
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import { MAX_BLOCKS_PER_TRACK } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
 import {
   WebmCorruptStreamError,
   WebmLacingNotSupportedError,

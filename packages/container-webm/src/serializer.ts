@@ -14,6 +14,7 @@
  * No byte-identical fast path is provided (see serializeWebm JSDoc for details).
  */
 
+import { concatBytes, writeVintId, writeVintSize } from '@webcvt/ebml';
 import {
   ID_CUES,
   ID_INFO,
@@ -22,8 +23,6 @@ import {
   SEEK_HEAD_RESERVED_BYTES,
   SEGMENT_SIZE_VINT_WIDTH,
 } from './constants.ts';
-import { concatBytes } from './ebml-types.ts';
-import { writeVintId, writeVintSize } from './ebml-vint.ts';
 import { encodeCluster } from './elements/cluster.ts';
 import type { WebmCluster } from './elements/cluster.ts';
 import { encodeCues } from './elements/cues.ts';

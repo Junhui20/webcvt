@@ -8,6 +8,17 @@
  * - Per-track block count cap
  */
 
+import { findChild } from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
+  concatBytes,
+  readUint,
+  readVintId,
+  readVintSize,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
 import {
   ID_CLUSTER,
   ID_SIMPLE_BLOCK,
@@ -15,10 +26,6 @@ import {
   ID_VOID,
   MAX_BLOCKS_PER_TRACK,
 } from '../constants.ts';
-import { findChild } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, readUint, writeUint } from '../ebml-types.ts';
-import { readVintId, readVintSize, writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   WebmCorruptStreamError,
   WebmLacingNotSupportedError,

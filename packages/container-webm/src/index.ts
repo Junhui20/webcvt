@@ -34,17 +34,22 @@ export {
 // Backend registration.
 export { WebmBackend, WEBM_FORMAT } from './backend.ts';
 
+// EBML generic error classes (re-exported from @webcvt/ebml for consumer convenience).
+export {
+  EbmlVintError,
+  EbmlElementTooLargeError,
+  EbmlTooManyElementsError,
+  EbmlDepthExceededError,
+  EbmlTruncatedError,
+  EbmlUnknownSizeError,
+} from '@webcvt/ebml';
+
 // Typed error classes (exported so callers can catch by type).
 export {
   WebmInputTooLargeError,
   WebmDocTypeNotSupportedError,
   WebmEbmlVersionError,
   WebmEbmlLimitError,
-  WebmVintError,
-  WebmElementTooLargeError,
-  WebmTooManyElementsError,
-  WebmDepthExceededError,
-  WebmUnknownSizeError,
   WebmMissingElementError,
   WebmUnsupportedCodecError,
   WebmLacingNotSupportedError,
@@ -55,7 +60,6 @@ export {
   WebmTooManyBlocksError,
   WebmCorruptStreamError,
   WebmMissingSegmentError,
-  WebmTruncatedError,
   WebmTooManyCuePointsError,
   WebmEncodeNotImplementedError,
 } from './errors.ts';

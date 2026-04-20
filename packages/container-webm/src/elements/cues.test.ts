@@ -5,9 +5,9 @@
  * - "parses Cues block and resolves CueClusterPosition to absolute file offset"
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import { MAX_CUE_POINTS } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
 import {
   WebmCorruptStreamError,
   WebmMissingElementError,

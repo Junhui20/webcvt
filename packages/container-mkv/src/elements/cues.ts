@@ -6,6 +6,8 @@
  * CueRelativePosition and CueDuration are read but ignored (deferred per design note).
  */
 
+import { concatBytes, findChild, parseFlatChildren, readUint, readUintNumber } from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
 import {
   ID_CUES,
   ID_CUE_CLUSTER_POSITION,
@@ -17,9 +19,6 @@ import {
   ID_CUE_TRACK_POSITIONS,
   MAX_CUE_POINTS,
 } from '../constants.ts';
-import { findChild, parseFlatChildren } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, readUint, readUintNumber } from '../ebml-types.ts';
 import {
   MkvCorruptStreamError,
   MkvMissingElementError,

@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@webcvt/core": "workspace:*",
+    "@webcvt/ebml": "workspace:*",
     "@webcvt/codec-webcodecs": "workspace:*"
   },
   "devDependencies": {

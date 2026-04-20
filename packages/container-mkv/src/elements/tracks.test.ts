@@ -2,6 +2,16 @@
  * Tests for Tracks/TrackEntry decode/encode (tracks.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import {
+  concatBytes,
+  readChildren,
+  writeFloat32,
+  writeString,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_AUDIO,
@@ -19,10 +29,6 @@ import {
   ID_TRACK_UID,
   ID_VIDEO,
 } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { readChildren } from '../ebml-element.ts';
-import { concatBytes, writeFloat32, writeString, writeUint } from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   MkvCorruptStreamError,
   MkvEncryptionNotSupportedError,

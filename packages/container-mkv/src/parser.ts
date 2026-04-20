@@ -18,6 +18,15 @@
  * can try container-webm instead.
  */
 
+import { findChild, readChildren, readElementHeader } from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import { readVintId, readVintSize } from '@webcvt/ebml';
+import {
+  EbmlElementTooLargeError,
+  EbmlTooManyElementsError,
+  EbmlTruncatedError,
+  EbmlUnknownSizeError,
+} from '@webcvt/ebml';
 import {
   ID_CLUSTER,
   ID_CUES,
@@ -31,10 +40,6 @@ import {
   MAX_ELEMENT_PAYLOAD_BYTES,
   MAX_INPUT_BYTES,
 } from './constants.ts';
-import { readChildren, readElementHeader } from './ebml-element.ts';
-import { findChild } from './ebml-element.ts';
-import type { EbmlElement } from './ebml-element.ts';
-import { readVintId, readVintSize } from './ebml-vint.ts';
 import { decodeCluster } from './elements/cluster.ts';
 import type { MkvCluster } from './elements/cluster.ts';
 import { decodeCues } from './elements/cues.ts';
@@ -49,13 +54,9 @@ import { decodeTracks } from './elements/tracks.ts';
 import type { MkvTrack } from './elements/tracks.ts';
 import {
   MkvCorruptStreamError,
-  MkvElementTooLargeError,
   MkvInputTooLargeError,
   MkvMissingElementError,
   MkvMissingSegmentError,
-  MkvTooManyElementsError,
-  MkvTruncatedError,
-  MkvUnknownSizeError,
 } from './errors.ts';
 
 // ---------------------------------------------------------------------------
@@ -118,7 +119,7 @@ export function parseMkv(input: Uint8Array): MkvFile {
   const ebmlSizeOffset = ebmlIdVint.width;
   const ebmlSizeVint = readVintSize(input, ebmlSizeOffset);
   if (ebmlSizeVint.value === -1n) {
-    throw new MkvUnknownSizeError(ID_EBML, 0);
+    throw new EbmlUnknownSizeError(ID_EBML, 0);
   }
 
   elementCount.value++;
@@ -159,12 +160,12 @@ export function parseMkv(input: Uint8Array): MkvFile {
 
   if (segSizeVint.value === -1n) {
     // Sec-H-1: Unknown-size Segment is out of scope (design note Trap §2).
-    throw new MkvUnknownSizeError(ID_SEGMENT, segOffset);
+    throw new EbmlUnknownSizeError(ID_SEGMENT, segOffset);
   }
   const segPayloadOffset = segSizeOffset + segSizeVint.width;
   const segEnd = segPayloadOffset + Number(segSizeVint.value);
   if (segEnd > input.length) {
-    throw new MkvTruncatedError(ID_SEGMENT, segSizeVint.value, input.length - segPayloadOffset);
+    throw new EbmlTruncatedError(ID_SEGMENT, segSizeVint.value, input.length - segPayloadOffset);
   }
 
   elementCount.value++;
@@ -203,7 +204,7 @@ export function parseMkv(input: Uint8Array): MkvFile {
 
     elementCount.value++;
     if (elementCount.value > MAX_ELEMENTS_PER_FILE) {
-      throw new MkvTooManyElementsError(MAX_ELEMENTS_PER_FILE);
+      throw new EbmlTooManyElementsError(MAX_ELEMENTS_PER_FILE);
     }
 
     const id = idVint.value;
@@ -211,11 +212,11 @@ export function parseMkv(input: Uint8Array): MkvFile {
     // Per-element size cap (Cluster has its own cap).
     if (id !== ID_CLUSTER) {
       if (elemSize > MAX_ELEMENT_PAYLOAD_BYTES) {
-        throw new MkvElementTooLargeError(id, BigInt(elemSize), MAX_ELEMENT_PAYLOAD_BYTES);
+        throw new EbmlElementTooLargeError(id, BigInt(elemSize), MAX_ELEMENT_PAYLOAD_BYTES);
       }
     } else {
       if (elemSize > MAX_CLUSTER_BYTES) {
-        throw new MkvElementTooLargeError(id, BigInt(elemSize), MAX_CLUSTER_BYTES);
+        throw new EbmlElementTooLargeError(id, BigInt(elemSize), MAX_CLUSTER_BYTES);
       }
     }
 

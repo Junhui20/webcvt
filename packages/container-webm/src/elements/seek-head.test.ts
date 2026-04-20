@@ -5,9 +5,9 @@
  * - "tolerates missing SeekHead"
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import { SEEK_HEAD_RESERVED_BYTES } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
 import { WebmCorruptStreamError } from '../errors.ts';
 import { decodeSeekHead, encodeSeekHead, idToBytes } from './seek-head.ts';
 

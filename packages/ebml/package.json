@@ -1,7 +1,7 @@
 {
-  "name": "@webcvt/container-webm",
+  "name": "@webcvt/ebml",
   "version": "0.0.0",
-  "description": "WebM container muxer and demuxer for webcvt — pure TypeScript, no native dependencies",
+  "description": "Shared EBML primitives (VINT codec, element walker, typed readers/writers) for webcvt container packages",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -24,9 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*",
-    "@webcvt/ebml": "workspace:*",
-    "@webcvt/codec-webcodecs": "workspace:*"
+    "@webcvt/core": "workspace:*"
   },
   "devDependencies": {
     "@webcvt/test-utils": "workspace:*",

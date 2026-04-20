@@ -2,9 +2,9 @@
  * Tests for EBML header element decode/encode (elements/header.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import { readVintId, readVintSize } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
-import type { EbmlElement } from '../ebml-element.ts';
-import { readVintId, readVintSize } from '../ebml-vint.ts';
 import {
   WebmDocTypeNotSupportedError,
   WebmEbmlLimitError,

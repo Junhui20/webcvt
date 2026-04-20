@@ -2,8 +2,8 @@
  * Tests for tracks decode/encode (elements/tracks.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
-import type { EbmlElement } from '../ebml-element.ts';
 import {
   WebmCorruptStreamError,
   WebmMultiTrackNotSupportedError,

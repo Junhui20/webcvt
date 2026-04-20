@@ -8,6 +8,18 @@
  */
 
 import {
+  concatBytes,
+  findChild,
+  readFloat,
+  readUintNumber,
+  readUtf8,
+  writeFloat64,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
   DEFAULT_TIMECODE_SCALE,
   ID_DATE_UTC,
   ID_DURATION,
@@ -18,17 +30,6 @@ import {
   ID_TITLE,
   ID_WRITING_APP,
 } from '../constants.ts';
-import { findChild } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import {
-  concatBytes,
-  readFloat,
-  readUintNumber,
-  readUtf8,
-  writeFloat64,
-  writeUint,
-} from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   encodeBinaryElement,
   encodeMasterElement,

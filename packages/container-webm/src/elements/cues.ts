@@ -6,6 +6,17 @@
  */
 
 import {
+  concatBytes,
+  findChild,
+  findChildren,
+  parseFlatChildren,
+  readUint,
+  readUintNumber,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
   ID_CUES,
   ID_CUE_CLUSTER_POSITION,
   ID_CUE_POINT,
@@ -14,10 +25,6 @@ import {
   ID_CUE_TRACK_POSITIONS,
   MAX_CUE_POINTS,
 } from '../constants.ts';
-import { findChild, findChildren, parseFlatChildren } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, readUint, readUintNumber } from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   WebmCorruptStreamError,
   WebmMissingElementError,

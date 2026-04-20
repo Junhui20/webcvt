@@ -2,6 +2,15 @@
  * Tests for Segment Info element decode/encode (segment-info.ts).
  */
 
+import type { EbmlElement } from '@webcvt/ebml';
+import {
+  concatBytes,
+  writeFloat64,
+  writeUint,
+  writeUtf8,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TIMECODE_SCALE,
@@ -13,9 +22,6 @@ import {
   ID_TITLE,
   ID_WRITING_APP,
 } from '../constants.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import { concatBytes, writeFloat64, writeUint, writeUtf8 } from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   encodeBinaryElement,
   encodeMasterElement,

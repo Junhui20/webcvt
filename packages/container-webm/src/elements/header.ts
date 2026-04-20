@@ -8,6 +8,18 @@
  */
 
 import {
+  concatBytes,
+  findChild,
+  readString,
+  readUintNumber,
+  writeString,
+  writeUint,
+  writeUtf8,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
   ID_DOCTYPE,
   ID_DOCTYPE_READ_VERSION,
   ID_DOCTYPE_VERSION,
@@ -17,17 +29,6 @@ import {
   ID_EBML_READ_VERSION,
   ID_EBML_VERSION,
 } from '../constants.ts';
-import { findChild } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import {
-  concatBytes,
-  readString,
-  readUintNumber,
-  writeString,
-  writeUint,
-  writeUtf8,
-} from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   WebmDocTypeNotSupportedError,
   WebmEbmlLimitError,

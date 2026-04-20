@@ -7,6 +7,21 @@
  * Rejects multi-video or multi-audio tracks (first-pass scope).
  */
 
+import {
+  concatBytes,
+  findChild,
+  findChildren,
+  parseFlatChildren,
+  readFloat,
+  readString,
+  readUint,
+  readUintNumber,
+  writeFloat32,
+  writeUint,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
 import { parseAacAsc } from '../codec-meta/aac-asc.ts';
 import { parseAvcDecoderConfig } from '../codec-meta/avc.ts';
 import { normaliseFlacCodecPrivate } from '../codec-meta/flac-streaminfo.ts';
@@ -41,18 +56,6 @@ import {
   ID_VIDEO,
   MAX_CODEC_PRIVATE_BYTES,
 } from '../constants.ts';
-import { findChild, findChildren, parseFlatChildren } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import {
-  concatBytes,
-  readFloat,
-  readString,
-  readUint,
-  readUintNumber,
-  writeFloat32,
-  writeUint,
-} from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import {
   MkvCodecPrivateTooLargeError,
   MkvCorruptStreamError,

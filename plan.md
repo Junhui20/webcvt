@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: 4/6 · Phase 4: 3/5 (archive-zip + image-svg + data-text first-passes done; image-legacy + image-animation remain)** · CI green · 2,215 tests passing · last revised 2026-04-19
+- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: 5/6 (4 first-pass containers + `@webcvt/ebml` extracted from webm/mkv duplicated primitives) · Phase 4: 3/5** · CI green · 2,141 tests passing · 19 packages · last revised 2026-04-19
 
 ---
 
@@ -682,7 +682,7 @@ container-mp3 numbers from this loop: 120 → 124 → 131 tests, 97.09% → 96.8
 
 | Container / task | LOC | Pipeline status |
 |---|---|---|
-| Extract `@webcvt/ebml` from webm + mkv duplicated primitives | ~370 | 🔜 likely next — both consumers exist now |
+| ~~Extract `@webcvt/ebml` from webm + mkv duplicated primitives~~ | ✅ done 2026-04-19 — 19 packages, 65 ebml tests, ~740 LOC duplication eliminated |
 | Interop tests (FFmpeg can demux our output) | — | Phase 3 wrap-up |
 | Phase-3 demo: full MP4 ↔ WebM ↔ MOV ↔ MKV pipeline | — | Phase 3 wrap-up (or merge into Phase 5 apps/playground) |
 | `container-mp4` second-pass (video, fragmented, edit lists, multi-track, DRM) | ~4,500 | Phase 3.5 |

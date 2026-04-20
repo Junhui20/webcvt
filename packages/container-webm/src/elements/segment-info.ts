@@ -6,6 +6,19 @@
  */
 
 import {
+  concatBytes,
+  findChild,
+  readFloat,
+  readUintNumber,
+  readUtf8,
+  writeFloat64,
+  writeUint,
+  writeUtf8,
+  writeVintId,
+  writeVintSize,
+} from '@webcvt/ebml';
+import type { EbmlElement } from '@webcvt/ebml';
+import {
   DEFAULT_TIMECODE_SCALE,
   ID_DURATION,
   ID_INFO,
@@ -13,18 +26,6 @@ import {
   ID_TIMECODE_SCALE,
   ID_WRITING_APP,
 } from '../constants.ts';
-import { findChild } from '../ebml-element.ts';
-import type { EbmlElement } from '../ebml-element.ts';
-import {
-  concatBytes,
-  readFloat,
-  readUintNumber,
-  readUtf8,
-  writeFloat64,
-  writeUint,
-  writeUtf8,
-} from '../ebml-types.ts';
-import { writeVintId, writeVintSize } from '../ebml-vint.ts';
 import { WebmMissingElementError } from '../errors.ts';
 import { encodeMasterElement, encodeUintElement, encodeUtf8Element } from './header.ts';
 

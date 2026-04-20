@@ -46,58 +46,6 @@ export class WebmEbmlLimitError extends WebcvtError {
   }
 }
 
-/** Thrown when an EBML VINT has an invalid encoding (e.g. all-zeros first byte). */
-export class WebmVintError extends WebcvtError {
-  constructor(offset: number, reason: string) {
-    super('WEBM_VINT_ERROR', `Invalid EBML VINT at offset ${offset}: ${reason}`);
-    this.name = 'WebmVintError';
-  }
-}
-
-/** Thrown when an element's declared size exceeds security caps. */
-export class WebmElementTooLargeError extends WebcvtError {
-  constructor(elementId: number, size: bigint, max: number) {
-    super(
-      'WEBM_ELEMENT_TOO_LARGE',
-      `Element 0x${elementId.toString(16)} claims size ${size} bytes; maximum is ${max} bytes.`,
-    );
-    this.name = 'WebmElementTooLargeError';
-  }
-}
-
-/** Thrown when the total element count across the file exceeds MAX_ELEMENTS_PER_FILE. */
-export class WebmTooManyElementsError extends WebcvtError {
-  constructor(max: number) {
-    super(
-      'WEBM_TOO_MANY_ELEMENTS',
-      `File contains more than ${max} EBML elements. The input may be corrupt or adversarially crafted.`,
-    );
-    this.name = 'WebmTooManyElementsError';
-  }
-}
-
-/** Thrown when the EBML nesting depth exceeds MAX_NEST_DEPTH. */
-export class WebmDepthExceededError extends WebcvtError {
-  constructor(max: number) {
-    super(
-      'WEBM_DEPTH_EXCEEDED',
-      `EBML element nesting depth exceeds maximum of ${max}. The input may be corrupt or adversarially crafted.`,
-    );
-    this.name = 'WebmDepthExceededError';
-  }
-}
-
-/** Thrown when an unknown-size VINT is encountered (only valid in live streaming). */
-export class WebmUnknownSizeError extends WebcvtError {
-  constructor(elementId: number, offset: number) {
-    super(
-      'WEBM_UNKNOWN_SIZE',
-      `Element 0x${elementId.toString(16)} at offset ${offset} has unknown size. Unknown-size elements are only valid for live streaming (deferred).`,
-    );
-    this.name = 'WebmUnknownSizeError';
-  }
-}
-
 /** Thrown when a required EBML element is missing. */
 export class WebmMissingElementError extends WebcvtError {
   constructor(elementName: string, parent: string) {
@@ -205,17 +153,6 @@ export class WebmMissingSegmentError extends WebcvtError {
       'No Segment element found after EBML header. Not a valid WebM file.',
     );
     this.name = 'WebmMissingSegmentError';
-  }
-}
-
-/** Thrown when an element's claimed size exceeds the remaining bytes in its container. */
-export class WebmTruncatedError extends WebcvtError {
-  constructor(elementId: number, claimed: bigint, remaining: number) {
-    super(
-      'WEBM_TRUNCATED',
-      `Element 0x${elementId.toString(16)} claims ${claimed} bytes but only ${remaining} bytes remain. File may be truncated.`,
-    );
-    this.name = 'WebmTruncatedError';
   }
 }
 
