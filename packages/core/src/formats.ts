@@ -95,6 +95,7 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'tiff', mime: 'image/tiff', category: 'image', description: 'Tag Image File Format (TIFF 6.0)' },
   { ext: 'tga', mime: 'image/x-tga', category: 'image', description: 'Truevision TGA (Targa)' },
   { ext: 'xbm', mime: 'image/x-xbitmap', category: 'image', description: 'X11 Bitmap' },
+  { ext: 'pcx', mime: 'image/x-pcx', category: 'image', description: 'PC Paintbrush' },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',

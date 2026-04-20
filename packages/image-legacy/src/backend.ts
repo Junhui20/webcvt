@@ -12,6 +12,8 @@ import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@
 import {
   MAX_INPUT_BYTES,
   PBM_MIME,
+  PCX_MIME,
+  PCX_MIME_ALT,
   PFM_MIME,
   PGM_MIME,
   PPM_MIME,
@@ -44,6 +46,8 @@ const MIME_TO_FORMAT = new Map<string, ImageFormat>([
   [TGA_MIME_ALT2, 'tga'],
   [XBM_MIME, 'xbm'],
   [XBM_MIME_ALT, 'xbm'],
+  [PCX_MIME, 'pcx'],
+  [PCX_MIME_ALT, 'pcx'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -162,4 +166,11 @@ export const XBM_FORMAT: FormatDescriptor = {
   mime: XBM_MIME,
   category: 'image',
   description: 'X11 Bitmap',
+};
+
+export const PCX_FORMAT: FormatDescriptor = {
+  ext: 'pcx',
+  mime: PCX_MIME,
+  category: 'image',
+  description: 'PC Paintbrush',
 };

@@ -15,6 +15,7 @@ import {
   parsePgm,
   parsePpm,
 } from './netpbm.ts';
+import { type PcxFile, parsePcx } from './pcx.ts';
 import { type PfmFile, parsePfm } from './pfm.ts';
 import { type QoiFile, parseQoi } from './qoi.ts';
 import { type TgaFile, parseTga } from './tga.ts';
@@ -33,7 +34,8 @@ export type ImageFile =
   | QoiFile
   | TiffFile
   | TgaFile
-  | XbmFile;
+  | XbmFile
+  | PcxFile;
 
 // Re-export sub-types for consumers
 export type {
@@ -45,6 +47,7 @@ export type {
   TiffFile,
   TgaFile,
   XbmFile,
+  PcxFile,
   ImageFormat,
 };
 
@@ -70,5 +73,7 @@ export function parseImage(input: Uint8Array, format: ImageFormat): ImageFile {
       return parseTga(input);
     case 'xbm':
       return parseXbm(input);
+    case 'pcx':
+      return parsePcx(input);
   }
 }

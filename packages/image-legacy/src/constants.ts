@@ -174,3 +174,37 @@ export const XBM_BYTES_PER_LINE = 12;
  * define). Defends against degenerate inputs with very long identifiers.
  */
 export const XBM_MAX_IDENTIFIER_LENGTH = 256;
+
+// ---------------------------------------------------------------------------
+// PCX constants
+// ---------------------------------------------------------------------------
+
+/** PCX manufacturer byte — must be 0x0A in every valid PCX file. */
+export const PCX_MAGIC = 0x0a;
+
+/** PCX encoding value — 1 = RLE (the only defined encoding). */
+export const PCX_ENCODING_RLE = 0x01;
+
+/** Sentinel byte that precedes the 768-byte VGA palette footer (version 5 only). */
+export const PCX_PALETTE_SENTINEL = 0x0c;
+
+/** Size of the fixed PCX header in bytes. */
+export const PCX_HEADER_SIZE = 128;
+
+/** Total size of the VGA palette footer: 1 sentinel + 768 palette bytes. */
+export const PCX_PALETTE_FOOTER_SIZE = 769;
+
+/** Size of the EGA palette block inside the header (bytes 16–63). */
+export const PCX_EGA_PALETTE_SIZE = 48;
+
+/** Size of the RGB palette data portion of the VGA footer (bytes 1–768). */
+export const PCX_VGA_PALETTE_SIZE = 768;
+
+/** Maximum count for a single PCX RLE run (6-bit field, 0x3F). */
+export const PCX_MAX_RUN = 63;
+
+/** Primary MIME type for PCX images. */
+export const PCX_MIME = 'image/x-pcx';
+
+/** Alternative MIME type for PCX images. */
+export const PCX_MIME_ALT = 'image/pcx';

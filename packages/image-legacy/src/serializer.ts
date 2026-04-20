@@ -7,6 +7,7 @@
 
 import { serializePbm, serializePgm, serializePpm } from './netpbm.ts';
 import type { ImageFile } from './parser.ts';
+import { serializePcx } from './pcx.ts';
 import { serializePfm } from './pfm.ts';
 import { serializeQoi } from './qoi.ts';
 import { serializeTga } from './tga.ts';
@@ -31,5 +32,7 @@ export function serializeImage(file: ImageFile): Uint8Array {
       return serializeTga(file);
     case 'xbm':
       return serializeXbm(file);
+    case 'pcx':
+      return serializePcx(file);
   }
 }

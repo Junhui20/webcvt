@@ -1,10 +1,10 @@
 /**
  * @webcvt/image-legacy — Public API
  *
- * Supported formats (fourth pass — Phase 4.5):
- *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA, XBM.
+ * Supported formats (fifth pass — Phase 4.5):
+ *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA, XBM, PCX.
  *
- * Deferred (Phase 4.5+): PCX, XPM, ICNS, CUR.
+ * Deferred (Phase 4.5+): XPM, ICNS, CUR.
  *
  * No cross-format conversion: each format is parse/serialize-only within its type.
  * No auto-detection inside parseImage: pass format explicitly.
@@ -30,6 +30,7 @@ export type {
   TiffFile,
   TgaFile,
   XbmFile,
+  PcxFile,
 } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -66,6 +67,18 @@ export type {
 // ---------------------------------------------------------------------------
 
 export type { XbmHotspot } from './xbm.ts';
+
+// ---------------------------------------------------------------------------
+// PCX types (direct from pcx.ts)
+// ---------------------------------------------------------------------------
+
+export type {
+  PcxVersion,
+  PcxBitsPerPixel,
+  PcxNPlanes,
+  PcxKind,
+  PcxNormalisation,
+} from './pcx.ts';
 
 // ---------------------------------------------------------------------------
 // PBM API
@@ -122,6 +135,12 @@ export { parseTga, serializeTga, decodeTgaRle, isTgaHeader } from './tga.ts';
 export { parseXbm, serializeXbm, isXbmHeader } from './xbm.ts';
 
 // ---------------------------------------------------------------------------
+// PCX API
+// ---------------------------------------------------------------------------
+
+export { parsePcx, serializePcx, decodePcxRle } from './pcx.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -143,6 +162,7 @@ export {
   TIFF_FORMAT,
   TGA_FORMAT,
   XBM_FORMAT,
+  PCX_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -190,4 +210,10 @@ export {
   XbmBadHexByteError,
   XbmSizeMismatchError,
   XbmBadIdentifierError,
+  PcxBadMagicError,
+  PcxBadVersionError,
+  PcxBadEncodingError,
+  PcxBadHeaderError,
+  PcxUnsupportedFeatureError,
+  PcxRleDecodeError,
 } from './errors.ts';

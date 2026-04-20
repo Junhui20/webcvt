@@ -266,6 +266,76 @@ export class XbmBadIdentifierError extends WebcvtError {
 }
 
 // ---------------------------------------------------------------------------
+// PCX errors
+// ---------------------------------------------------------------------------
+
+/** Thrown when byte 0 of a PCX file is not 0x0A. */
+export class PcxBadMagicError extends WebcvtError {
+  constructor(got: number) {
+    super(
+      'PCX_BAD_MAGIC',
+      `PCX: expected manufacturer byte 0x0A, got 0x${got.toString(16).padStart(2, '0')}.`,
+    );
+    this.name = 'PcxBadMagicError';
+  }
+}
+
+/** Thrown when the PCX version byte is not in {0, 2, 3, 4, 5}. */
+export class PcxBadVersionError extends WebcvtError {
+  constructor(version: number) {
+    super(
+      'PCX_BAD_VERSION',
+      `PCX: version ${version} is not supported; expected one of {0, 2, 3, 4, 5}.`,
+    );
+    this.name = 'PcxBadVersionError';
+  }
+}
+
+/** Thrown when the PCX encoding byte is not 1 (RLE). */
+export class PcxBadEncodingError extends WebcvtError {
+  constructor(encoding: number) {
+    super(
+      'PCX_BAD_ENCODING',
+      `PCX: encoding ${encoding} is not supported; only encoding 1 (RLE) is valid.`,
+    );
+    this.name = 'PcxBadEncodingError';
+  }
+}
+
+/**
+ * Thrown when the PCX header is structurally invalid:
+ * Xmax < Xmin, Ymax < Ymin, BytesPerLine odd, or BytesPerLine too small.
+ */
+export class PcxBadHeaderError extends WebcvtError {
+  constructor(message: string) {
+    super('PCX_BAD_HEADER', `PCX: bad header — ${message}`);
+    this.name = 'PcxBadHeaderError';
+  }
+}
+
+/** Thrown when the (BitsPerPixel, NPlanes) combination is not supported. */
+export class PcxUnsupportedFeatureError extends WebcvtError {
+  constructor(feature: string) {
+    super('PCX_UNSUPPORTED_FEATURE', `PCX: unsupported feature — ${feature}`);
+    this.name = 'PcxUnsupportedFeatureError';
+  }
+}
+
+/** Thrown when PCX RLE decoding encounters an input underrun, output overflow, or illegal zero-length run. */
+export class PcxRleDecodeError extends WebcvtError {
+  constructor(kind: 'input-underrun' | 'output-overflow' | 'zero-length-run') {
+    const msg =
+      kind === 'input-underrun'
+        ? 'RLE input exhausted before expected byte count was reached.'
+        : kind === 'output-overflow'
+          ? 'RLE packet would write past the output buffer boundary.'
+          : 'RLE run header 0xC0 has count=0 (spec range is 1..63); rejecting to prevent unbounded decode loop.';
+    super('PCX_RLE_DECODE', `PCX RLE: ${msg}`);
+    this.name = 'PcxRleDecodeError';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Backend error
 // ---------------------------------------------------------------------------
 

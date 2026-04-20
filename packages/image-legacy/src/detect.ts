@@ -15,11 +15,17 @@
  *   (3) null otherwise.
  */
 
-import { TGA_FOOTER_SIGNATURE, TGA_FOOTER_SIZE } from './constants.ts';
+import {
+  PCX_ENCODING_RLE,
+  PCX_HEADER_SIZE,
+  PCX_MAGIC,
+  TGA_FOOTER_SIGNATURE,
+  TGA_FOOTER_SIZE,
+} from './constants.ts';
 import { isTgaHeader } from './tga.ts';
 import { isXbmHeader } from './xbm.ts';
 
-export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff' | 'tga' | 'xbm';
+export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff' | 'tga' | 'xbm' | 'pcx';
 
 /**
  * Sniff the format of input and return the matching ImageFormat or null.
@@ -48,6 +54,18 @@ export function detectImageFormat(input: Uint8Array): ImageFormat | null {
   /* v8 ignore next 2 */
   const b0 = input[0] ?? 0;
   const b1 = input[1] ?? 0;
+
+  // PCX: magic byte 0x0A at offset 0, encoding=1 at offset 2, valid version at offset 1
+  // Must be checked before TGA heuristic (TGA has no fixed magic)
+  if (b0 === PCX_MAGIC && input.length >= PCX_HEADER_SIZE) {
+    const version = b1;
+    const encoding = input[2] ?? 0;
+    const validVersion =
+      version === 0 || version === 2 || version === 3 || version === 4 || version === 5;
+    if (validVersion && encoding === PCX_ENCODING_RLE) {
+      return 'pcx';
+    }
+  }
 
   // QOI: 4-byte magic "qoif"
   if (input.length >= 4) {
