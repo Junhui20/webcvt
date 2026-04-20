@@ -797,3 +797,282 @@ export class FwfBadPadCharError extends WebcvtError {
     this.name = 'FwfBadPadCharError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// YAML errors (19)
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a Uint8Array YAML input contains malformed UTF-8 bytes,
+ * or a non-UTF-8 BOM (UTF-16/UTF-32) is detected (Trap 11).
+ */
+export class YamlInvalidUtf8Error extends WebcvtError {
+  constructor(cause?: unknown) {
+    const msg =
+      typeof cause === 'string'
+        ? cause
+        : 'YAML input contains malformed UTF-8 bytes or a non-UTF-8 BOM.';
+    super(
+      'YAML_INVALID_UTF8',
+      msg,
+      typeof cause === 'object' && cause !== null ? { cause } : undefined,
+    );
+    this.name = 'YamlInvalidUtf8Error';
+  }
+}
+
+/**
+ * Thrown for generic YAML parse failures.
+ * Carries a 1-based line/column and source snippet for diagnostics.
+ */
+export class YamlParseError extends WebcvtError {
+  readonly line: number;
+  readonly col: number;
+  readonly snippet: string;
+  constructor(message: string, line: number, col: number, snippet: string) {
+    super(
+      'YAML_PARSE_ERROR',
+      `YAML parse error at line ${line}, col ${col}: ${message}\n  Near: ${snippet}`,
+    );
+    this.name = 'YamlParseError';
+    this.line = line;
+    this.col = col;
+    this.snippet = snippet;
+  }
+}
+
+/**
+ * Thrown when a tab character appears in leading indentation (Trap 7).
+ * YAML 1.2.2 §6.1 forbids tabs as indentation whitespace.
+ */
+export class YamlIndentError extends WebcvtError {
+  constructor(line: number, col: number) {
+    super(
+      'YAML_INDENT_ERROR',
+      `YAML indentation error at line ${line}, col ${col}: tab character in leading indentation. YAML 1.2.2 §6.1 forbids tabs as indentation.`,
+    );
+    this.name = 'YamlIndentError';
+  }
+}
+
+/**
+ * Thrown when a second '---' marker or any '...' document-end marker is
+ * encountered after the first document (Trap 12).
+ */
+export class YamlMultiDocForbiddenError extends WebcvtError {
+  constructor(detail: string) {
+    super(
+      'YAML_MULTI_DOC_FORBIDDEN',
+      `YAML multi-document stream is not supported: ${detail}. Only single-document YAML is accepted.`,
+    );
+    this.name = 'YamlMultiDocForbiddenError';
+  }
+}
+
+/**
+ * Thrown when a directive other than '%YAML 1.2' is encountered (Trap 13).
+ * '%YAML 1.1' and '%TAG' are rejected to prevent schema confusion.
+ */
+export class YamlDirectiveForbiddenError extends WebcvtError {
+  constructor(directive: string) {
+    super(
+      'YAML_DIRECTIVE_FORBIDDEN',
+      `YAML directive "${directive}" is not allowed. Only "%YAML 1.2" is accepted.`,
+    );
+    this.name = 'YamlDirectiveForbiddenError';
+  }
+}
+
+/**
+ * Thrown when a tag outside the 7-entry allowlist is encountered (Trap 3).
+ * Allowlist: !!str !!int !!float !!bool !!null !!seq !!map.
+ */
+export class YamlTagForbiddenError extends WebcvtError {
+  readonly tag: string;
+  constructor(tag: string) {
+    super(
+      'YAML_TAG_FORBIDDEN',
+      `YAML tag "${tag}" is not allowed. Only !!str !!int !!float !!bool !!null !!seq !!map are accepted. This guard neutralises YAML type-tag RCE attacks.`,
+    );
+    this.name = 'YamlTagForbiddenError';
+    this.tag = tag;
+  }
+}
+
+/**
+ * Thrown when a merge key '<<:' is encountered (Trap 4).
+ * Merge keys are a YAML 1.1 extension and a known footgun.
+ */
+export class YamlMergeKeyForbiddenError extends WebcvtError {
+  constructor() {
+    super(
+      'YAML_MERGE_KEY_FORBIDDEN',
+      'YAML merge key "<<:" is not supported. Merge keys are a YAML 1.1 extension and are rejected to prevent silent override bugs.',
+    );
+    this.name = 'YamlMergeKeyForbiddenError';
+  }
+}
+
+/**
+ * Thrown when an anchor cycle is detected during alias expansion (Trap 1).
+ * Example: &a [*a] creates an infinite structure.
+ */
+export class YamlAnchorCycleError extends WebcvtError {
+  readonly anchorName: string;
+  constructor(anchorName: string) {
+    super(
+      'YAML_ANCHOR_CYCLE',
+      `YAML anchor cycle detected: alias *${anchorName} references itself directly or indirectly.`,
+    );
+    this.name = 'YamlAnchorCycleError';
+    this.anchorName = anchorName;
+  }
+}
+
+/**
+ * Thrown when an alias references an undefined anchor (no matching &name).
+ */
+export class YamlAnchorUndefinedError extends WebcvtError {
+  readonly anchorName: string;
+  constructor(anchorName: string) {
+    super(
+      'YAML_ANCHOR_UNDEFINED',
+      `YAML alias *${anchorName} references an undefined anchor. Anchors must appear before their aliases.`,
+    );
+    this.name = 'YamlAnchorUndefinedError';
+    this.anchorName = anchorName;
+  }
+}
+
+/**
+ * Thrown when the number of distinct anchor declarations exceeds
+ * MAX_YAML_ANCHORS (100). Prevents anchor-table DoS.
+ */
+export class YamlAnchorLimitError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'YAML_ANCHOR_LIMIT',
+      `YAML anchor count ${count} exceeds the cap of ${max}. Documents with excessive anchors are rejected.`,
+    );
+    this.name = 'YamlAnchorLimitError';
+  }
+}
+
+/**
+ * Thrown when total alias dereferences exceed MAX_YAML_ALIASES (1000).
+ * This is the primary billion-laughs defense (Trap 2).
+ */
+export class YamlAliasLimitError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'YAML_ALIAS_LIMIT',
+      `YAML alias expansion count ${count} exceeds the cap of ${max}. This prevents billion-laughs exponential expansion attacks (Trap 2).`,
+    );
+    this.name = 'YamlAliasLimitError';
+  }
+}
+
+/**
+ * Thrown when container nesting depth exceeds MAX_YAML_DEPTH (64).
+ */
+export class YamlDepthExceededError extends WebcvtError {
+  constructor(depth: number, max: number) {
+    super(
+      'YAML_DEPTH_EXCEEDED',
+      `YAML nesting depth ${depth} exceeds the cap of ${max}. Deeply nested documents are rejected to prevent stack overflow.`,
+    );
+    this.name = 'YamlDepthExceededError';
+  }
+}
+
+/**
+ * Thrown when a scalar token exceeds MAX_YAML_SCALAR_LEN (1 MiB).
+ */
+export class YamlScalarTooLongError extends WebcvtError {
+  constructor(length: number, max: number) {
+    super(
+      'YAML_SCALAR_TOO_LONG',
+      `YAML scalar token is ${length} characters which exceeds the cap of ${max} (1 MiB).`,
+    );
+    this.name = 'YamlScalarTooLongError';
+  }
+}
+
+/**
+ * Thrown when a single mapping has more than MAX_YAML_MAP_KEYS (10,000) keys.
+ */
+export class YamlMapTooLargeError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super('YAML_MAP_TOO_LARGE', `YAML mapping has ${count} keys which exceeds the cap of ${max}.`);
+    this.name = 'YamlMapTooLargeError';
+  }
+}
+
+/**
+ * Thrown when a sequence has more than MAX_YAML_SEQ_ITEMS (1,000,000) items.
+ */
+export class YamlSeqTooLargeError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'YAML_SEQ_TOO_LARGE',
+      `YAML sequence has ${count} items which exceeds the cap of ${max}.`,
+    );
+    this.name = 'YamlSeqTooLargeError';
+  }
+}
+
+/**
+ * Thrown when a complex (non-scalar) mapping key is encountered (Trap 16).
+ * Only scalar keys are supported.
+ */
+export class YamlComplexKeyForbiddenError extends WebcvtError {
+  constructor() {
+    super(
+      'YAML_COMPLEX_KEY_FORBIDDEN',
+      'YAML complex mapping keys (non-scalar keys such as sequences or mappings as keys) are not supported. Only scalar keys are allowed.',
+    );
+    this.name = 'YamlComplexKeyForbiddenError';
+  }
+}
+
+/**
+ * Thrown when a double-quoted scalar contains an unknown escape sequence (Trap 18).
+ */
+export class YamlBadEscapeError extends WebcvtError {
+  readonly escapeChar: string;
+  constructor(escapeChar: string) {
+    super(
+      'YAML_BAD_ESCAPE',
+      `YAML bad escape sequence "\\${escapeChar}" in double-quoted scalar. Recognized escapes: \\0 \\a \\b \\t \\n \\v \\f \\r \\e \\ \\\" \\/ \\N \\_ \\L \\P \\xHH \\uHHHH \\UHHHHHHHH.`,
+    );
+    this.name = 'YamlBadEscapeError';
+    this.escapeChar = escapeChar;
+  }
+}
+
+/**
+ * Thrown when the same key appears twice in the same mapping (Trap 17).
+ * YAML 1.2 leaves duplicate keys as "undefined behaviour"; we reject them.
+ */
+export class YamlDuplicateKeyError extends WebcvtError {
+  readonly key: string;
+  constructor(key: string) {
+    super(
+      'YAML_DUPLICATE_KEY',
+      `YAML duplicate key: "${key}" appears more than once in the same mapping.`,
+    );
+    this.name = 'YamlDuplicateKeyError';
+    this.key = key;
+  }
+}
+
+/**
+ * Thrown when serializeYaml encounters a value that cannot be serialized
+ * to valid YAML (e.g. non-string map keys, Symbol, Function).
+ */
+export class YamlSerializeError extends WebcvtError {
+  constructor(reason: string) {
+    super('YAML_SERIALIZE_ERROR', `YAML serialize error: ${reason}.`);
+    this.name = 'YamlSerializeError';
+  }
+}

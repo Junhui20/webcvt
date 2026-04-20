@@ -19,12 +19,13 @@ import { type JsonFile, parseJson } from './json.ts';
 import { type JsonlFile, parseJsonl } from './jsonl.ts';
 import { type TomlFile, parseToml } from './toml.ts';
 import { type XmlFile, parseXml } from './xml.ts';
+import { type YamlFile, parseYaml } from './yaml.ts';
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
-/** The nine text formats supported (five first-pass + JSONL + TOML + FWF + XML extensions). */
+/** The ten text formats supported (five first-pass + JSONL + TOML + FWF + XML + YAML extensions). */
 export type DataTextFormat =
   | 'json'
   | 'csv'
@@ -34,7 +35,8 @@ export type DataTextFormat =
   | 'jsonl'
   | 'toml'
   | 'fwf'
-  | 'xml';
+  | 'xml'
+  | 'yaml';
 
 /** Discriminated union returned by the top-level dispatcher. */
 export type DataTextFile =
@@ -46,10 +48,21 @@ export type DataTextFile =
   | { kind: 'jsonl'; file: JsonlFile }
   | { kind: 'toml'; file: TomlFile }
   | { kind: 'fwf'; file: FwfFile }
-  | { kind: 'xml'; file: XmlFile };
+  | { kind: 'xml'; file: XmlFile }
+  | { kind: 'yaml'; file: YamlFile };
 
 // Re-export sub-types so callers can import from parser.ts if desired.
-export type { JsonFile, DelimitedFile, IniFile, EnvFile, JsonlFile, TomlFile, FwfFile, XmlFile };
+export type {
+  JsonFile,
+  DelimitedFile,
+  IniFile,
+  EnvFile,
+  JsonlFile,
+  TomlFile,
+  FwfFile,
+  XmlFile,
+  YamlFile,
+};
 export type { DelimitedParseOptions, FwfParseOptions };
 
 // ---------------------------------------------------------------------------
@@ -111,5 +124,7 @@ export function parseDataText(
       return { kind: 'fwf', file: parseFwf(input, opts as FwfParseOptions) };
     case 'xml':
       return { kind: 'xml', file: parseXml(input) };
+    case 'yaml':
+      return { kind: 'yaml', file: parseYaml(input) };
   }
 }

@@ -84,6 +84,12 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'data',
     description: 'Extensible Markup Language',
   },
+  {
+    ext: 'yaml',
+    mime: 'application/yaml',
+    category: 'data',
+    description: 'YAML Aint Markup Language 1.2 Core',
+  },
   // Image-legacy (Phase 4: image-legacy package)
   {
     ext: 'pbm',
@@ -158,6 +164,8 @@ const EXT_ALIASES: Readonly<Record<string, string>> = {
   jpg: 'jpeg',
   // .tgz is an alias for .gz (both are gzip-compressed; the tar layer is detected by content)
   tgz: 'gz',
+  // .yml is an alias for .yaml
+  yml: 'yaml',
 };
 
 const BY_EXT = new Map<string, FormatDescriptor>(

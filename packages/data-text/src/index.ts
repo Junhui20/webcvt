@@ -40,6 +40,7 @@ export type { JsonlFile, JsonlSerializeOptions } from './jsonl.ts';
 export type { TomlFile, TomlValue, TomlDate, TomlTime, TomlDateTime } from './toml.ts';
 export type { FwfFile, FwfColumn, FwfAlign, FwfParseOptions, FwfSerializeOptions } from './fwf.ts';
 export type { XmlFile, XmlElement, XmlAttribute } from './xml.ts';
+export type { YamlFile, YamlValue } from './yaml.ts';
 export type { DataTextFile, DataTextFormat } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -97,6 +98,12 @@ export { parseFwf, serializeFwf } from './fwf.ts';
 export { parseXml, serializeXml } from './xml.ts';
 
 // ---------------------------------------------------------------------------
+// YAML API
+// ---------------------------------------------------------------------------
+
+export { parseYaml, serializeYaml } from './yaml.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -118,6 +125,7 @@ export {
   TOML_FORMAT,
   FWF_FORMAT,
   XML_FORMAT,
+  YAML_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -182,4 +190,23 @@ export {
   XmlTextNodeTooLongError,
   XmlBadElementNameError,
   XmlSerializeError,
+  YamlInvalidUtf8Error,
+  YamlParseError,
+  YamlIndentError,
+  YamlMultiDocForbiddenError,
+  YamlDirectiveForbiddenError,
+  YamlTagForbiddenError,
+  YamlMergeKeyForbiddenError,
+  YamlAnchorCycleError,
+  YamlAnchorUndefinedError,
+  YamlAnchorLimitError,
+  YamlAliasLimitError,
+  YamlDepthExceededError,
+  YamlScalarTooLongError,
+  YamlMapTooLargeError,
+  YamlSeqTooLargeError,
+  YamlComplexKeyForbiddenError,
+  YamlBadEscapeError,
+  YamlDuplicateKeyError,
+  YamlSerializeError,
 } from './errors.ts';

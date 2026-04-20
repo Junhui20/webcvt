@@ -206,3 +206,59 @@ export const XML_MIME = 'application/xml';
  * parseFwf / serializeFwf API or parseDataText(input, 'fwf', { columns }).
  */
 export const FWF_MIME = 'text/plain';
+
+// ---------------------------------------------------------------------------
+// YAML-specific caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum container nesting depth for YAML (64).
+ * Enforced incrementally during parse. Matches XML and TOML depth caps.
+ */
+export const MAX_YAML_DEPTH = 64;
+
+/**
+ * Maximum number of distinct &name anchor declarations (100).
+ * Prevents anchor-table DoS. Legitimate k8s manifests stay well under.
+ */
+export const MAX_YAML_ANCHORS = 100;
+
+/**
+ * Maximum total *name alias dereferences across the entire document (1000).
+ * Core billion-laughs defense (Trap 2). Caps output at O(1000 × scalar-size).
+ */
+export const MAX_YAML_ALIASES = 1000;
+
+/**
+ * Maximum scalar token length in characters (1,048,576 = 1 MiB).
+ * Checked incrementally during scalar scanning.
+ */
+export const MAX_YAML_SCALAR_LEN = 1_048_576;
+
+/**
+ * Maximum number of keys in a single YAML mapping (10,000).
+ * Matches MAX_TOML_KEYS_PER_TABLE.
+ */
+export const MAX_YAML_MAP_KEYS = 10_000;
+
+/**
+ * Maximum number of items in a single YAML sequence (1,000,000).
+ * Matches MAX_TOML_ARRAY_LEN and MAX_JSONL_RECORDS.
+ */
+export const MAX_YAML_SEQ_ITEMS = 1_000_000;
+
+// ---------------------------------------------------------------------------
+// YAML MIME
+// ---------------------------------------------------------------------------
+
+/** Canonical MIME type for YAML (application/yaml). */
+export const YAML_MIME = 'application/yaml';
+
+/** Alias MIME for YAML (application/x-yaml). */
+export const YAML_MIME_ALIAS_X = 'application/x-yaml';
+
+/** Alias MIME for YAML (text/yaml). */
+export const YAML_MIME_ALIAS_TEXT = 'text/yaml';
+
+/** Alias MIME for YAML (text/x-yaml). */
+export const YAML_MIME_ALIAS_TEXT_X = 'text/x-yaml';

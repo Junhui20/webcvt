@@ -27,13 +27,17 @@ import {
   TOML_MIME,
   TSV_MIME,
   XML_MIME,
+  YAML_MIME,
+  YAML_MIME_ALIAS_TEXT,
+  YAML_MIME_ALIAS_TEXT_X,
+  YAML_MIME_ALIAS_X,
 } from './constants.ts';
 import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
 import { type DataTextFormat, parseDataText } from './parser.ts';
 import { serializeDataText } from './serializer.ts';
 
 /** DataTextFormat variants that are routable via MIME (excludes FWF — see FWF_MIME note). */
-type RoutableFormat = Exclude<DataTextFormat, 'fwf'>; // 'xml' IS routable via application/xml
+type RoutableFormat = Exclude<DataTextFormat, 'fwf'>; // 'xml' and 'yaml' are routable via their MIMEs
 
 // ---------------------------------------------------------------------------
 // MIME → DataTextFormat mapping
@@ -64,6 +68,10 @@ const MIME_TO_FORMAT = new Map<string, RoutableFormat>([
   [JSONL_MIME_ALIAS, 'jsonl'],
   [TOML_MIME, 'toml'],
   [XML_MIME, 'xml'],
+  [YAML_MIME, 'yaml'],
+  [YAML_MIME_ALIAS_X, 'yaml'],
+  [YAML_MIME_ALIAS_TEXT, 'yaml'],
+  [YAML_MIME_ALIAS_TEXT_X, 'yaml'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -195,4 +203,11 @@ export const XML_FORMAT: FormatDescriptor = {
   mime: XML_MIME,
   category: 'data',
   description: 'Extensible Markup Language',
+};
+
+export const YAML_FORMAT: FormatDescriptor = {
+  ext: 'yaml',
+  mime: YAML_MIME,
+  category: 'data',
+  description: 'YAML Aint Markup Language 1.2 Core',
 };
