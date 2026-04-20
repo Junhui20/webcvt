@@ -73,6 +73,77 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
 
+  packages/cli:
+    dependencies:
+      '@webcvt/core':
+        specifier: workspace:*
+        version: link:../core
+    optionalDependencies:
+      '@webcvt/archive-zip':
+        specifier: workspace:*
+        version: link:../archive-zip
+      '@webcvt/backend-wasm':
+        specifier: workspace:*
+        version: link:../backend-wasm
+      '@webcvt/container-aac':
+        specifier: workspace:*
+        version: link:../container-aac
+      '@webcvt/container-flac':
+        specifier: workspace:*
+        version: link:../container-flac
+      '@webcvt/container-mkv':
+        specifier: workspace:*
+        version: link:../container-mkv
+      '@webcvt/container-mp3':
+        specifier: workspace:*
+        version: link:../container-mp3
+      '@webcvt/container-mp4':
+        specifier: workspace:*
+        version: link:../container-mp4
+      '@webcvt/container-ogg':
+        specifier: workspace:*
+        version: link:../container-ogg
+      '@webcvt/container-ts':
+        specifier: workspace:*
+        version: link:../container-ts
+      '@webcvt/container-wav':
+        specifier: workspace:*
+        version: link:../container-wav
+      '@webcvt/container-webm':
+        specifier: workspace:*
+        version: link:../container-webm
+      '@webcvt/data-text':
+        specifier: workspace:*
+        version: link:../data-text
+      '@webcvt/image-animation':
+        specifier: workspace:*
+        version: link:../image-animation
+      '@webcvt/image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
+      '@webcvt/image-legacy':
+        specifier: workspace:*
+        version: link:../image-legacy
+      '@webcvt/image-svg':
+        specifier: workspace:*
+        version: link:../image-svg
+      '@webcvt/subtitle':
+        specifier: workspace:*
+        version: link:../subtitle
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
+
   packages/codec-webcodecs:
     dependencies:
       '@webcvt/core':

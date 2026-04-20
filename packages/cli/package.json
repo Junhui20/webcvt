@@ -1,0 +1,51 @@
+{
+  "name": "@webcvt/cli",
+  "version": "0.0.0",
+  "description": "Command-line interface for webcvt — thin shell around @webcvt/core",
+  "type": "module",
+  "bin": {
+    "webcvt": "./dist/cli.js"
+  },
+  "main": "./dist/cli.js",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup && node -e \"require('node:fs').chmodSync('dist/cli.js', 0o755)\"",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .turbo"
+  },
+  "dependencies": {
+    "@webcvt/core": "workspace:*"
+  },
+  "optionalDependencies": {
+    "@webcvt/container-mp3": "workspace:*",
+    "@webcvt/container-wav": "workspace:*",
+    "@webcvt/container-flac": "workspace:*",
+    "@webcvt/container-ogg": "workspace:*",
+    "@webcvt/container-aac": "workspace:*",
+    "@webcvt/container-mp4": "workspace:*",
+    "@webcvt/container-webm": "workspace:*",
+    "@webcvt/container-mkv": "workspace:*",
+    "@webcvt/container-ts": "workspace:*",
+    "@webcvt/image-canvas": "workspace:*",
+    "@webcvt/image-svg": "workspace:*",
+    "@webcvt/image-animation": "workspace:*",
+    "@webcvt/image-legacy": "workspace:*",
+    "@webcvt/data-text": "workspace:*",
+    "@webcvt/archive-zip": "workspace:*",
+    "@webcvt/subtitle": "workspace:*",
+    "@webcvt/backend-wasm": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

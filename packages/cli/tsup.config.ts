@@ -1,0 +1,33 @@
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: ['src/cli.ts'],
+  format: ['esm'],
+  splitting: false,
+  sourcemap: true,
+  clean: true,
+  target: 'node20',
+  treeshake: true,
+  banner: { js: '#!/usr/bin/env node' },
+  noExternal: [],
+  external: [
+    '@webcvt/core',
+    '@webcvt/container-mp3',
+    '@webcvt/container-wav',
+    '@webcvt/container-flac',
+    '@webcvt/container-ogg',
+    '@webcvt/container-aac',
+    '@webcvt/container-mp4',
+    '@webcvt/container-webm',
+    '@webcvt/container-mkv',
+    '@webcvt/container-ts',
+    '@webcvt/image-canvas',
+    '@webcvt/image-svg',
+    '@webcvt/image-animation',
+    '@webcvt/image-legacy',
+    '@webcvt/data-text',
+    '@webcvt/archive-zip',
+    '@webcvt/subtitle',
+    '@webcvt/backend-wasm',
+  ],
+});
