@@ -513,3 +513,112 @@ export class TomlSerializeError extends WebcvtError {
     this.name = 'TomlSerializeError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// FWF errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a Uint8Array FWF input contains malformed UTF-8 bytes.
+ */
+export class FwfInvalidUtf8Error extends WebcvtError {
+  constructor(cause?: unknown) {
+    super('FWF_INVALID_UTF8', 'FWF input contains malformed UTF-8 bytes.', { cause });
+    this.name = 'FwfInvalidUtf8Error';
+  }
+}
+
+/**
+ * Thrown when two declared columns overlap (prev.end > next.start).
+ * Adjacent columns (prev.end === next.start) are allowed.
+ */
+export class FwfOverlappingColumnsError extends WebcvtError {
+  constructor(prevName: string, nextName: string, prevEnd: number, nextStart: number) {
+    super(
+      'FWF_OVERLAPPING_COLUMNS',
+      `FWF columns "${prevName}" (end=${prevEnd}) and "${nextName}" (start=${nextStart}) overlap. Column ranges must not overlap; adjacent ranges (end === start) are allowed.`,
+    );
+    this.name = 'FwfOverlappingColumnsError';
+  }
+}
+
+/**
+ * Thrown when a column declaration is invalid:
+ * - end <= start (zero-or-negative width)
+ * - start < 0
+ * - empty name
+ * - align not 'left' | 'right'
+ * - duplicate name
+ */
+export class FwfInvalidColumnError extends WebcvtError {
+  constructor(name: string, reason: string) {
+    super('FWF_INVALID_COLUMN', `FWF column "${name}" is invalid: ${reason}.`);
+    this.name = 'FwfInvalidColumnError';
+  }
+}
+
+/**
+ * Thrown when the number of declared columns exceeds MAX_FWF_COLUMNS (1,024).
+ */
+export class FwfTooManyColumnsError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'FWF_TOO_MANY_COLUMNS',
+      `FWF schema declares ${count} columns which exceeds the cap of ${max}. Large schemas are rejected to prevent schema-bomb DoS.`,
+    );
+    this.name = 'FwfTooManyColumnsError';
+  }
+}
+
+/**
+ * Thrown when the raw line count (after split, before skip-empty walk)
+ * exceeds MAX_FWF_LINES (1,000,000).
+ * Checked BEFORE the skip-empty walk to prevent DoS from huge arrays of
+ * whitespace-only lines.
+ */
+export class FwfTooManyLinesError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'FWF_TOO_MANY_LINES',
+      `FWF input has ${count} raw lines which exceeds the cap of ${max}. Cap is checked on raw split count before empty-line skipping.`,
+    );
+    this.name = 'FwfTooManyLinesError';
+  }
+}
+
+/**
+ * Thrown by serializeFwf when a field value is longer than its declared
+ * column width (value.length > end - start).
+ * NEVER truncates silently — callers must pre-truncate if desired.
+ */
+export class FwfFieldOverflowError extends WebcvtError {
+  readonly column: string;
+  readonly valueLength: number;
+  readonly columnWidth: number;
+  constructor(column: string, valueLength: number, columnWidth: number) {
+    super(
+      'FWF_FIELD_OVERFLOW',
+      `FWF field "${column}" value length ${valueLength} exceeds declared column width ${columnWidth}. Truncation is never silent — shorten the value or widen the column.`,
+    );
+    this.name = 'FwfFieldOverflowError';
+    this.column = column;
+    this.valueLength = valueLength;
+    this.columnWidth = columnWidth;
+  }
+}
+
+/**
+ * Thrown when padChar is not exactly 1 UTF-16 code unit.
+ * FWF column width math is UTF-16 code unit based; a multi-unit or empty
+ * padChar would corrupt column boundaries.
+ */
+export class FwfBadPadCharError extends WebcvtError {
+  constructor(padChar: string) {
+    super(
+      'FWF_BAD_PAD_CHAR',
+      `FWF padChar must be exactly 1 UTF-16 code unit but received "${padChar}" ` +
+        `(length=${padChar.length}). Use a single ASCII character such as ' ' or '0'.`,
+    );
+    this.name = 'FwfBadPadCharError';
+  }
+}

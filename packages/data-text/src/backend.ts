@@ -18,6 +18,7 @@ import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@
 import {
   CSV_MIME,
   ENV_MIME,
+  FWF_MIME,
   INI_MIME,
   JSONL_MIME,
   JSONL_MIME_ALIAS,
@@ -29,6 +30,9 @@ import {
 import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
 import { type DataTextFormat, parseDataText } from './parser.ts';
 import { serializeDataText } from './serializer.ts';
+
+/** DataTextFormat variants that are routable via MIME (excludes FWF — see FWF_MIME note). */
+type RoutableFormat = Exclude<DataTextFormat, 'fwf'>;
 
 // ---------------------------------------------------------------------------
 // MIME → DataTextFormat mapping
@@ -43,7 +47,13 @@ import { serializeDataText } from './serializer.ts';
  * handles text/plain when input.mime === output.mime AND the caller has opted
  * in by registering this backend.
  */
-const MIME_TO_FORMAT = new Map<string, DataTextFormat>([
+/**
+ * Map from MIME type string to routable format.
+ *
+ * Note: FWF is deliberately excluded — it shares text/plain with ENV and cannot
+ * be disambiguated by MIME alone. FWF is only reachable via the direct API.
+ */
+const MIME_TO_FORMAT = new Map<string, RoutableFormat>([
   [JSON_MIME, 'json'],
   [CSV_MIME, 'csv'],
   [TSV_MIME, 'tsv'],
@@ -160,4 +170,20 @@ export const TOML_FORMAT: FormatDescriptor = {
   mime: TOML_MIME,
   category: 'data',
   description: "Tom's Obvious Minimal Language",
+};
+
+/**
+ * FWF format descriptor.
+ *
+ * IMPORTANT — MIME disambiguation:
+ * FWF shares `text/plain` with ENV. The DataTextBackend.canHandle MIME routing
+ * CANNOT distinguish them, so FWF_FORMAT is NOT registered in MIME_TO_FORMAT.
+ * FWF is reachable ONLY via direct parseFwf / serializeFwf API or via
+ * parseDataText(input, 'fwf', { columns }).
+ */
+export const FWF_FORMAT: FormatDescriptor = {
+  ext: 'fwf',
+  mime: FWF_MIME,
+  category: 'data',
+  description: 'Fixed-Width Format',
 };

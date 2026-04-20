@@ -72,6 +72,12 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'data',
     description: "Tom's Obvious Minimal Language",
   },
+  {
+    ext: 'fwf',
+    mime: 'text/plain',
+    category: 'data',
+    description: 'Fixed-Width Format',
+  },
   // Image-legacy (Phase 4: image-legacy package)
   {
     ext: 'pbm',

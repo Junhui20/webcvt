@@ -4,14 +4,18 @@
  * Supported formats:
  *   JSON (RFC 8259), CSV (RFC 4180), TSV (IANA text/tab-separated-values),
  *   INI (de-facto subset), ENV (dotenv-style), JSONL (JSON Lines / NDJSON),
- *   TOML v1.0.0 (toml.io).
+ *   TOML v1.0.0 (toml.io), FWF (Fixed-Width Format).
  *
- * Deferred (Phase 4.5+): YAML, XML, FWF, TOON.
+ * Deferred (Phase 4.5+): YAML, XML, TOON.
  *
  * No auto-detection: callers must explicitly pass the format to parseDataText.
  * No cross-format conversion: use @webcvt/convert for that.
  * No schema coercion: all values returned as strings (except JSON).
  * No streaming: all operations are fully buffered.
+ *
+ * FWF note: FWF shares text/plain MIME with ENV. DataTextBackend.canHandle
+ * CANNOT disambiguate them by MIME. FWF is reachable ONLY via direct
+ * parseFwf / serializeFwf or parseDataText(input, 'fwf', { columns }).
  *
  * Security: 10 MiB input cap, UTF-8 fatal-mode decoding, JSON depth pre-scan,
  * CSV/INI/ENV row/key caps. See the design note for the full security story.
@@ -31,6 +35,7 @@ export type { IniFile } from './ini.ts';
 export type { EnvFile } from './env.ts';
 export type { JsonlFile, JsonlSerializeOptions } from './jsonl.ts';
 export type { TomlFile, TomlValue, TomlDate, TomlTime, TomlDateTime } from './toml.ts';
+export type { FwfFile, FwfColumn, FwfAlign, FwfParseOptions, FwfSerializeOptions } from './fwf.ts';
 export type { DataTextFile, DataTextFormat } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -76,6 +81,12 @@ export { parseJsonl, serializeJsonl } from './jsonl.ts';
 export { parseToml, serializeToml } from './toml.ts';
 
 // ---------------------------------------------------------------------------
+// FWF API
+// ---------------------------------------------------------------------------
+
+export { parseFwf, serializeFwf } from './fwf.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -95,6 +106,7 @@ export {
   ENV_FORMAT,
   JSONL_FORMAT,
   TOML_FORMAT,
+  FWF_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -139,4 +151,11 @@ export {
   TomlDepthExceededError,
   TomlStringTooLongError,
   TomlSerializeError,
+  FwfInvalidUtf8Error,
+  FwfOverlappingColumnsError,
+  FwfInvalidColumnError,
+  FwfTooManyColumnsError,
+  FwfTooManyLinesError,
+  FwfFieldOverflowError,
+  FwfBadPadCharError,
 } from './errors.ts';

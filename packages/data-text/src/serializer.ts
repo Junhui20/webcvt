@@ -10,6 +10,7 @@
 
 import { serializeDelimited } from './csv.ts';
 import { serializeEnv } from './env.ts';
+import { serializeFwf } from './fwf.ts';
 import { serializeIni } from './ini.ts';
 import { serializeJson } from './json.ts';
 import { serializeJsonl } from './jsonl.ts';
@@ -41,5 +42,7 @@ export function serializeDataText(file: DataTextFile): string {
       return serializeJsonl(file.file);
     case 'toml':
       return serializeToml(file.file);
+    case 'fwf':
+      return serializeFwf(file.file);
   }
 }

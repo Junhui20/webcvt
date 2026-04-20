@@ -135,3 +135,37 @@ export const MAX_TOML_ARRAY_LEN = 1_000_000;
 
 /** Canonical MIME type for TOML (application/toml). */
 export const TOML_MIME = 'application/toml';
+
+// ---------------------------------------------------------------------------
+// FWF-specific caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum number of columns in an FWF schema (1,024).
+ * Matches MAX_CSV_COLS; prevents schema-bomb DoS where a caller declares
+ * thousands of columns each requiring per-line slice operations.
+ * Checked BEFORE any input processing (schema validation runs first).
+ */
+export const MAX_FWF_COLUMNS = 1024;
+
+/**
+ * Maximum number of raw lines after split in an FWF document (1,000,000).
+ * Checked BEFORE the skip-empty walk to prevent DoS from huge split arrays
+ * (e.g. 10 MiB of bare newlines produces ~10M lines → ~80 MiB array).
+ * Matches MAX_JSONL_RECORDS.
+ */
+export const MAX_FWF_LINES = 1_000_000;
+
+// ---------------------------------------------------------------------------
+// FWF MIME
+// ---------------------------------------------------------------------------
+
+/**
+ * MIME type for FWF files (text/plain).
+ *
+ * WARNING: FWF shares `text/plain` with ENV. The DataTextBackend.canHandle
+ * MIME-routing CANNOT disambiguate them. FWF is therefore NOT added to
+ * MIME_TO_FORMAT in backend.ts. FWF is reachable ONLY via direct
+ * parseFwf / serializeFwf API or parseDataText(input, 'fwf', { columns }).
+ */
+export const FWF_MIME = 'text/plain';
