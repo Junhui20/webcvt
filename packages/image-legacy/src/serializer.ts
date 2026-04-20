@@ -13,6 +13,7 @@ import { serializeQoi } from './qoi.ts';
 import { serializeTga } from './tga.ts';
 import { serializeTiff } from './tiff.ts';
 import { serializeXbm } from './xbm.ts';
+import { serializeXpm } from './xpm.ts';
 
 export function serializeImage(file: ImageFile): Uint8Array {
   switch (file.format) {
@@ -34,5 +35,7 @@ export function serializeImage(file: ImageFile): Uint8Array {
       return serializeXbm(file);
     case 'pcx':
       return serializePcx(file);
+    case 'xpm':
+      return serializeXpm(file);
   }
 }

@@ -24,8 +24,19 @@ import {
 } from './constants.ts';
 import { isTgaHeader } from './tga.ts';
 import { isXbmHeader } from './xbm.ts';
+import { isXpmHeader } from './xpm.ts';
 
-export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff' | 'tga' | 'xbm' | 'pcx';
+export type ImageFormat =
+  | 'pbm'
+  | 'pgm'
+  | 'ppm'
+  | 'pfm'
+  | 'qoi'
+  | 'tiff'
+  | 'tga'
+  | 'xbm'
+  | 'pcx'
+  | 'xpm';
 
 /**
  * Sniff the format of input and return the matching ImageFormat or null.
@@ -127,6 +138,12 @@ export function detectImageFormat(input: Uint8Array): ImageFormat | null {
   // Strategy (2): header heuristic for TGA 1.0 (no footer)
   if (isTgaHeader(input)) {
     return 'tga';
+  }
+
+  // XPM: `/* XPM */` comment or `static char *` shape.
+  // Must come before XBM (XBM starts with '#define', XPM starts with '/* XPM */' or 'static').
+  if (isXpmHeader(input)) {
+    return 'xpm';
   }
 
   // XBM: no fixed magic bytes — lookahead-validated #define detection (Trap #6).

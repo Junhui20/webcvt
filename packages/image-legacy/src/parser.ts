@@ -21,6 +21,7 @@ import { type QoiFile, parseQoi } from './qoi.ts';
 import { type TgaFile, parseTga } from './tga.ts';
 import { type TiffFile, parseTiff } from './tiff.ts';
 import { type XbmFile, parseXbm } from './xbm.ts';
+import { type XpmFile, parseXpm } from './xpm.ts';
 
 // ---------------------------------------------------------------------------
 // Public discriminated union
@@ -35,7 +36,8 @@ export type ImageFile =
   | TiffFile
   | TgaFile
   | XbmFile
-  | PcxFile;
+  | PcxFile
+  | XpmFile;
 
 // Re-export sub-types for consumers
 export type {
@@ -48,6 +50,7 @@ export type {
   TgaFile,
   XbmFile,
   PcxFile,
+  XpmFile,
   ImageFormat,
 };
 
@@ -75,5 +78,7 @@ export function parseImage(input: Uint8Array, format: ImageFormat): ImageFile {
       return parseXbm(input);
     case 'pcx':
       return parsePcx(input);
+    case 'xpm':
+      return parseXpm(input);
   }
 }

@@ -113,6 +113,7 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'tga', mime: 'image/x-tga', category: 'image', description: 'Truevision TGA (Targa)' },
   { ext: 'xbm', mime: 'image/x-xbitmap', category: 'image', description: 'X11 Bitmap' },
   { ext: 'pcx', mime: 'image/x-pcx', category: 'image', description: 'PC Paintbrush' },
+  { ext: 'xpm', mime: 'image/x-xpixmap', category: 'image', description: 'X PixMap' },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',

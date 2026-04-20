@@ -24,6 +24,8 @@ import {
   TIFF_MIME,
   XBM_MIME,
   XBM_MIME_ALT,
+  XPM_MIME,
+  XPM_MIME_ALT,
 } from './constants.ts';
 import type { ImageFormat } from './detect.ts';
 import { ImageInputTooLargeError, ImageUnsupportedFormatError } from './errors.ts';
@@ -48,6 +50,8 @@ const MIME_TO_FORMAT = new Map<string, ImageFormat>([
   [XBM_MIME_ALT, 'xbm'],
   [PCX_MIME, 'pcx'],
   [PCX_MIME_ALT, 'pcx'],
+  [XPM_MIME, 'xpm'],
+  [XPM_MIME_ALT, 'xpm'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -173,4 +177,11 @@ export const PCX_FORMAT: FormatDescriptor = {
   mime: PCX_MIME,
   category: 'image',
   description: 'PC Paintbrush',
+};
+
+export const XPM_FORMAT: FormatDescriptor = {
+  ext: 'xpm',
+  mime: XPM_MIME,
+  category: 'image',
+  description: 'X PixMap',
 };

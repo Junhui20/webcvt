@@ -336,6 +336,108 @@ export class PcxRleDecodeError extends WebcvtError {
 }
 
 // ---------------------------------------------------------------------------
+// XPM errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when the file lacks a valid `static char *<name>[] = {` array header,
+ * or when the first string literal is malformed.
+ */
+export class XpmBadHeaderError extends WebcvtError {
+  constructor(message: string) {
+    super('XPM_BAD_HEADER', `XPM: bad header — ${message}`);
+    this.name = 'XpmBadHeaderError';
+  }
+}
+
+/**
+ * Thrown when the header string does not contain exactly 4 or 6 decimal
+ * tokens, or when width/height/ncolors/cpp are out of range.
+ */
+export class XpmBadValuesError extends WebcvtError {
+  constructor(message: string) {
+    super('XPM_BAD_VALUES', `XPM: bad values — ${message}`);
+    this.name = 'XpmBadValuesError';
+  }
+}
+
+/**
+ * Thrown when a colour definition string is missing a `c` visual-class
+ * pair or is otherwise malformed.
+ */
+export class XpmBadColorDefError extends WebcvtError {
+  constructor(message: string) {
+    super('XPM_BAD_COLOR_DEF', `XPM: bad colour definition — ${message}`);
+    this.name = 'XpmBadColorDefError';
+  }
+}
+
+/**
+ * Thrown when a `#...` colour specifier has wrong length or contains
+ * non-hex characters.
+ */
+export class XpmBadHexColorError extends WebcvtError {
+  constructor(raw: string) {
+    super('XPM_BAD_HEX_COLOR', `XPM: invalid hex colour "${raw}".`);
+    this.name = 'XpmBadHexColorError';
+  }
+}
+
+/**
+ * Thrown when a named colour (e.g. `red`) is not present in the built-in
+ * X11 colour table.
+ */
+export class XpmUnknownColorError extends WebcvtError {
+  constructor(name: string) {
+    super('XPM_UNKNOWN_COLOR', `XPM: unknown named colour "${name}".`);
+    this.name = 'XpmUnknownColorError';
+  }
+}
+
+/**
+ * Thrown when two colour definitions share the same key string.
+ */
+export class XpmDuplicateKeyError extends WebcvtError {
+  constructor(key: string) {
+    super('XPM_DUPLICATE_KEY', `XPM: duplicate colour key "${key}".`);
+    this.name = 'XpmDuplicateKeyError';
+  }
+}
+
+/**
+ * Thrown when the number of pixel rows ≠ height, or a pixel row length
+ * ≠ width × chars_per_pixel.
+ */
+export class XpmSizeMismatchError extends WebcvtError {
+  constructor(message: string) {
+    super('XPM_SIZE_MISMATCH', `XPM: size mismatch — ${message}`);
+    this.name = 'XpmSizeMismatchError';
+  }
+}
+
+/**
+ * Thrown when a pixel row references a key that was not declared in the
+ * colour table.
+ */
+export class XpmUnknownKeyError extends WebcvtError {
+  constructor(key: string) {
+    super('XPM_UNKNOWN_KEY', `XPM: undefined pixel key "${key}".`);
+    this.name = 'XpmUnknownKeyError';
+  }
+}
+
+/**
+ * Thrown when the serializer encounters more unique colours than
+ * XPM_MAX_COLORS.
+ */
+export class XpmTooManyColorsError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super('XPM_TOO_MANY_COLORS', `XPM: ${count} unique colours exceeds maximum ${max}.`);
+    this.name = 'XpmTooManyColorsError';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Backend error
 // ---------------------------------------------------------------------------
 

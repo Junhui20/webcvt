@@ -208,3 +208,44 @@ export const PCX_MIME = 'image/x-pcx';
 
 /** Alternative MIME type for PCX images. */
 export const PCX_MIME_ALT = 'image/pcx';
+
+// ---------------------------------------------------------------------------
+// XPM constants
+// ---------------------------------------------------------------------------
+
+/** Primary MIME type for XPM images (X PixMap). */
+export const XPM_MIME = 'image/x-xpixmap';
+
+/** Alternative MIME type accepted by the backend. */
+export const XPM_MIME_ALT = 'image/x-xpm';
+
+/**
+ * Default C identifier name used by the serializer when XpmFile.name is
+ * empty or missing.
+ */
+export const XPM_DEFAULT_NAME = 'image';
+
+/**
+ * Maximum number of unique colours in a single XPM file.
+ * Defends against degenerate colour tables on parse and serialize.
+ */
+export const XPM_MAX_COLORS = 1024;
+
+/**
+ * Maximum chars_per_pixel value supported.
+ * Only 1 and 2 are in scope; values > 2 are rejected.
+ */
+export const XPM_MAX_CHARS_PER_PIXEL = 2;
+
+/**
+ * The 93 printable ASCII characters that are valid as pixel key characters.
+ * All printable ASCII (0x20–0x7E) except double-quote (0x22) and
+ * backslash (0x5C, which would require escaping in C string literals).
+ *
+ * The cpp=1 threshold is ≤92 unique colours (first 92 alphabet chars suffice);
+ * cpp=2 is required for 93 or more unique colours.
+ */
+export const XPM_KEY_ALPHABET =
+  ` !#$%&'()*+,-./0123456789:;<=>?@` +
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`' +
+  'abcdefghijklmnopqrstuvwxyz{|}~';
