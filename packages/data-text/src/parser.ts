@@ -15,13 +15,14 @@ import type { DelimitedFile } from './csv.ts';
 import { type EnvFile, parseEnv } from './env.ts';
 import { type IniFile, parseIni } from './ini.ts';
 import { type JsonFile, parseJson } from './json.ts';
+import { type JsonlFile, parseJsonl } from './jsonl.ts';
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
-/** The five text formats supported in first pass. */
-export type DataTextFormat = 'json' | 'csv' | 'tsv' | 'ini' | 'env';
+/** The six text formats supported (five first-pass + JSONL extension). */
+export type DataTextFormat = 'json' | 'csv' | 'tsv' | 'ini' | 'env' | 'jsonl';
 
 /** Discriminated union returned by the top-level dispatcher. */
 export type DataTextFile =
@@ -29,10 +30,11 @@ export type DataTextFile =
   | { kind: 'csv'; file: DelimitedFile }
   | { kind: 'tsv'; file: DelimitedFile }
   | { kind: 'ini'; file: IniFile }
-  | { kind: 'env'; file: EnvFile };
+  | { kind: 'env'; file: EnvFile }
+  | { kind: 'jsonl'; file: JsonlFile };
 
 // Re-export sub-types so callers can import from parser.ts if desired.
-export type { JsonFile, DelimitedFile, IniFile, EnvFile };
+export type { JsonFile, DelimitedFile, IniFile, EnvFile, JsonlFile };
 export type { DelimitedParseOptions };
 
 // ---------------------------------------------------------------------------
@@ -62,5 +64,7 @@ export function parseDataText(
       return { kind: 'ini', file: parseIni(input) };
     case 'env':
       return { kind: 'env', file: parseEnv(input) };
+    case 'jsonl':
+      return { kind: 'jsonl', file: parseJsonl(input) };
   }
 }

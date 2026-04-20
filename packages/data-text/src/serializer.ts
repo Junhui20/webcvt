@@ -12,6 +12,7 @@ import { serializeDelimited } from './csv.ts';
 import { serializeEnv } from './env.ts';
 import { serializeIni } from './ini.ts';
 import { serializeJson } from './json.ts';
+import { serializeJsonl } from './jsonl.ts';
 import type { DataTextFile } from './parser.ts';
 
 // Re-export for convenience
@@ -35,5 +36,7 @@ export function serializeDataText(file: DataTextFile): string {
       return serializeIni(file.file);
     case 'env':
       return serializeEnv(file.file);
+    case 'jsonl':
+      return serializeJsonl(file.file);
   }
 }

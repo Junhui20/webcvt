@@ -1,11 +1,11 @@
 /**
  * @webcvt/data-text — Public API
  *
- * Supported formats (first pass — Phase 4):
+ * Supported formats:
  *   JSON (RFC 8259), CSV (RFC 4180), TSV (IANA text/tab-separated-values),
- *   INI (de-facto subset), ENV (dotenv-style).
+ *   INI (de-facto subset), ENV (dotenv-style), JSONL (JSON Lines / NDJSON).
  *
- * Deferred (Phase 4.5+): YAML, TOML, XML, JSONL, FWF, TOON.
+ * Deferred (Phase 4.5+): YAML, TOML, XML, FWF, TOON.
  *
  * No auto-detection: callers must explicitly pass the format to parseDataText.
  * No cross-format conversion: use @webcvt/convert for that.
@@ -28,6 +28,7 @@ export type { JsonFile, JsonValue } from './json.ts';
 export type { DelimitedFile, DelimitedParseOptions } from './csv.ts';
 export type { IniFile } from './ini.ts';
 export type { EnvFile } from './env.ts';
+export type { JsonlFile, JsonlSerializeOptions } from './jsonl.ts';
 export type { DataTextFile, DataTextFormat } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -61,6 +62,12 @@ export { parseIni, serializeIni } from './ini.ts';
 export { parseEnv, serializeEnv } from './env.ts';
 
 // ---------------------------------------------------------------------------
+// JSONL API
+// ---------------------------------------------------------------------------
+
+export { parseJsonl, serializeJsonl } from './jsonl.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -78,6 +85,7 @@ export {
   TSV_FORMAT,
   INI_FORMAT,
   ENV_FORMAT,
+  JSONL_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -106,4 +114,9 @@ export {
   EnvInvalidUtf8Error,
   EnvSyntaxError,
   EnvBadEscapeError,
+  JsonlInvalidUtf8Error,
+  JsonlRecordParseError,
+  JsonlRecordDepthExceededError,
+  JsonlTooManyRecordsError,
+  JsonlRecordTooLongError,
 } from './errors.ts';

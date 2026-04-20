@@ -63,6 +63,24 @@ export const MAX_INI_KEYS = 100_000;
 export const MAX_ENV_KEYS = 100_000;
 
 // ---------------------------------------------------------------------------
+// JSONL-specific caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum number of raw lines after split in a JSONL document (1,000,000).
+ * Checked BEFORE the skip-empty walk to prevent DoS from huge split arrays
+ * (Trap #6: 10 MiB of bare newlines = ~10M lines → ~80 MiB array).
+ */
+export const MAX_JSONL_RECORDS = 1_000_000;
+
+/**
+ * Maximum number of characters in a single JSONL record line (1,048,576 = 1 MiB).
+ * Checked BEFORE the depth pre-scan to prevent memory exhaustion from a single
+ * very long line (Trap #7: one 10 MiB padded line overwhelms JSON.parse).
+ */
+export const MAX_JSONL_RECORD_CHARS = 1_048_576;
+
+// ---------------------------------------------------------------------------
 // MIME types
 // ---------------------------------------------------------------------------
 
@@ -71,3 +89,12 @@ export const CSV_MIME = 'text/csv';
 export const TSV_MIME = 'text/tab-separated-values';
 export const INI_MIME = 'text/x-ini';
 export const ENV_MIME = 'text/plain';
+
+/** Canonical MIME type for JSONL / JSON Lines (application/jsonl). */
+export const JSONL_MIME = 'application/jsonl';
+
+/**
+ * Alias MIME type for JSONL (application/x-ndjson).
+ * Accepted by the backend as an identity-within-format alias.
+ */
+export const JSONL_MIME_ALIAS = 'application/x-ndjson';

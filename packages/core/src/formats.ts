@@ -60,6 +60,12 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'data',
     description: 'Environment Variables File (.env)',
   },
+  {
+    ext: 'jsonl',
+    mime: 'application/jsonl',
+    category: 'data',
+    description: 'JSON Lines',
+  },
   // Image-legacy (Phase 4: image-legacy package)
   {
     ext: 'pbm',

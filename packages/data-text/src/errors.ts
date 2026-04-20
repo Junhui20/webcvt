@@ -274,3 +274,83 @@ export class EnvBadEscapeError extends WebcvtError {
     this.name = 'EnvBadEscapeError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// JSONL errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a Uint8Array input contains malformed UTF-8 bytes for JSONL.
+ */
+export class JsonlInvalidUtf8Error extends WebcvtError {
+  constructor(cause?: unknown) {
+    super('JSONL_INVALID_UTF8', 'JSONL input contains malformed UTF-8 bytes.', { cause });
+    this.name = 'JsonlInvalidUtf8Error';
+  }
+}
+
+/**
+ * Thrown when a JSONL record fails JSON.parse, or when JSON.stringify produces
+ * undefined for a record during serialize (Trap #8 — undefined/function values).
+ * Carries a 1-based lineNumber.
+ */
+export class JsonlRecordParseError extends WebcvtError {
+  readonly lineNumber: number;
+  constructor(lineNumber: number, cause?: unknown) {
+    super(
+      'JSONL_RECORD_PARSE',
+      `JSONL record at line ${lineNumber} failed to parse.`,
+      cause !== undefined ? { cause } : undefined,
+    );
+    this.name = 'JsonlRecordParseError';
+    this.lineNumber = lineNumber;
+  }
+}
+
+/**
+ * Thrown when a JSONL record's nesting depth exceeds MAX_JSON_DEPTH (256).
+ * Detected BEFORE JSON.parse to prevent V8 stack-overflow (Trap #3).
+ * Carries a 1-based lineNumber.
+ */
+export class JsonlRecordDepthExceededError extends WebcvtError {
+  readonly lineNumber: number;
+  constructor(lineNumber: number, depth: number, max: number) {
+    super(
+      'JSONL_RECORD_DEPTH_EXCEEDED',
+      `JSONL record at line ${lineNumber} has nesting depth ${depth} which exceeds the cap of ${max}. Rejected before JSON.parse to prevent stack overflow.`,
+    );
+    this.name = 'JsonlRecordDepthExceededError';
+    this.lineNumber = lineNumber;
+  }
+}
+
+/**
+ * Thrown when the raw split line count exceeds MAX_JSONL_RECORDS (1,000,000).
+ * Checked BEFORE the walk to prevent DoS from huge arrays of empty lines (Trap #6).
+ */
+export class JsonlTooManyRecordsError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'JSONL_TOO_MANY_RECORDS',
+      `JSONL input has ${count} lines which exceeds the cap of ${max}. Check Trap #6: 10 MiB of bare newlines produces ~10M lines.`,
+    );
+    this.name = 'JsonlTooManyRecordsError';
+  }
+}
+
+/**
+ * Thrown when a single JSONL record line exceeds MAX_JSONL_RECORD_CHARS (1,048,576).
+ * Checked BEFORE depth scan to prevent memory exhaustion (Trap #7).
+ * Carries a 1-based lineNumber.
+ */
+export class JsonlRecordTooLongError extends WebcvtError {
+  readonly lineNumber: number;
+  constructor(lineNumber: number, length: number, max: number) {
+    super(
+      'JSONL_RECORD_TOO_LONG',
+      `JSONL record at line ${lineNumber} is ${length} characters which exceeds the per-record cap of ${max} (1 MiB).`,
+    );
+    this.name = 'JsonlRecordTooLongError';
+    this.lineNumber = lineNumber;
+  }
+}

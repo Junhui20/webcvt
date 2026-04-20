@@ -15,7 +15,16 @@
  */
 
 import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
-import { CSV_MIME, ENV_MIME, INI_MIME, JSON_MIME, MAX_INPUT_BYTES, TSV_MIME } from './constants.ts';
+import {
+  CSV_MIME,
+  ENV_MIME,
+  INI_MIME,
+  JSONL_MIME,
+  JSONL_MIME_ALIAS,
+  JSON_MIME,
+  MAX_INPUT_BYTES,
+  TSV_MIME,
+} from './constants.ts';
 import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
 import { type DataTextFormat, parseDataText } from './parser.ts';
 import { serializeDataText } from './serializer.ts';
@@ -39,6 +48,8 @@ const MIME_TO_FORMAT = new Map<string, DataTextFormat>([
   [TSV_MIME, 'tsv'],
   [INI_MIME, 'ini'],
   [ENV_MIME, 'env'],
+  [JSONL_MIME, 'jsonl'],
+  [JSONL_MIME_ALIAS, 'jsonl'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -133,4 +144,11 @@ export const ENV_FORMAT: FormatDescriptor = {
   mime: ENV_MIME,
   category: 'data',
   description: 'Environment Variables File',
+};
+
+export const JSONL_FORMAT: FormatDescriptor = {
+  ext: 'jsonl',
+  mime: JSONL_MIME,
+  category: 'data',
+  description: 'JSON Lines',
 };

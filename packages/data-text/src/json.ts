@@ -47,7 +47,7 @@ export interface JsonFile {
 }
 
 // ---------------------------------------------------------------------------
-// Depth pre-scan (Trap §1)
+// Depth pre-scan (shared helper, module-internal)
 // ---------------------------------------------------------------------------
 
 /**
@@ -55,10 +55,20 @@ export interface JsonFile {
  * Counts `[` and `{` as +1, `]` and `}` as -1, skips characters inside
  * strings (tracking `"` with `\"` escape awareness).
  *
- * Returns the maximum depth reached. Throws JsonDepthExceededError if it
- * exceeds MAX_JSON_DEPTH — this must run BEFORE JSON.parse.
+ * The `throwOnExceed` closure is called with (depth, max) when the running
+ * depth exceeds MAX_JSON_DEPTH. The closure is responsible for throwing the
+ * appropriate typed error for the calling format:
+ *   - JSON callers pass: (d, m) => new JsonDepthExceededError(d, m)
+ *   - JSONL callers pass: (d, m) => new JsonlRecordDepthExceededError(lineNumber, d, m)
+ *
+ * This must run BEFORE JSON.parse to prevent V8 stack-overflow exposure.
+ *
+ * @internal Exported for use by jsonl.ts only; not part of the public API.
  */
-function prescanJsonDepth(text: string): void {
+export function prescanJsonDepth(
+  text: string,
+  throwOnExceed: (depth: number, max: number) => Error,
+): void {
   let depth = 0;
   let maxDepth = 0;
   let inString = false;
@@ -80,7 +90,7 @@ function prescanJsonDepth(text: string): void {
         if (depth > maxDepth) {
           maxDepth = depth;
           if (maxDepth > MAX_JSON_DEPTH) {
-            throw new JsonDepthExceededError(maxDepth, MAX_JSON_DEPTH);
+            throw throwOnExceed(maxDepth, MAX_JSON_DEPTH);
           }
         }
       } else if (c === ']' || c === '}') {
@@ -107,7 +117,7 @@ export function parseJson(input: Uint8Array | string): JsonFile {
   const { text, hadBom } = decodeInput(input, 'JSON', (cause) => new JsonInvalidUtf8Error(cause));
 
   // Trap §1: pre-scan BEFORE JSON.parse
-  prescanJsonDepth(text);
+  prescanJsonDepth(text, (d, m) => new JsonDepthExceededError(d, m));
 
   let value: JsonValue;
   try {
