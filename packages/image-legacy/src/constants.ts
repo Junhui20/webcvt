@@ -64,3 +64,38 @@ export const QOI_MAGIC = new Uint8Array([0x71, 0x6f, 0x69, 0x66]);
 
 /** QOI header size in bytes. */
 export const QOI_HEADER_SIZE = 14;
+
+// ---------------------------------------------------------------------------
+// TIFF constants
+// ---------------------------------------------------------------------------
+
+/** MIME type for TIFF images. */
+export const TIFF_MIME = 'image/tiff';
+
+/** TIFF little-endian (II) magic: 49 49 2A 00. */
+export const TIFF_LE_MAGIC = new Uint8Array([0x49, 0x49, 0x2a, 0x00]);
+
+/** TIFF big-endian (MM) magic: 4D 4D 00 2A. */
+export const TIFF_BE_MAGIC = new Uint8Array([0x4d, 0x4d, 0x00, 0x2a]);
+
+/** Maximum number of IFD pages (chain length cap). */
+export const MAX_PAGES = 1024;
+
+/** Maximum IFD entry count per IFD. */
+export const MAX_IFD_ENTRIES = 4096;
+
+/**
+ * Maximum LZW expansion ratio (compressed-to-decompressed).
+ * Actual output bytes capped via MAX_DECOMPRESSED_STRIP_BYTES.
+ */
+export const MAX_LZW_EXPANSION_RATIO = 1024;
+
+/** Maximum bytes for a single decompressed strip (256 MiB). */
+export const MAX_DECOMPRESSED_STRIP_BYTES = 256 * 1024 * 1024;
+
+/**
+ * Maximum count for a single IFD tag value array.
+ * 256M covers MAX_INPUT_BYTES / smallest type size (1 byte per BYTE element).
+ * Prevents count × typeSize integer overflow before the downstream bounds check.
+ */
+export const MAX_TAG_VALUE_COUNT = 268_435_456; // 256M

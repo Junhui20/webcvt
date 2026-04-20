@@ -9,7 +9,7 @@
  * inputs. detectImageFormat is an opt-in helper only.
  */
 
-export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi';
+export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff';
 
 /**
  * Sniff the first 4 bytes of input and return the matching ImageFormat or null.
@@ -24,17 +24,38 @@ export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi';
  *   'Pf' (0x50 0x66) → 'pfm'    (grayscale PFM)
  *   'PF' (0x50 0x46) → 'pfm'    (RGB PFM)
  *   'qoif' (0x71 0x6F 0x69 0x66) → 'qoi'
+ *   II*\0 (0x49 0x49 0x2A 0x00) → 'tiff'  (TIFF little-endian)
+ *   MM\0* (0x4D 0x4D 0x00 0x2A) → 'tiff'  (TIFF big-endian)
+ *
+ * NOTE: BigTIFF (magic 43) is NOT matched here — it is handled as an
+ * unsupported feature inside parseTiff, not as a separate format variant.
  */
 export function detectImageFormat(input: Uint8Array): ImageFormat | null {
   if (input.length < 2) return null;
 
+  // input.length >= 2 is guaranteed here; ?? 0 is defensive for noUncheckedIndexedAccess
+  /* v8 ignore next 2 */
   const b0 = input[0] ?? 0;
   const b1 = input[1] ?? 0;
 
   // QOI: 4-byte magic "qoif"
   if (input.length >= 4) {
+    // input.length >= 4 is guaranteed here; ?? 0 is defensive for noUncheckedIndexedAccess
+    /* v8 ignore next */
     if (b0 === 0x71 && b1 === 0x6f && (input[2] ?? 0) === 0x69 && (input[3] ?? 0) === 0x66) {
       return 'qoi';
+    }
+
+    // TIFF little-endian: II*\0 (0x49 0x49 0x2A 0x00)
+    /* v8 ignore next */
+    if (b0 === 0x49 && b1 === 0x49 && (input[2] ?? 0) === 0x2a && (input[3] ?? 0) === 0x00) {
+      return 'tiff';
+    }
+
+    // TIFF big-endian: MM\0* (0x4D 0x4D 0x00 0x2A)
+    /* v8 ignore next */
+    if (b0 === 0x4d && b1 === 0x4d && (input[2] ?? 0) === 0x00 && (input[3] ?? 0) === 0x2a) {
+      return 'tiff';
     }
   }
 

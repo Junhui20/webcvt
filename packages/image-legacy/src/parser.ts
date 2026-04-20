@@ -17,15 +17,16 @@ import {
 } from './netpbm.ts';
 import { type PfmFile, parsePfm } from './pfm.ts';
 import { type QoiFile, parseQoi } from './qoi.ts';
+import { type TiffFile, parseTiff } from './tiff.ts';
 
 // ---------------------------------------------------------------------------
 // Public discriminated union
 // ---------------------------------------------------------------------------
 
-export type ImageFile = PbmFile | PgmFile | PpmFile | PfmFile | QoiFile;
+export type ImageFile = PbmFile | PgmFile | PpmFile | PfmFile | QoiFile | TiffFile;
 
 // Re-export sub-types for consumers
-export type { PbmFile, PgmFile, PpmFile, PfmFile, QoiFile, ImageFormat };
+export type { PbmFile, PgmFile, PpmFile, PfmFile, QoiFile, TiffFile, ImageFormat };
 
 // ---------------------------------------------------------------------------
 // Top-level dispatcher
@@ -43,5 +44,7 @@ export function parseImage(input: Uint8Array, format: ImageFormat): ImageFile {
       return parsePfm(input);
     case 'qoi':
       return parseQoi(input);
+    case 'tiff':
+      return parseTiff(input);
   }
 }

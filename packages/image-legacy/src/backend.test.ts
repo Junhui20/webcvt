@@ -11,8 +11,8 @@ import {
 import { ImageInputTooLargeError, ImageUnsupportedFormatError } from './errors.ts';
 
 const FAKE_FORMAT: FormatDescriptor = {
-  ext: 'tiff',
-  mime: 'image/tiff',
+  ext: 'bmp',
+  mime: 'image/bmp',
   category: 'image',
 };
 
@@ -74,7 +74,7 @@ describe('ImageLegacyBackend', () => {
   });
 
   it('convert throws ImageUnsupportedFormatError for unsupported MIME', async () => {
-    const badBlob = new Blob([new Uint8Array(1)], { type: 'image/tiff' });
+    const badBlob = new Blob([new Uint8Array(1)], { type: 'image/bmp' });
     await expect(backend.convert(badBlob, FAKE_FORMAT, { format: FAKE_FORMAT })).rejects.toThrow(
       ImageUnsupportedFormatError,
     );

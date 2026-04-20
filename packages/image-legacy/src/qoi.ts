@@ -97,12 +97,16 @@ export function parseQoi(input: Uint8Array): QoiFile {
     );
   }
   const pixelCount = width * height;
+  const pixelBytes = pixelCount * channels;
+  // pixelCount <= MAX_DIM^2 = MAX_PIXELS and pixelBytes <= MAX_PIXELS * 4 = MAX_PIXEL_BYTES
+  // exactly, so both branches below are unreachable given the dimension guard above.
+  // They are retained as belt-and-braces defence against future constant changes.
+  /* v8 ignore next 8 */
   if (pixelCount > MAX_PIXELS) {
     throw new ImagePixelCapError(
       `QOI: pixel count ${pixelCount} exceeds MAX_PIXELS ${MAX_PIXELS}.`,
     );
   }
-  const pixelBytes = pixelCount * channels;
   if (pixelBytes > MAX_PIXEL_BYTES) {
     throw new ImagePixelCapError(
       `QOI: pixel byte count ${pixelBytes} exceeds MAX_PIXEL_BYTES ${MAX_PIXEL_BYTES}.`,

@@ -1,10 +1,10 @@
 /**
  * @webcvt/image-legacy — Public API
  *
- * Supported formats (first pass — Phase 4):
- *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI.
+ * Supported formats (second pass — Phase 4.5):
+ *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF.
  *
- * Deferred (Phase 4.5+): TIFF, TGA, PCX, XBM, XPM, ICNS, CUR.
+ * Deferred (Phase 4.5+): TGA, PCX, XBM, XPM, ICNS, CUR.
  *
  * No cross-format conversion: each format is parse/serialize-only within its type.
  * No auto-detection inside parseImage: pass format explicitly.
@@ -27,7 +27,23 @@ export type {
   PpmFile,
   PfmFile,
   QoiFile,
+  TiffFile,
 } from './parser.ts';
+
+// ---------------------------------------------------------------------------
+// TIFF types (direct from tiff.ts)
+// ---------------------------------------------------------------------------
+
+export type {
+  TiffByteOrder,
+  TiffPhotometric,
+  TiffCompression,
+  TiffPredictor,
+  TiffPlanarConfig,
+  TiffOpaqueTag,
+  TiffPage,
+  TiffNormalisation,
+} from './tiff.ts';
 export type { NetpbmMagic } from './netpbm.ts';
 
 // ---------------------------------------------------------------------------
@@ -61,6 +77,18 @@ export { parsePfm, serializePfm } from './pfm.ts';
 export { parseQoi, serializeQoi } from './qoi.ts';
 
 // ---------------------------------------------------------------------------
+// TIFF API
+// ---------------------------------------------------------------------------
+
+export {
+  parseTiff,
+  serializeTiff,
+  serializeTiffWithNormalisations,
+  packBitsDecode,
+} from './tiff.ts';
+export { lzwDecode } from './tiff-lzw.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -79,6 +107,7 @@ export {
   PPM_FORMAT,
   PFM_FORMAT,
   QOI_FORMAT,
+  TIFF_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -104,4 +133,13 @@ export {
   QoiMissingEndMarkerError,
   QoiSizeMismatchError,
   ImageUnsupportedFormatError,
+  TiffBadMagicError,
+  TiffUnsupportedFeatureError,
+  TiffBadIfdError,
+  TiffCircularIfdError,
+  TiffTooManyPagesError,
+  TiffBadTagValueError,
+  TiffPackBitsDecodeError,
+  TiffLzwDecodeError,
+  TiffDeflateDecodeError,
 } from './errors.ts';

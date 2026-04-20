@@ -9,7 +9,15 @@
  */
 
 import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
-import { MAX_INPUT_BYTES, PBM_MIME, PFM_MIME, PGM_MIME, PPM_MIME, QOI_MIME } from './constants.ts';
+import {
+  MAX_INPUT_BYTES,
+  PBM_MIME,
+  PFM_MIME,
+  PGM_MIME,
+  PPM_MIME,
+  QOI_MIME,
+  TIFF_MIME,
+} from './constants.ts';
 import type { ImageFormat } from './detect.ts';
 import { ImageInputTooLargeError, ImageUnsupportedFormatError } from './errors.ts';
 import { parseImage } from './parser.ts';
@@ -25,6 +33,7 @@ const MIME_TO_FORMAT = new Map<string, ImageFormat>([
   [PPM_MIME, 'ppm'],
   [PFM_MIME, 'pfm'],
   [QOI_MIME, 'qoi'],
+  [TIFF_MIME, 'tiff'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -122,4 +131,11 @@ export const QOI_FORMAT: FormatDescriptor = {
   mime: QOI_MIME,
   category: 'image',
   description: 'Quite OK Image Format',
+};
+
+export const TIFF_FORMAT: FormatDescriptor = {
+  ext: 'tiff',
+  mime: TIFF_MIME,
+  category: 'image',
+  description: 'Tag Image File Format (TIFF 6.0)',
 };

@@ -9,6 +9,7 @@ import { serializePbm, serializePgm, serializePpm } from './netpbm.ts';
 import type { ImageFile } from './parser.ts';
 import { serializePfm } from './pfm.ts';
 import { serializeQoi } from './qoi.ts';
+import { serializeTiff } from './tiff.ts';
 
 export function serializeImage(file: ImageFile): Uint8Array {
   switch (file.format) {
@@ -22,5 +23,7 @@ export function serializeImage(file: ImageFile): Uint8Array {
       return serializePfm(file);
     case 'qoi':
       return serializeQoi(file);
+    case 'tiff':
+      return serializeTiff(file);
   }
 }
