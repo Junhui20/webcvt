@@ -58,6 +58,32 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'data',
     description: 'Environment Variables File (.env)',
   },
+  // Image-legacy (Phase 4: image-legacy package)
+  {
+    ext: 'pbm',
+    mime: 'image/x-portable-bitmap',
+    category: 'image',
+    description: 'Portable Bitmap (Netpbm PBM)',
+  },
+  {
+    ext: 'pgm',
+    mime: 'image/x-portable-graymap',
+    category: 'image',
+    description: 'Portable Graymap (Netpbm PGM)',
+  },
+  {
+    ext: 'ppm',
+    mime: 'image/x-portable-pixmap',
+    category: 'image',
+    description: 'Portable Pixmap (Netpbm PPM)',
+  },
+  {
+    ext: 'pfm',
+    mime: 'image/x-portable-floatmap',
+    category: 'image',
+    description: 'Portable Float Map (Netpbm PFM)',
+  },
+  { ext: 'qoi', mime: 'image/qoi', category: 'image', description: 'Quite OK Image Format' },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',

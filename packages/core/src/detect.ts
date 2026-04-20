@@ -51,6 +51,8 @@ const SIGNATURES: readonly Signature[] = [
   // TAR ustar: magic "ustar\0" at offset 257 (POSIX 1003.1).
   // HEADER_BYTES_TO_READ must be >= 263 to reach this offset.
   { ext: 'tar', offset: 257, bytes: [0x75, 0x73, 0x74, 0x61, 0x72, 0x00] }, // "ustar\0"
+  // QOI: 4-byte magic "qoif" at offset 0 (image/qoi)
+  { ext: 'qoi', offset: 0, bytes: [0x71, 0x6f, 0x69, 0x66] },
 ];
 
 // For MPEG-TS detection we need 189 bytes (offset 0 + offset 188).
@@ -120,6 +122,40 @@ function detectSvgFromBytes(buf: Uint8Array): FormatDescriptor | undefined {
   return undefined;
 }
 
+/**
+ * Detect Netpbm formats (PBM/PGM/PPM/PFM) from magic bytes.
+ *
+ * All Netpbm magics start with 'P' (0x50) at offset 0:
+ *   P1 → pbm (ASCII PBM)
+ *   P4 → pbm (binary PBM)
+ *   P2 → pgm (ASCII PGM)
+ *   P5 → pgm (binary PGM)
+ *   P3 → ppm (ASCII PPM)
+ *   P6 → ppm (binary PPM)
+ *   Pf → pfm (grayscale PFM)
+ *   PF → pfm (RGB PFM)
+ */
+function detectNetpbmFromBytes(buf: Uint8Array): FormatDescriptor | undefined {
+  if (buf.length < 2) return undefined;
+  if ((buf[0] ?? 0) !== 0x50) return undefined; // must start with 'P'
+  const b1 = buf[1] ?? 0;
+  switch (b1) {
+    case 0x31: // '1'
+    case 0x34: // '4'
+      return findByExt('pbm');
+    case 0x32: // '2'
+    case 0x35: // '5'
+      return findByExt('pgm');
+    case 0x33: // '3'
+    case 0x36: // '6'
+      return findByExt('ppm');
+    case 0x66: // 'f'
+    case 0x46: // 'F'
+      return findByExt('pfm');
+  }
+  return undefined;
+}
+
 function disambiguateRiff(buf: Uint8Array): 'webp' | 'wav' | undefined {
   // RIFF containers: "RIFF" at 0, "WEBP"/"WAVE" at 8
   if (buf.length < 12) return undefined;
@@ -159,6 +195,14 @@ export async function detectFormat(
   // Note: GIF is already checked above; but GIF[188] is unlikely to also be 0x47 in random data.
   if (head[0] === 0x47 && head.length >= 189 && head[188] === 0x47) {
     return findByExt('ts');
+  }
+
+  // Netpbm detection: all magics start with 'P' (0x50) followed by a digit or 'f'/'F'.
+  // P1..P6 → 2-byte ASCII magic; Pf/PF → 2-byte ASCII magic.
+  // These are checked as text patterns because the signatures overlap with 'P' at offset 0.
+  {
+    const netpbmResult = detectNetpbmFromBytes(head);
+    if (netpbmResult) return netpbmResult;
   }
 
   // SVG detection: text-based XML format — no fixed-offset binary magic.
