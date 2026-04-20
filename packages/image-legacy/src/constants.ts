@@ -99,3 +99,53 @@ export const MAX_DECOMPRESSED_STRIP_BYTES = 256 * 1024 * 1024;
  * Prevents count × typeSize integer overflow before the downstream bounds check.
  */
 export const MAX_TAG_VALUE_COUNT = 268_435_456; // 256M
+
+// ---------------------------------------------------------------------------
+// TGA constants
+// ---------------------------------------------------------------------------
+
+/** Primary MIME type for TGA images. */
+export const TGA_MIME = 'image/x-tga';
+
+/** Alternative MIME types accepted by the backend. */
+export const TGA_MIME_ALT1 = 'image/tga';
+export const TGA_MIME_ALT2 = 'image/x-targa';
+
+/**
+ * TGA 2.0 footer signature — exactly 18 bytes:
+ * 'TRUEVISION-XFILE' (16 ASCII chars) + '.' (0x2E) + NUL (0x00).
+ * Located at file.length - 26 + 8 (offsets bytes 8..25 of the 26-byte footer).
+ */
+export const TGA_FOOTER_SIGNATURE = new Uint8Array([
+  0x54,
+  0x52,
+  0x55,
+  0x45,
+  0x56,
+  0x49,
+  0x53,
+  0x49,
+  0x4f,
+  0x4e, // 'TRUEVISION'
+  0x2d,
+  0x58,
+  0x46,
+  0x49,
+  0x4c,
+  0x45, // '-XFILE'
+  0x2e,
+  0x00, // '.\0'
+]);
+
+/** Size of the TGA fixed header in bytes. */
+export const TGA_HEADER_SIZE = 18;
+
+/** Size of the TGA 2.0 footer in bytes. */
+export const TGA_FOOTER_SIZE = 26;
+
+/**
+ * Documentary constant: the maximum expansion ratio for a single RLE packet
+ * is 128:1 (one header byte → 128 pixels). Used as a comment reference only;
+ * actual RLE bounds use the pre-allocated output buffer size.
+ */
+export const MAX_RLE_EXPANSION_RATIO = 128;

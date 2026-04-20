@@ -1,10 +1,10 @@
 /**
  * @webcvt/image-legacy — Public API
  *
- * Supported formats (second pass — Phase 4.5):
- *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF.
+ * Supported formats (third pass — Phase 4.5):
+ *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA.
  *
- * Deferred (Phase 4.5+): TGA, PCX, XBM, XPM, ICNS, CUR.
+ * Deferred (Phase 4.5+): PCX, XBM, XPM, ICNS, CUR.
  *
  * No cross-format conversion: each format is parse/serialize-only within its type.
  * No auto-detection inside parseImage: pass format explicitly.
@@ -28,6 +28,7 @@ export type {
   PfmFile,
   QoiFile,
   TiffFile,
+  TgaFile,
 } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -45,6 +46,19 @@ export type {
   TiffNormalisation,
 } from './tiff.ts';
 export type { NetpbmMagic } from './netpbm.ts';
+
+// ---------------------------------------------------------------------------
+// TGA types (direct from tga.ts)
+// ---------------------------------------------------------------------------
+
+export type {
+  TgaImageType,
+  TgaPixelDepth,
+  TgaOrigin,
+  TgaColorMapEntrySize,
+  TgaColorMap,
+  TgaNormalisation,
+} from './tga.ts';
 
 // ---------------------------------------------------------------------------
 // PBM API
@@ -89,6 +103,12 @@ export {
 export { lzwDecode } from './tiff-lzw.ts';
 
 // ---------------------------------------------------------------------------
+// TGA API
+// ---------------------------------------------------------------------------
+
+export { parseTga, serializeTga, decodeTgaRle, isTgaHeader } from './tga.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -108,6 +128,7 @@ export {
   PFM_FORMAT,
   QOI_FORMAT,
   TIFF_FORMAT,
+  TGA_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -142,4 +163,11 @@ export {
   TiffPackBitsDecodeError,
   TiffLzwDecodeError,
   TiffDeflateDecodeError,
+  TgaBadHeaderError,
+  TgaUnsupportedImageTypeError,
+  TgaNoImageDataError,
+  TgaUnsupportedFeatureError,
+  TgaTruncatedError,
+  TgaRleDecodeError,
+  TgaBadFooterError,
 } from './errors.ts';

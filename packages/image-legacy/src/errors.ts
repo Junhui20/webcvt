@@ -285,3 +285,85 @@ export class TiffDeflateDecodeError extends WebcvtError {
     this.name = 'TiffDeflateDecodeError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// TGA errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when the TGA 18-byte header is malformed:
+ * fewer than 18 bytes, reserved bits 6-7 of byte 17 set, or zero dimensions.
+ */
+export class TgaBadHeaderError extends WebcvtError {
+  constructor(message: string) {
+    super('TGA_BAD_HEADER', `TGA: bad header — ${message}`);
+    this.name = 'TgaBadHeaderError';
+  }
+}
+
+/**
+ * Thrown when imageType is not in {1, 2, 3, 9, 10, 11}.
+ * Type 32/33 also triggers this (they are exotic Huffman/Delta/RLE variants).
+ */
+export class TgaUnsupportedImageTypeError extends WebcvtError {
+  constructor(imageType: number) {
+    super(
+      'TGA_UNSUPPORTED_IMAGE_TYPE',
+      `TGA: image type ${imageType} is not supported; expected one of {1, 2, 3, 9, 10, 11}.`,
+    );
+    this.name = 'TgaUnsupportedImageTypeError';
+  }
+}
+
+/** Thrown when imageType === 0 (no image data). */
+export class TgaNoImageDataError extends WebcvtError {
+  constructor() {
+    super('TGA_NO_IMAGE_DATA', 'TGA: image type 0 indicates no image data.');
+    this.name = 'TgaNoImageDataError';
+  }
+}
+
+/**
+ * Thrown when an unsupported feature is encountered: 15/16-bit palette entries,
+ * type 32/33, or (imageType, pixelDepth) pair that is not a legal combination.
+ */
+export class TgaUnsupportedFeatureError extends WebcvtError {
+  constructor(feature: string) {
+    super('TGA_UNSUPPORTED_FEATURE', `TGA: unsupported feature — ${feature}`);
+    this.name = 'TgaUnsupportedFeatureError';
+  }
+}
+
+/** Thrown when the raster byte range extends past the input buffer. */
+export class TgaTruncatedError extends WebcvtError {
+  constructor(message: string) {
+    super('TGA_TRUNCATED', `TGA: truncated input — ${message}`);
+    this.name = 'TgaTruncatedError';
+  }
+}
+
+/**
+ * Thrown when RLE decoding would write past the pre-allocated output buffer,
+ * or when the input is exhausted before enough pixels are decoded.
+ */
+export class TgaRleDecodeError extends WebcvtError {
+  constructor(kind: 'output-overflow' | 'input-underrun') {
+    const msg =
+      kind === 'output-overflow'
+        ? 'RLE packet would write past the output buffer boundary.'
+        : 'RLE input exhausted before expected pixel count was reached.';
+    super('TGA_RLE_DECODE', `TGA RLE: ${msg}`);
+    this.name = 'TgaRleDecodeError';
+  }
+}
+
+/**
+ * Thrown when the last 26 bytes partially match the TGA 2.0 footer signature
+ * but the footer is malformed (e.g., reserved bytes non-zero).
+ */
+export class TgaBadFooterError extends WebcvtError {
+  constructor(message: string) {
+    super('TGA_BAD_FOOTER', `TGA: bad footer — ${message}`);
+    this.name = 'TgaBadFooterError';
+  }
+}

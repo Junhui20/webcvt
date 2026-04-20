@@ -1,18 +1,28 @@
 /**
  * Magic-byte detection for @webcvt/image-legacy.
  *
- * Checks first 4 bytes only. The Netpbm magics (P1–P6, Pf, PF) and QOI's
- * "qoif" are fully byte-disjoint — disambiguation is unambiguous.
+ * Checks first 4 bytes for most formats. The Netpbm magics (P1–P6, Pf, PF)
+ * and QOI's "qoif" are fully byte-disjoint — disambiguation is unambiguous.
+ * TGA has no fixed magic and uses structural detection (footer + header heuristic).
  *
  * NOTE: detection is NOT applied automatically inside parseImage. The caller
  * must pass a format hint explicitly to defend against coincidences in truncated
  * inputs. detectImageFormat is an opt-in helper only.
+ *
+ * TGA detection strategy (Trap #5 from TGA design note):
+ *   (1) Footer-first: if last 18 bytes match "TRUEVISION-XFILE.\0" → 'tga'
+ *   (2) Header heuristic: sanity check on colorMapType/imageType/pixelDepth/reserved bits/dims
+ *   (3) null otherwise.
  */
 
-export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff';
+import { TGA_FOOTER_SIGNATURE, TGA_FOOTER_SIZE } from './constants.ts';
+import { isTgaHeader } from './tga.ts';
+
+export type ImageFormat = 'pbm' | 'pgm' | 'ppm' | 'pfm' | 'qoi' | 'tiff' | 'tga';
 
 /**
- * Sniff the first 4 bytes of input and return the matching ImageFormat or null.
+ * Sniff the format of input and return the matching ImageFormat or null.
+ * TGA has no fixed magic; uses footer-first then header heuristic detection.
  *
  * Recognized magics:
  *   'P1' (0x50 0x31) → 'pbm'    (ASCII PBM)
@@ -79,6 +89,25 @@ export function detectImageFormat(input: Uint8Array): ImageFormat | null {
       case 0x46:
         return 'pfm'; // PF
     }
+  }
+
+  // TGA: no fixed magic — structural detection (Trap #5)
+  // Strategy (1): footer-first — if last 18 bytes match TGA 2.0 signature → 'tga'
+  if (input.length >= TGA_FOOTER_SIZE) {
+    const sigStart = input.length - TGA_FOOTER_SIZE + 8;
+    let footerMatch = true;
+    for (let i = 0; i < TGA_FOOTER_SIGNATURE.length; i++) {
+      if ((input[sigStart + i] ?? 0) !== (TGA_FOOTER_SIGNATURE[i] ?? 0)) {
+        footerMatch = false;
+        break;
+      }
+    }
+    if (footerMatch) return 'tga';
+  }
+
+  // Strategy (2): header heuristic for TGA 1.0 (no footer)
+  if (isTgaHeader(input)) {
+    return 'tga';
   }
 
   return null;

@@ -16,6 +16,9 @@ import {
   PGM_MIME,
   PPM_MIME,
   QOI_MIME,
+  TGA_MIME,
+  TGA_MIME_ALT1,
+  TGA_MIME_ALT2,
   TIFF_MIME,
 } from './constants.ts';
 import type { ImageFormat } from './detect.ts';
@@ -34,6 +37,9 @@ const MIME_TO_FORMAT = new Map<string, ImageFormat>([
   [PFM_MIME, 'pfm'],
   [QOI_MIME, 'qoi'],
   [TIFF_MIME, 'tiff'],
+  [TGA_MIME, 'tga'],
+  [TGA_MIME_ALT1, 'tga'],
+  [TGA_MIME_ALT2, 'tga'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -138,4 +144,11 @@ export const TIFF_FORMAT: FormatDescriptor = {
   mime: TIFF_MIME,
   category: 'image',
   description: 'Tag Image File Format (TIFF 6.0)',
+};
+
+export const TGA_FORMAT: FormatDescriptor = {
+  ext: 'tga',
+  mime: TGA_MIME,
+  category: 'image',
+  description: 'Truevision TGA (Targa)',
 };
