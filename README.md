@@ -9,6 +9,12 @@
 
 🚧 **Pre-alpha** — under active construction. Not ready for use.
 
+- **22 packages** shipped across Phases 1–5 (`@webcvt/core` + 4 codec/image, 9 container, 2 data, 1 CLI, 4 ancillary)
+- **3,028 tests** passing; CI green
+- Phase 4 (image, animation, archive, data-text): **complete** (5/5)
+- Phase 4.5 (deferred-format roll-up): **5 of N** shipped (TIFF, TGA, XBM, PCX, JSONL)
+- Phase 5 (launch prep): `@webcvt/cli` shipped; `backend-wasm`, `playground`, `docs` still open
+
 See [`plan.md`](./plan.md) for the full project plan and
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to contribute or resume work.
 
@@ -36,16 +42,48 @@ as a tree-shakable browser library instead of a Docker server.
 
 Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full roadmap.
 
-### Currently implemented (Phase 1)
+### Foundation
 
-- `@webcvt/core` — public API, types, format detector, capability probe
+- `@webcvt/core` — public API, types, format detector, backend registry, capability probe
 - `@webcvt/codec-webcodecs` — hardware-accelerated encode/decode adapter
+- `@webcvt/test-utils` — shared test fixtures + byte helpers
+- `@webcvt/backend-wasm` — ffmpeg.wasm fallback (placeholder; Phase 5)
+
+### Audio + video containers
+
+- `@webcvt/container-wav` — RIFF/WAV
+- `@webcvt/container-mp3` — MPEG-1/2/2.5 Layer III + ID3v2/v1 + Xing/LAME
+- `@webcvt/container-flac` — FLAC (native)
+- `@webcvt/container-ogg` — Ogg (Vorbis, Opus)
+- `@webcvt/container-aac` — AAC ADTS
+- `@webcvt/container-mp4` — M4A / MP4 (single audio track)
+- `@webcvt/container-webm` — WebM (VP8/VP9 + Opus/Vorbis)
+- `@webcvt/container-mkv` — Matroska (AVC/HEVC/VP9 + AAC/FLAC/Opus/Vorbis)
+- `@webcvt/container-ts` — MPEG-TS / HLS (H.264 + AAC ADTS)
+- `@webcvt/ebml` — shared EBML primitives (RFC 8794)
+
+### Images
+
 - `@webcvt/image-canvas` — PNG/JPG/WebP/BMP/ICO via Canvas API
+- `@webcvt/image-svg` — SVG parse + Canvas rasterize (with aggressive security gates)
+- `@webcvt/image-animation` — GIF + APNG + animated WebP
+- `@webcvt/image-legacy` — PBM/PGM/PPM/PFM/QOI + TIFF + TGA + XBM + PCX
+
+### Archives + data + subtitles
+
+- `@webcvt/archive-zip` — ZIP + POSIX ustar TAR + gzip
+- `@webcvt/data-text` — JSON + CSV + TSV + INI + ENV + JSONL
 - `@webcvt/subtitle` — SRT/VTT/ASS/SSA/SUB/MPL
+
+### CLI
+
+- `@webcvt/cli` — `npx webcvt in out` Node CLI with optional-dep backend loader
 
 ### Planned
 
-See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months.
+See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months. Next up:
+`@webcvt/backend-wasm` full wiring, `apps/playground`, `apps/docs`, remaining
+Phase 4.5 formats (XPM, ICNS, YAML, TOML, XML).
 
 ## Quickstart (once v0.1 is published)
 
