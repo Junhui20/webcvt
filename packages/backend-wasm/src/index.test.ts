@@ -1,53 +1,68 @@
+/**
+ * Smoke tests for the index.ts barrel — verifies public API surface.
+ */
 import { describe, expect, it } from 'vitest';
 import {
-  BACKEND_WASM_AVAILABLE,
-  NotImplementedError,
-  decodeWithWasm,
-  encodeWithWasm,
+  WASM_SUPPORTED_FORMATS,
+  WASM_SUPPORTED_PAIRS,
+  WasmBackend,
+  WasmExecutionError,
+  WasmLoadError,
+  WasmUnsupportedError,
+  isAllowlisted,
+  registerWasmBackend,
 } from './index.ts';
 
-describe('NotImplementedError', () => {
-  it('is an instance of Error', () => {
-    const err = new NotImplementedError('test feature');
-    expect(err).toBeInstanceOf(Error);
-    expect(err).toBeInstanceOf(NotImplementedError);
+describe('barrel exports', () => {
+  it('exports WasmBackend class', () => {
+    expect(typeof WasmBackend).toBe('function');
   });
 
-  it('has name "NotImplementedError"', () => {
-    const err = new NotImplementedError('test feature');
-    expect(err.name).toBe('NotImplementedError');
+  it('exports WasmLoadError, WasmExecutionError, WasmUnsupportedError', () => {
+    expect(typeof WasmLoadError).toBe('function');
+    expect(typeof WasmExecutionError).toBe('function');
+    expect(typeof WasmUnsupportedError).toBe('function');
   });
 
-  it('includes the feature name in the message', () => {
-    const err = new NotImplementedError('my feature');
-    expect(err.message).toContain('my feature');
-  });
-});
-
-describe('decodeWithWasm', () => {
-  it('throws NotImplementedError', () => {
-    expect(() => decodeWithWasm(new ArrayBuffer(0))).toThrow(NotImplementedError);
+  it('exports isAllowlisted function', () => {
+    expect(typeof isAllowlisted).toBe('function');
   });
 
-  it('throws with options present', () => {
-    expect(() => decodeWithWasm(new ArrayBuffer(4), { codec: 'aac' })).toThrow(NotImplementedError);
-  });
-});
-
-describe('encodeWithWasm', () => {
-  it('throws NotImplementedError', () => {
-    expect(() => encodeWithWasm(new ArrayBuffer(0))).toThrow(NotImplementedError);
+  it('exports registerWasmBackend function', () => {
+    expect(typeof registerWasmBackend).toBe('function');
   });
 
-  it('throws with options present', () => {
-    expect(() => encodeWithWasm(new ArrayBuffer(4), { codec: 'flac', bitrate: 128 })).toThrow(
-      NotImplementedError,
-    );
+  it('exports WASM_SUPPORTED_PAIRS array with ≥180 entries', () => {
+    expect(Array.isArray(WASM_SUPPORTED_PAIRS)).toBe(true);
+    expect(WASM_SUPPORTED_PAIRS.length).toBeGreaterThanOrEqual(180);
+  });
+
+  it('exports WASM_SUPPORTED_FORMATS array with ≥10 entries', () => {
+    expect(Array.isArray(WASM_SUPPORTED_FORMATS)).toBe(true);
+    expect(WASM_SUPPORTED_FORMATS.length).toBeGreaterThanOrEqual(10);
   });
 });
 
-describe('BACKEND_WASM_AVAILABLE', () => {
-  it('is false', () => {
-    expect(BACKEND_WASM_AVAILABLE).toBe(false);
+describe('registerWasmBackend', () => {
+  it('registers without throwing when given a fresh registry', () => {
+    const { BackendRegistry } = require('@webcvt/core') as typeof import('@webcvt/core');
+    const registry = new BackendRegistry();
+    expect(() => registerWasmBackend(registry)).not.toThrow();
+  });
+
+  it('throws if called twice on same registry', () => {
+    const { BackendRegistry } = require('@webcvt/core') as typeof import('@webcvt/core');
+    const registry = new BackendRegistry();
+    registerWasmBackend(registry);
+    expect(() => registerWasmBackend(registry)).toThrow();
+  });
+
+  it('enables subtitle pairs when enableSubtitleFallback is true', () => {
+    const { BackendRegistry } = require('@webcvt/core') as typeof import('@webcvt/core');
+    const registry = new BackendRegistry();
+    // Should not throw
+    expect(() => registerWasmBackend(registry, { enableSubtitleFallback: true })).not.toThrow();
+    // Subtitle pairs should now be allowlisted
+    expect(isAllowlisted('text/x-subrip', 'text/vtt')).toBe(true);
   });
 });

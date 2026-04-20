@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: {
     alias: {
+      '@webcvt/core': resolve(__dirname, '../core/src/index.ts'),
       '@webcvt/test-utils': resolve(__dirname, '../test-utils/src/index.ts'),
     },
   },
@@ -14,7 +15,11 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts'],
+      exclude: [
+        'src/**/*.test.ts',
+        // loader.ts uses dynamic import() of real WASM — integration-tested separately
+        'src/loader.ts',
+      ],
       thresholds: {
         lines: 80,
         functions: 80,
