@@ -157,6 +157,43 @@ export const MAX_FWF_COLUMNS = 1024;
 export const MAX_FWF_LINES = 1_000_000;
 
 // ---------------------------------------------------------------------------
+// XML-specific caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum element nesting depth for XML documents (64).
+ * Pre-scan rejects inputs exceeding this BEFORE DOMParser is called,
+ * preventing stack-overflow exposure from deeply nested elements (Trap #12).
+ */
+export const MAX_XML_DEPTH = 64;
+
+/**
+ * Maximum number of elements in an XML document (100,000).
+ * Approximate count — '<' characters outside quoted/comment/CDATA contexts.
+ * Pre-scan rejects inputs exceeding this BEFORE DOMParser is called (Trap #13).
+ */
+export const MAX_XML_ELEMENTS = 100_000;
+
+/**
+ * Maximum number of attributes per element (1,024).
+ * Checked during DOM-walk AFTER DOMParser (Trap #14).
+ */
+export const MAX_XML_ATTRS_PER_ELEMENT = 1024;
+
+/**
+ * Maximum concatenated text content per element in characters (1,048,576 = 1 MiB).
+ * Checked during DOM-walk AFTER DOMParser (Trap #15).
+ */
+export const MAX_XML_TEXT_NODE_CHARS = 1_048_576;
+
+// ---------------------------------------------------------------------------
+// XML MIME
+// ---------------------------------------------------------------------------
+
+/** Canonical MIME type for XML (application/xml). */
+export const XML_MIME = 'application/xml';
+
+// ---------------------------------------------------------------------------
 // FWF MIME
 // ---------------------------------------------------------------------------
 

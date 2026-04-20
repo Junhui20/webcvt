@@ -4,9 +4,8 @@
  * Supported formats:
  *   JSON (RFC 8259), CSV (RFC 4180), TSV (IANA text/tab-separated-values),
  *   INI (de-facto subset), ENV (dotenv-style), JSONL (JSON Lines / NDJSON),
- *   TOML v1.0.0 (toml.io), FWF (Fixed-Width Format).
- *
- * Deferred (Phase 4.5+): YAML, XML, TOON.
+ *   TOML v1.0.0 (toml.io), FWF (Fixed-Width Format),
+ *   XML 1.0 Fifth Edition (W3C 2008).
  *
  * No auto-detection: callers must explicitly pass the format to parseDataText.
  * No cross-format conversion: use @webcvt/convert for that.
@@ -17,12 +16,16 @@
  * CANNOT disambiguate them by MIME. FWF is reachable ONLY via direct
  * parseFwf / serializeFwf or parseDataText(input, 'fwf', { columns }).
  *
+ * XML security: pre-scan rejects DOCTYPE, ENTITY, non-preamble PIs, and
+ * CDATA payloads containing forbidden tokens. DOMParser errors detected via
+ * parsererror element. See design note for the full security story.
+ *
  * Security: 10 MiB input cap, UTF-8 fatal-mode decoding, JSON depth pre-scan,
  * CSV/INI/ENV row/key caps. See the design note for the full security story.
  *
  * References: RFC 8259 (JSON), RFC 4180 (CSV), IANA text/tab-separated-values
  * (TSV), Wikipedia INI article (INI), motdotla/dotenv README + 12factor.net
- * (ENV). No code copied from competing libraries.
+ * (ENV), W3C XML 1.0 Fifth Edition (XML). No code copied from competing libraries.
  */
 
 // ---------------------------------------------------------------------------
@@ -36,6 +39,7 @@ export type { EnvFile } from './env.ts';
 export type { JsonlFile, JsonlSerializeOptions } from './jsonl.ts';
 export type { TomlFile, TomlValue, TomlDate, TomlTime, TomlDateTime } from './toml.ts';
 export type { FwfFile, FwfColumn, FwfAlign, FwfParseOptions, FwfSerializeOptions } from './fwf.ts';
+export type { XmlFile, XmlElement, XmlAttribute } from './xml.ts';
 export type { DataTextFile, DataTextFormat } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -87,6 +91,12 @@ export { parseToml, serializeToml } from './toml.ts';
 export { parseFwf, serializeFwf } from './fwf.ts';
 
 // ---------------------------------------------------------------------------
+// XML API
+// ---------------------------------------------------------------------------
+
+export { parseXml, serializeXml } from './xml.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -107,6 +117,7 @@ export {
   JSONL_FORMAT,
   TOML_FORMAT,
   FWF_FORMAT,
+  XML_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -158,4 +169,17 @@ export {
   FwfTooManyLinesError,
   FwfFieldOverflowError,
   FwfBadPadCharError,
+  XmlInvalidUtf8Error,
+  XmlDoctypeForbiddenError,
+  XmlEntityForbiddenError,
+  XmlExternalEntityForbiddenError,
+  XmlForbiddenPiError,
+  XmlCdataPayloadError,
+  XmlParseError,
+  XmlDepthExceededError,
+  XmlTooManyElementsError,
+  XmlTooManyAttrsError,
+  XmlTextNodeTooLongError,
+  XmlBadElementNameError,
+  XmlSerializeError,
 } from './errors.ts';

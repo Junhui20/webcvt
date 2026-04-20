@@ -515,6 +515,181 @@ export class TomlSerializeError extends WebcvtError {
 }
 
 // ---------------------------------------------------------------------------
+// XML errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a Uint8Array XML input contains malformed UTF-8 bytes.
+ */
+export class XmlInvalidUtf8Error extends WebcvtError {
+  constructor(cause?: unknown) {
+    super('XML_INVALID_UTF8', 'XML input contains malformed UTF-8 bytes.', { cause });
+    this.name = 'XmlInvalidUtf8Error';
+  }
+}
+
+/**
+ * Thrown when the pre-scan detects a `<!DOCTYPE` declaration (Trap #1).
+ * DOCTYPE is the root cause of XXE attacks and is rejected BEFORE DOMParser.
+ */
+export class XmlDoctypeForbiddenError extends WebcvtError {
+  constructor() {
+    super(
+      'XML_DOCTYPE_FORBIDDEN',
+      'XML input contains a <!DOCTYPE declaration which is forbidden. DTDs are rejected to prevent XXE and entity-expansion attacks.',
+    );
+    this.name = 'XmlDoctypeForbiddenError';
+  }
+}
+
+/**
+ * Thrown when the pre-scan detects a `<!ENTITY` declaration (Trap #2).
+ * Even pure-internal entity declarations can enable billion-laughs attacks.
+ */
+export class XmlEntityForbiddenError extends WebcvtError {
+  constructor() {
+    super(
+      'XML_ENTITY_FORBIDDEN',
+      'XML input contains a <!ENTITY declaration which is forbidden. Entity declarations enable billion-laughs and XXE attacks.',
+    );
+    this.name = 'XmlEntityForbiddenError';
+  }
+}
+
+/**
+ * Thrown when the pre-scan detects a SYSTEM or PUBLIC external entity reference
+ * (Trap #3). Cannot appear outside DTD context; treated as hostile input.
+ */
+export class XmlExternalEntityForbiddenError extends WebcvtError {
+  constructor(token: string) {
+    super(
+      'XML_EXTERNAL_ENTITY_FORBIDDEN',
+      `XML input contains a forbidden external entity reference token "${token}". External entity loading is disabled.`,
+    );
+    this.name = 'XmlExternalEntityForbiddenError';
+  }
+}
+
+/**
+ * Thrown when a processing instruction other than the `<?xml?>` preamble is
+ * found (Trap #5). PIs like `<?xml-stylesheet?>` and `<?php?>` are rejected.
+ */
+export class XmlForbiddenPiError extends WebcvtError {
+  constructor(target: string) {
+    super(
+      'XML_FORBIDDEN_PI',
+      `XML input contains a forbidden processing instruction "<?${target}". Only the <?xml?> preamble is allowed.`,
+    );
+    this.name = 'XmlForbiddenPiError';
+  }
+}
+
+/**
+ * Thrown when the CDATA section payload contains a forbidden token such as
+ * `<!DOCTYPE` or `<!ENTITY` (Trap #4 — defense in depth).
+ */
+export class XmlCdataPayloadError extends WebcvtError {
+  constructor(token: string) {
+    super(
+      'XML_CDATA_PAYLOAD_FORBIDDEN',
+      `XML CDATA section contains forbidden token "${token}". This is rejected as a defense-in-depth measure against rewrite attacks.`,
+    );
+    this.name = 'XmlCdataPayloadError';
+  }
+}
+
+/**
+ * Thrown when DOMParser reports a parse error via `<parsererror>` (Trap #6),
+ * or when the preamble declares a non-UTF-8 encoding (Trap #16).
+ */
+export class XmlParseError extends WebcvtError {
+  constructor(reason: string) {
+    super('XML_PARSE_ERROR', `XML parse error: ${reason}`);
+    this.name = 'XmlParseError';
+  }
+}
+
+/**
+ * Thrown when the pre-scan detects tag nesting depth exceeding MAX_XML_DEPTH (64).
+ * Raised BEFORE DOMParser to prevent stack-overflow exposure (Trap #12).
+ */
+export class XmlDepthExceededError extends WebcvtError {
+  constructor(depth: number, max: number) {
+    super(
+      'XML_DEPTH_EXCEEDED',
+      `XML document nesting depth ${depth} exceeds the cap of ${max}. Deeply nested documents are rejected before DOMParser to prevent stack overflow.`,
+    );
+    this.name = 'XmlDepthExceededError';
+  }
+}
+
+/**
+ * Thrown when the pre-scan counts more than MAX_XML_ELEMENTS (100,000) opening
+ * tags outside quoted/comment/CDATA contexts (Trap #13).
+ */
+export class XmlTooManyElementsError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'XML_TOO_MANY_ELEMENTS',
+      `XML document contains more than ${max} elements (counted ${count}). Large documents are rejected to prevent memory exhaustion.`,
+    );
+    this.name = 'XmlTooManyElementsError';
+  }
+}
+
+/**
+ * Thrown during DOM-walk when a single element has more than
+ * MAX_XML_ATTRS_PER_ELEMENT (1024) attributes (Trap #14).
+ */
+export class XmlTooManyAttrsError extends WebcvtError {
+  constructor(elementName: string, count: number, max: number) {
+    super(
+      'XML_TOO_MANY_ATTRS',
+      `XML element <${elementName}> has ${count} attributes which exceeds the cap of ${max}.`,
+    );
+    this.name = 'XmlTooManyAttrsError';
+  }
+}
+
+/**
+ * Thrown during DOM-walk when the concatenated text content of a single element
+ * exceeds MAX_XML_TEXT_NODE_CHARS (1 MiB) (Trap #15).
+ */
+export class XmlTextNodeTooLongError extends WebcvtError {
+  constructor(elementName: string, length: number, max: number) {
+    super(
+      'XML_TEXT_NODE_TOO_LONG',
+      `XML element <${elementName}> has ${length} text characters which exceeds the cap of ${max} (1 MiB).`,
+    );
+    this.name = 'XmlTextNodeTooLongError';
+  }
+}
+
+/**
+ * Thrown by the serializer when an element or attribute name fails the XML 1.0
+ * Name production validation (Trap #11).
+ */
+export class XmlBadElementNameError extends WebcvtError {
+  constructor(name: string) {
+    super(
+      'XML_BAD_ELEMENT_NAME',
+      `"${name}" is not a valid XML 1.0 Name. Names must start with a letter, underscore, or colon, and contain only name characters.`,
+    );
+    this.name = 'XmlBadElementNameError';
+  }
+}
+
+/**
+ * Thrown by the serializer when a value cannot be serialized to well-formed XML.
+ */
+export class XmlSerializeError extends WebcvtError {
+  constructor(reason: string) {
+    super('XML_SERIALIZE_ERROR', `XML serialize error: ${reason}`);
+    this.name = 'XmlSerializeError';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // FWF errors
 // ---------------------------------------------------------------------------
 

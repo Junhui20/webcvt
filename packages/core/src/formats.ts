@@ -78,6 +78,12 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'data',
     description: 'Fixed-Width Format',
   },
+  {
+    ext: 'xml',
+    mime: 'application/xml',
+    category: 'data',
+    description: 'Extensible Markup Language',
+  },
   // Image-legacy (Phase 4: image-legacy package)
   {
     ext: 'pbm',

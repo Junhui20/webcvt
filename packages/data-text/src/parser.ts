@@ -18,13 +18,23 @@ import { type IniFile, parseIni } from './ini.ts';
 import { type JsonFile, parseJson } from './json.ts';
 import { type JsonlFile, parseJsonl } from './jsonl.ts';
 import { type TomlFile, parseToml } from './toml.ts';
+import { type XmlFile, parseXml } from './xml.ts';
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
-/** The eight text formats supported (five first-pass + JSONL + TOML + FWF extensions). */
-export type DataTextFormat = 'json' | 'csv' | 'tsv' | 'ini' | 'env' | 'jsonl' | 'toml' | 'fwf';
+/** The nine text formats supported (five first-pass + JSONL + TOML + FWF + XML extensions). */
+export type DataTextFormat =
+  | 'json'
+  | 'csv'
+  | 'tsv'
+  | 'ini'
+  | 'env'
+  | 'jsonl'
+  | 'toml'
+  | 'fwf'
+  | 'xml';
 
 /** Discriminated union returned by the top-level dispatcher. */
 export type DataTextFile =
@@ -35,10 +45,11 @@ export type DataTextFile =
   | { kind: 'env'; file: EnvFile }
   | { kind: 'jsonl'; file: JsonlFile }
   | { kind: 'toml'; file: TomlFile }
-  | { kind: 'fwf'; file: FwfFile };
+  | { kind: 'fwf'; file: FwfFile }
+  | { kind: 'xml'; file: XmlFile };
 
 // Re-export sub-types so callers can import from parser.ts if desired.
-export type { JsonFile, DelimitedFile, IniFile, EnvFile, JsonlFile, TomlFile, FwfFile };
+export type { JsonFile, DelimitedFile, IniFile, EnvFile, JsonlFile, TomlFile, FwfFile, XmlFile };
 export type { DelimitedParseOptions, FwfParseOptions };
 
 // ---------------------------------------------------------------------------
@@ -73,7 +84,7 @@ export function parseDataText(
  * Parse a text document of the given format.
  *
  * @param input   Raw bytes (Uint8Array) or decoded string.
- * @param format  One of 'json' | 'csv' | 'tsv' | 'ini' | 'env' | 'jsonl' | 'toml' | 'fwf'.
+ * @param format  One of 'json' | 'csv' | 'tsv' | 'ini' | 'env' | 'jsonl' | 'toml' | 'fwf' | 'xml'.
  * @param opts    For 'fwf': FwfParseOptions (required). For 'csv'/'tsv': DelimitedParseOptions (optional).
  */
 export function parseDataText(
@@ -98,5 +109,7 @@ export function parseDataText(
       return { kind: 'toml', file: parseToml(input) };
     case 'fwf':
       return { kind: 'fwf', file: parseFwf(input, opts as FwfParseOptions) };
+    case 'xml':
+      return { kind: 'xml', file: parseXml(input) };
   }
 }

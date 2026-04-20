@@ -16,6 +16,7 @@ import { serializeJson } from './json.ts';
 import { serializeJsonl } from './jsonl.ts';
 import type { DataTextFile } from './parser.ts';
 import { serializeToml } from './toml.ts';
+import { serializeXml } from './xml.ts';
 
 // Re-export for convenience
 export type { DataTextFile };
@@ -44,5 +45,7 @@ export function serializeDataText(file: DataTextFile): string {
       return serializeToml(file.file);
     case 'fwf':
       return serializeFwf(file.file);
+    case 'xml':
+      return serializeXml(file.file);
   }
 }

@@ -26,13 +26,14 @@ import {
   MAX_INPUT_BYTES,
   TOML_MIME,
   TSV_MIME,
+  XML_MIME,
 } from './constants.ts';
 import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
 import { type DataTextFormat, parseDataText } from './parser.ts';
 import { serializeDataText } from './serializer.ts';
 
 /** DataTextFormat variants that are routable via MIME (excludes FWF — see FWF_MIME note). */
-type RoutableFormat = Exclude<DataTextFormat, 'fwf'>;
+type RoutableFormat = Exclude<DataTextFormat, 'fwf'>; // 'xml' IS routable via application/xml
 
 // ---------------------------------------------------------------------------
 // MIME → DataTextFormat mapping
@@ -62,6 +63,7 @@ const MIME_TO_FORMAT = new Map<string, RoutableFormat>([
   [JSONL_MIME, 'jsonl'],
   [JSONL_MIME_ALIAS, 'jsonl'],
   [TOML_MIME, 'toml'],
+  [XML_MIME, 'xml'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -186,4 +188,11 @@ export const FWF_FORMAT: FormatDescriptor = {
   mime: FWF_MIME,
   category: 'data',
   description: 'Fixed-Width Format',
+};
+
+export const XML_FORMAT: FormatDescriptor = {
+  ext: 'xml',
+  mime: XML_MIME,
+  category: 'data',
+  description: 'Extensible Markup Language',
 };
