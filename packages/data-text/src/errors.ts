@@ -354,3 +354,162 @@ export class JsonlRecordTooLongError extends WebcvtError {
     this.lineNumber = lineNumber;
   }
 }
+
+// ---------------------------------------------------------------------------
+// TOML errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a Uint8Array TOML input contains malformed UTF-8 bytes.
+ */
+export class TomlInvalidUtf8Error extends WebcvtError {
+  constructor(cause?: unknown) {
+    super('TOML_INVALID_UTF8', 'TOML input contains malformed UTF-8 bytes.', { cause });
+    this.name = 'TomlInvalidUtf8Error';
+  }
+}
+
+/**
+ * Thrown for generic TOML parse failures.
+ * Carries a 1-based line/column and a source snippet for diagnostic context.
+ */
+export class TomlParseError extends WebcvtError {
+  readonly line: number;
+  readonly col: number;
+  readonly snippet: string;
+  constructor(message: string, line: number, col: number, snippet: string) {
+    super(
+      'TOML_PARSE_ERROR',
+      `TOML parse error at line ${line}, col ${col}: ${message}\n  Near: ${snippet}`,
+    );
+    this.name = 'TomlParseError';
+    this.line = line;
+    this.col = col;
+    this.snippet = snippet;
+  }
+}
+
+/**
+ * Thrown when the same key is defined twice within the same table
+ * (Trap #3 / #4 — dotted key or direct key collision).
+ */
+export class TomlDuplicateKeyError extends WebcvtError {
+  readonly key: string;
+  constructor(key: string) {
+    super('TOML_DUPLICATE_KEY', `TOML duplicate key: "${key}" is already defined in this table.`);
+    this.name = 'TomlDuplicateKeyError';
+    this.key = key;
+  }
+}
+
+/**
+ * Thrown when a [table] header attempts to redefine a table that was
+ * already closed via a prior [table] header (Trap #4).
+ */
+export class TomlRedefineTableError extends WebcvtError {
+  readonly path: string;
+  constructor(path: string) {
+    super(
+      'TOML_REDEFINE_TABLE',
+      `TOML table [${path}] is being redefined. A table can only be defined once via a header.`,
+    );
+    this.name = 'TomlRedefineTableError';
+    this.path = path;
+  }
+}
+
+/**
+ * Thrown when a dotted key attempts to assign through a value that is not
+ * a table (e.g. a.b = 1 followed by a.b.c = 2, Trap #3).
+ */
+export class TomlConflictingTypeError extends WebcvtError {
+  readonly key: string;
+  constructor(key: string) {
+    super(
+      'TOML_CONFLICTING_TYPE',
+      `TOML key "${key}" has conflicting types: dotted-key assignment conflicts with an existing non-table value.`,
+    );
+    this.name = 'TomlConflictingTypeError';
+    this.key = key;
+  }
+}
+
+/**
+ * Thrown when a basic string contains an unrecognized escape sequence (Trap #13).
+ * Recognized escapes: \\b \\t \\n \\f \\r \\" \\\\ \\uXXXX \\UXXXXXXXX.
+ */
+export class TomlBadEscapeError extends WebcvtError {
+  readonly escapeChar: string;
+  constructor(escapeChar: string, line: number, col: number) {
+    super(
+      'TOML_BAD_ESCAPE',
+      `TOML bad escape sequence "\\${escapeChar}" at line ${line}, col ${col}. Recognized escapes: \\b \\t \\n \\f \\r \\" \\\\ \\uXXXX \\UXXXXXXXX.`,
+    );
+    this.name = 'TomlBadEscapeError';
+    this.escapeChar = escapeChar;
+  }
+}
+
+/**
+ * Thrown when an integer has leading zeros (Trap #12), overflows the
+ * signed 64-bit range, or has a bare underscore / adjacent underscores.
+ */
+export class TomlBadNumberError extends WebcvtError {
+  readonly raw: string;
+  constructor(reason: string, raw: string) {
+    super('TOML_BAD_NUMBER', `TOML bad number "${raw}": ${reason}.`);
+    this.name = 'TomlBadNumberError';
+    this.raw = raw;
+  }
+}
+
+/**
+ * Thrown when a date/time value has an out-of-range component (month 13,
+ * day 32, etc.) or an invalid offset (Trap — Bad Date).
+ */
+export class TomlBadDateError extends WebcvtError {
+  readonly raw: string;
+  constructor(reason: string, raw: string) {
+    super('TOML_BAD_DATE', `TOML bad date/time "${raw}": ${reason}.`);
+    this.name = 'TomlBadDateError';
+    this.raw = raw;
+  }
+}
+
+/**
+ * Thrown when table/array nesting exceeds MAX_TOML_DEPTH (64).
+ * Enforced incrementally during parse to prevent stack-overflow DoS.
+ */
+export class TomlDepthExceededError extends WebcvtError {
+  constructor(depth: number, max: number) {
+    super(
+      'TOML_DEPTH_EXCEEDED',
+      `TOML nesting depth ${depth} exceeds the cap of ${max}. Deeply nested structures are rejected to prevent stack overflow.`,
+    );
+    this.name = 'TomlDepthExceededError';
+  }
+}
+
+/**
+ * Thrown when a TOML string token exceeds MAX_TOML_STRING_LEN (1 MiB).
+ */
+export class TomlStringTooLongError extends WebcvtError {
+  constructor(length: number, max: number) {
+    super(
+      'TOML_STRING_TOO_LONG',
+      `TOML string token is ${length} characters which exceeds the cap of ${max} (1 MiB).`,
+    );
+    this.name = 'TomlStringTooLongError';
+  }
+}
+
+/**
+ * Thrown when serializeToml encounters a value that cannot be serialized
+ * to TOML (e.g. undefined, Function, Symbol, or circular reference).
+ */
+export class TomlSerializeError extends WebcvtError {
+  constructor(reason: string) {
+    super('TOML_SERIALIZE_ERROR', `TOML serialize error: ${reason}.`);
+    this.name = 'TomlSerializeError';
+  }
+}

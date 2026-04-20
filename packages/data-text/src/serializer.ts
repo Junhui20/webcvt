@@ -14,6 +14,7 @@ import { serializeIni } from './ini.ts';
 import { serializeJson } from './json.ts';
 import { serializeJsonl } from './jsonl.ts';
 import type { DataTextFile } from './parser.ts';
+import { serializeToml } from './toml.ts';
 
 // Re-export for convenience
 export type { DataTextFile };
@@ -38,5 +39,7 @@ export function serializeDataText(file: DataTextFile): string {
       return serializeEnv(file.file);
     case 'jsonl':
       return serializeJsonl(file.file);
+    case 'toml':
+      return serializeToml(file.file);
   }
 }

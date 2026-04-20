@@ -98,3 +98,40 @@ export const JSONL_MIME = 'application/jsonl';
  * Accepted by the backend as an identity-within-format alias.
  */
 export const JSONL_MIME_ALIAS = 'application/x-ndjson';
+
+// ---------------------------------------------------------------------------
+// TOML-specific caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum nesting depth for TOML tables and arrays (64).
+ * Enforced incrementally during parse. Prevents stack-overflow DoS from
+ * deeply nested inline tables or arrays.
+ */
+export const MAX_TOML_DEPTH = 64;
+
+/**
+ * Maximum number of characters in a single TOML string token (1,048,576 = 1 MiB).
+ * Checked incrementally during string scanning. Prevents memory exhaustion
+ * from a single huge string literal.
+ */
+export const MAX_TOML_STRING_LEN = 1_048_576;
+
+/**
+ * Maximum number of keys in a single TOML table (10,000).
+ * Prevents DoS via tables with an extreme key count.
+ */
+export const MAX_TOML_KEYS_PER_TABLE = 10_000;
+
+/**
+ * Maximum number of elements in a TOML array (1,000,000).
+ * Prevents DoS via huge inline arrays or array-of-tables.
+ */
+export const MAX_TOML_ARRAY_LEN = 1_000_000;
+
+// ---------------------------------------------------------------------------
+// TOML MIME
+// ---------------------------------------------------------------------------
+
+/** Canonical MIME type for TOML (application/toml). */
+export const TOML_MIME = 'application/toml';

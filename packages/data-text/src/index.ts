@@ -3,9 +3,10 @@
  *
  * Supported formats:
  *   JSON (RFC 8259), CSV (RFC 4180), TSV (IANA text/tab-separated-values),
- *   INI (de-facto subset), ENV (dotenv-style), JSONL (JSON Lines / NDJSON).
+ *   INI (de-facto subset), ENV (dotenv-style), JSONL (JSON Lines / NDJSON),
+ *   TOML v1.0.0 (toml.io).
  *
- * Deferred (Phase 4.5+): YAML, TOML, XML, FWF, TOON.
+ * Deferred (Phase 4.5+): YAML, XML, FWF, TOON.
  *
  * No auto-detection: callers must explicitly pass the format to parseDataText.
  * No cross-format conversion: use @webcvt/convert for that.
@@ -29,6 +30,7 @@ export type { DelimitedFile, DelimitedParseOptions } from './csv.ts';
 export type { IniFile } from './ini.ts';
 export type { EnvFile } from './env.ts';
 export type { JsonlFile, JsonlSerializeOptions } from './jsonl.ts';
+export type { TomlFile, TomlValue, TomlDate, TomlTime, TomlDateTime } from './toml.ts';
 export type { DataTextFile, DataTextFormat } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -68,6 +70,12 @@ export { parseEnv, serializeEnv } from './env.ts';
 export { parseJsonl, serializeJsonl } from './jsonl.ts';
 
 // ---------------------------------------------------------------------------
+// TOML API
+// ---------------------------------------------------------------------------
+
+export { parseToml, serializeToml } from './toml.ts';
+
+// ---------------------------------------------------------------------------
 // Top-level dispatch
 // ---------------------------------------------------------------------------
 
@@ -86,6 +94,7 @@ export {
   INI_FORMAT,
   ENV_FORMAT,
   JSONL_FORMAT,
+  TOML_FORMAT,
 } from './backend.ts';
 
 // ---------------------------------------------------------------------------
@@ -119,4 +128,15 @@ export {
   JsonlRecordDepthExceededError,
   JsonlTooManyRecordsError,
   JsonlRecordTooLongError,
+  TomlInvalidUtf8Error,
+  TomlParseError,
+  TomlDuplicateKeyError,
+  TomlRedefineTableError,
+  TomlConflictingTypeError,
+  TomlBadEscapeError,
+  TomlBadNumberError,
+  TomlBadDateError,
+  TomlDepthExceededError,
+  TomlStringTooLongError,
+  TomlSerializeError,
 } from './errors.ts';

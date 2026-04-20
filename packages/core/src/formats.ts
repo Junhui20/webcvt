@@ -66,6 +66,12 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'data',
     description: 'JSON Lines',
   },
+  {
+    ext: 'toml',
+    mime: 'application/toml',
+    category: 'data',
+    description: "Tom's Obvious Minimal Language",
+  },
   // Image-legacy (Phase 4: image-legacy package)
   {
     ext: 'pbm',

@@ -23,6 +23,7 @@ import {
   JSONL_MIME_ALIAS,
   JSON_MIME,
   MAX_INPUT_BYTES,
+  TOML_MIME,
   TSV_MIME,
 } from './constants.ts';
 import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
@@ -50,6 +51,7 @@ const MIME_TO_FORMAT = new Map<string, DataTextFormat>([
   [ENV_MIME, 'env'],
   [JSONL_MIME, 'jsonl'],
   [JSONL_MIME_ALIAS, 'jsonl'],
+  [TOML_MIME, 'toml'],
 ]);
 
 // ---------------------------------------------------------------------------
@@ -151,4 +153,11 @@ export const JSONL_FORMAT: FormatDescriptor = {
   mime: JSONL_MIME,
   category: 'data',
   description: 'JSON Lines',
+};
+
+export const TOML_FORMAT: FormatDescriptor = {
+  ext: 'toml',
+  mime: TOML_MIME,
+  category: 'data',
+  description: "Tom's Obvious Minimal Language",
 };
