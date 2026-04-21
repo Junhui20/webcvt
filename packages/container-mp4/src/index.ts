@@ -8,6 +8,14 @@
 export { parseMp4, type Mp4File, type Mp4Track } from './parser.ts';
 export { serializeMp4 } from './serializer.ts';
 
+// Track selectors (multi-track, sub-pass C).
+export {
+  findAudioTrack,
+  findVideoTrack,
+  findTrackById,
+  findTracksByKind,
+} from './track-selectors.ts';
+
 // Sample iteration.
 export {
   iterateAudioSamples,
@@ -31,7 +39,16 @@ export {
   Mp4MissingFtypError,
   Mp4UnsupportedBrandError,
   Mp4MissingMoovError,
+  /** @deprecated Parser no longer throws this. Kept for source compatibility. */
   Mp4MultiTrackNotSupportedError,
+  // Multi-track errors (sub-pass C):
+  Mp4NoTracksError,
+  Mp4TooManyTracksError,
+  Mp4TrackIdZeroError,
+  Mp4DuplicateTrackIdError,
+  Mp4AmbiguousTrackError,
+  Mp4TrackNotFoundError,
+  Mp4NoAudioTrackError,
   Mp4UnsupportedTrackTypeError,
   Mp4UnsupportedSampleEntryError,
   Mp4ExternalDataRefError,

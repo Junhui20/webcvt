@@ -162,3 +162,13 @@ export const MAX_VIDEO_DIMENSION = 16384;
 
 /** Maximum codec config box payload bytes (avcC/hvcC/vpcC/av1C). */
 export const MAX_VIDEO_CODEC_CONFIG_BYTES = 1024 * 1024;
+
+// ---------------------------------------------------------------------------
+// Multi-track security caps (sub-pass C)
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum number of trak boxes per moov.
+ * Real files have ≤4 tracks. 64 is a generous security cap.
+ */
+export const MAX_TRACKS_PER_FILE = 64;

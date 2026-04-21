@@ -51,7 +51,10 @@ export class Mp4MissingMoovError extends WebcvtError {
   }
 }
 
-/** Thrown when the file has more than one trak box (multi-track not supported). */
+/**
+ * @deprecated Multi-track is now supported (sub-pass C). This error is never
+ * thrown by the parser. Kept for source compatibility only.
+ */
 export class Mp4MultiTrackNotSupportedError extends WebcvtError {
   constructor(trackCount: number) {
     super(
@@ -59,6 +62,97 @@ export class Mp4MultiTrackNotSupportedError extends WebcvtError {
       `Found ${trackCount} trak boxes; only single-track audio M4A is supported in Phase 3. Multi-track support is Phase 3.5+.`,
     );
     this.name = 'Mp4MultiTrackNotSupportedError';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Multi-track errors (sub-pass C)
+// ---------------------------------------------------------------------------
+
+/** Thrown when the moov box contains no trak children (empty movie). */
+export class Mp4NoTracksError extends WebcvtError {
+  constructor() {
+    super('MP4_NO_TRACKS', 'moov box contains no trak children. The file has no tracks.');
+    this.name = 'Mp4NoTracksError';
+  }
+}
+
+/** Thrown when the track count exceeds MAX_TRACKS_PER_FILE. */
+export class Mp4TooManyTracksError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'MP4_TOO_MANY_TRACKS',
+      `File contains ${count} trak boxes; maximum supported is ${max}. The input may be corrupt or adversarially crafted.`,
+    );
+    this.name = 'Mp4TooManyTracksError';
+  }
+}
+
+/** Thrown when a trak has track_ID = 0, which is reserved and invalid (ISO §8.3.2). */
+export class Mp4TrackIdZeroError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_TRACK_ID_ZERO',
+      'A trak box has track_ID = 0, which is reserved and invalid (ISO/IEC 14496-12 §8.3.2).',
+    );
+    this.name = 'Mp4TrackIdZeroError';
+  }
+}
+
+/** Thrown when two trak boxes share the same track_ID. */
+export class Mp4DuplicateTrackIdError extends WebcvtError {
+  constructor(trackId: number) {
+    super(
+      'MP4_DUPLICATE_TRACK_ID',
+      `Two trak boxes share track_ID ${trackId}. Track IDs must be unique within a file.`,
+    );
+    this.name = 'Mp4DuplicateTrackIdError';
+  }
+}
+
+/**
+ * Thrown when an iterator is called on a multi-track file without an explicit
+ * track selector, making the target ambiguous.
+ */
+export class Mp4AmbiguousTrackError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_AMBIGUOUS_TRACK',
+      'The file has multiple tracks but no explicit track was provided. ' +
+        'Use findAudioTrack / findVideoTrack / findTrackById to select a track, ' +
+        'then pass it as the second argument to the iterator.',
+    );
+    this.name = 'Mp4AmbiguousTrackError';
+  }
+}
+
+/**
+ * Thrown when an iterator receives an Mp4Track that does not belong to the
+ * provided Mp4File (reference equality check fails).
+ */
+export class Mp4TrackNotFoundError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_TRACK_NOT_FOUND',
+      'The provided Mp4Track does not belong to this Mp4File. ' +
+        'Obtain the track via file.tracks or a findTrack* helper, not from another file.',
+    );
+    this.name = 'Mp4TrackNotFoundError';
+  }
+}
+
+/**
+ * Thrown by the backend when audio/mp4 → audio/mp4 conversion is requested
+ * on a file that has no audio (soun) track.
+ */
+export class Mp4NoAudioTrackError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_NO_AUDIO_TRACK',
+      'The MP4 file contains no audio (soun) track. ' +
+        'Cannot produce audio/mp4 output without an audio track.',
+    );
+    this.name = 'Mp4NoAudioTrackError';
   }
 }
 

@@ -20,7 +20,7 @@
  *   - sampleSizes[i]: expanded from stsz.
  *
  * Box ordering: readers tolerate any order (Trap §12). Writers emit:
- *   stsd → stts → stsc → stsz → stco/co64 (canonical order).
+ *   stsd → stts → stsc → stsz → stss (if present) → stco/co64 (canonical order).
  */
 
 import { MAX_TABLE_ENTRIES } from '../constants.ts';
@@ -390,6 +390,33 @@ export function parseStss(payload: Uint8Array): ReadonlySet<number> {
     off += 4;
   }
   return syncSet;
+}
+
+/**
+ * Serialize stss (Sync Sample Box) including the box header.
+ *
+ * Emits a FullBox with version=0, flags=0, entry_count, and one u32
+ * per keyframe sample number (1-based, ascending order).
+ *
+ * @param syncSamples  Set of 1-based keyframe sample numbers.
+ */
+export function serializeStss(syncSamples: ReadonlySet<number>): Uint8Array {
+  const entries = [...syncSamples].sort((a, b) => a - b);
+  const payloadSize = 8 + entries.length * 4; // 4 version+flags + 4 entry_count + N×4
+  const boxSize = 8 + payloadSize; // +8 box header
+  const out = new Uint8Array(boxSize);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, boxSize, false);
+  out[4] = 0x73;
+  out[5] = 0x74;
+  out[6] = 0x73;
+  out[7] = 0x73; // 'stss'
+  // version=0, flags=0 at bytes 8-11 (already zero)
+  view.setUint32(12, entries.length, false);
+  for (let i = 0; i < entries.length; i++) {
+    view.setUint32(16 + i * 4, entries[i] ?? 0, false);
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------

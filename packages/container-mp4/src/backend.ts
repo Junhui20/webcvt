@@ -17,9 +17,16 @@
 
 import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
 import { MAX_INPUT_BYTES } from './constants.ts';
-import { Mp4EncodeNotImplementedError, Mp4InputTooLargeError } from './errors.ts';
+import {
+  Mp4EncodeNotImplementedError,
+  Mp4FragmentedSerializeNotSupportedError,
+  Mp4InputTooLargeError,
+  Mp4NoAudioTrackError,
+} from './errors.ts';
+import type { Mp4File, Mp4Track } from './parser.ts';
 import { parseMp4 } from './parser.ts';
 import { serializeMp4 } from './serializer.ts';
+import { findAudioTrack } from './track-selectors.ts';
 
 // ---------------------------------------------------------------------------
 // MIME type registry
@@ -68,7 +75,17 @@ export class Mp4Backend implements Backend {
 
     // Identity / round-trip path (audio/mp4 → audio/mp4).
     if (M4A_MIMES.has(output.mime)) {
-      const outputBytes = serializeMp4(mp4File);
+      // C.4: project to single audio track when input has multiple tracks.
+      const audioTrack = findAudioTrack(mp4File);
+      if (!audioTrack) {
+        throw new Mp4NoAudioTrackError();
+      }
+
+      // If the file already has exactly one track and it is audio, no projection needed.
+      const fileToSerialize =
+        mp4File.tracks.length === 1 ? mp4File : projectToSingleTrack(mp4File, audioTrack);
+
+      const outputBytes = serializeMp4(fileToSerialize);
       options.onProgress?.({ percent: 100, phase: 'done' });
       const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: output.mime });
       return {
@@ -83,6 +100,47 @@ export class Mp4Backend implements Backend {
     // Non-M4A output is not implemented in Phase 3.
     throw new Mp4EncodeNotImplementedError();
   }
+}
+
+// ---------------------------------------------------------------------------
+// Projection helper (C.4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a new Mp4File containing only the given track.
+ *
+ * LOSSY: all other tracks (video, secondary audio, etc.) are permanently
+ * dropped from the returned file. The direct parseMp4 + serializeMp4 API
+ * preserves all tracks.
+ *
+ * Also drops unrelated mvex.trex entries and filters
+ * fragment.trackFragments to only those belonging to the kept track.
+ *
+ * Sub-pass C limitation: projection on fragmented files is not supported.
+ * The projected file retains `isFragmented: true` but may have empty
+ * trackFragments after filtering, which serializeMp4 cannot handle (D.4).
+ * Throw explicitly here rather than waiting for serializeMp4 to catch it,
+ * so the error surface is clear even if the serialize guard moves.
+ */
+function projectToSingleTrack(file: Mp4File, track: Mp4Track): Mp4File {
+  if (file.isFragmented) {
+    throw new Mp4FragmentedSerializeNotSupportedError();
+  }
+  // Filter track extends to only the kept track.
+  const filteredTrackExtends = file.trackExtends.filter((te) => te.trackId === track.trackId);
+
+  // Filter each fragment's trackFragments to the kept track.
+  const filteredFragments = file.fragments.map((frag) => ({
+    ...frag,
+    trackFragments: frag.trackFragments.filter((tf) => tf.trackId === track.trackId),
+  }));
+
+  return {
+    ...file,
+    tracks: [track],
+    trackExtends: filteredTrackExtends,
+    fragments: filteredFragments,
+  };
 }
 
 // ---------------------------------------------------------------------------

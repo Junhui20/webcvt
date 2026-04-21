@@ -134,9 +134,16 @@ export function parseMoof(
   }
 
   const trackFragments: Mp4TrackFragment[] = [];
+  const seenTrafTrackIds = new Set<number>();
 
   for (const trafBox of trafBoxes) {
     const traf = parseTraf(trafBox, moofOffset, trackExtendsById);
+    if (seenTrafTrackIds.has(traf.trackId)) {
+      throw new Mp4InvalidBoxError(
+        `moof at offset ${moofOffset} contains two traf boxes for trackId ${traf.trackId}; spec requires at most one per track per moof.`,
+      );
+    }
+    seenTrafTrackIds.add(traf.trackId);
     trackFragments.push(traf);
   }
 

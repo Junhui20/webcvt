@@ -4,7 +4,7 @@
  * Design note test cases covered:
  *   - "parses single-track audio M4A end-to-end"
  *   - "tolerates moov-after-mdat layout and moov-before-mdat layout"
- *   - "rejects multi-track file with Mp4MultiTrackNotSupportedError"
+ *   - "multi-track moov is now accepted (sub-pass C)"
  *   - "rejects video-handler track with Mp4UnsupportedTrackTypeError"
  *   - "rejects external data reference (dref url with flags = 0)"
  *   - "enforces 200 MiB input cap"
@@ -283,10 +283,10 @@ describe('parseMp4 — error cases', () => {
     expect(parsed.mdatRanges.length).toBeGreaterThan(0);
   });
 
-  it('throws Mp4MultiTrackNotSupportedError for multi-trak moov', () => {
-    // Build a minimal moov with two trak children. Each trak must contain at
-    // least a tkhd box so the walker does not choke on trak's content — trak
-    // is a container type and its payload is descended into.
+  it('multi-trak moov is now accepted (sub-pass C): parser throws Mp4MissingBoxError for incomplete trak', () => {
+    // Sub-pass C: multi-track is now supported. A moov with two trak children
+    // that only have tkhd (no mdia) still throws Mp4MissingBoxError('mdia', 'trak').
+    // Mp4MultiTrackNotSupportedError is no longer thrown by the parser.
     const ftyp = buildFtypBox('mp42');
     const mvhd = buildFullBox('mvhd', buildMvhdV0Payload(1000, 5000));
     const tkhd1 = buildFullBox('tkhd', buildMinimalTkhd());
@@ -297,7 +297,8 @@ describe('parseMp4 — error cases', () => {
     const moov = buildBox('moov', moovPayload);
     const mdat = buildBox('mdat', new Uint8Array(8));
     const file = concat([ftyp, moov, mdat]);
-    expect(() => parseMp4(file)).toThrow(Mp4MultiTrackNotSupportedError);
+    // Now throws Mp4MissingBoxError because trak lacks mdia, not Mp4MultiTrackNotSupportedError.
+    expect(() => parseMp4(file)).toThrow(Mp4MissingBoxError);
   });
 });
 

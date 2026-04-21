@@ -8,7 +8,7 @@
  * 4. Locate moov (may be after mdat — Trap §8). Throw if absent.
  * 5. Locate mdat ranges (do not copy contents).
  * 6. Descend into moov with iterative stack (depth cap = 10).
- * 7a. Classic path: parse the single trak (throw if != 1).
+ * 7a. Classic path: parse all trak boxes; validate count, trackId uniqueness.
  * 7b. Fragmented path: parse mvex/trex; walk top-level for moof boxes.
  * 8. Validate and return Mp4File.
  *
@@ -54,9 +54,10 @@ import {
 } from './boxes/stbl.ts';
 import type { Mp4TrackRun } from './boxes/trun.ts';
 import { type MetadataAtoms, parseUdta } from './boxes/udta-meta-ilst.ts';
-import { MAX_FRAGMENTS, MAX_INPUT_BYTES } from './constants.ts';
+import { MAX_FRAGMENTS, MAX_INPUT_BYTES, MAX_TRACKS_PER_FILE } from './constants.ts';
 import {
   Mp4CorruptSampleError,
+  Mp4DuplicateTrackIdError,
   Mp4FragmentCountTooLargeError,
   Mp4FragmentMixedSampleTablesError,
   Mp4InputTooLargeError,
@@ -66,7 +67,9 @@ import {
   Mp4MissingFtypError,
   Mp4MissingMoovError,
   Mp4MoofSequenceOutOfOrderError,
-  Mp4MultiTrackNotSupportedError,
+  Mp4NoTracksError,
+  Mp4TooManyTracksError,
+  Mp4TrackIdZeroError,
 } from './errors.ts';
 
 // ---------------------------------------------------------------------------
@@ -185,9 +188,12 @@ export interface Mp4File {
  * @throws Mp4InputTooLargeError — input > 200 MiB.
  * @throws Mp4MissingFtypError — ftyp is not the first box.
  * @throws Mp4MissingMoovError — no moov box found.
- * @throws Mp4MultiTrackNotSupportedError — more than one trak box (classic path).
- * @throws Mp4UnsupportedTrackTypeError — hdlr handler is not 'soun'.
- * @throws Mp4UnsupportedSampleEntryError — sample entry is not 'mp4a'.
+ * @throws Mp4NoTracksError — moov has zero trak children.
+ * @throws Mp4TooManyTracksError — trak count exceeds MAX_TRACKS_PER_FILE (64).
+ * @throws Mp4TrackIdZeroError — a trak has track_ID = 0 (invalid per spec).
+ * @throws Mp4DuplicateTrackIdError — two trak boxes share the same track_ID.
+ * @throws Mp4UnsupportedTrackTypeError — hdlr handler is not 'soun' or 'vide'.
+ * @throws Mp4UnsupportedSampleEntryError — sample entry not supported.
  * @throws Mp4ExternalDataRefError — dref is not self-contained.
  * @throws Mp4InvalidBoxError — malformed box structure.
  * @throws Mp4FragmentMixedSampleTablesError — fragmented file with non-empty stbl.
@@ -299,42 +305,45 @@ function parseClassic(
   udtaOpaque: Uint8Array | null,
   boxCount: { value: number },
 ): Mp4File {
-  if (trakBoxes.length !== 1) {
-    if (trakBoxes.length === 0) {
-      throw new Mp4MissingBoxError('trak', 'moov');
-    }
-    throw new Mp4MultiTrackNotSupportedError(trakBoxes.length);
+  // C.1: multi-track discovery — replace the single-track gate.
+  if (trakBoxes.length === 0) {
+    throw new Mp4NoTracksError();
+  }
+  if (trakBoxes.length > MAX_TRACKS_PER_FILE) {
+    throw new Mp4TooManyTracksError(trakBoxes.length, MAX_TRACKS_PER_FILE);
   }
 
-  const trakBox = trakBoxes[0];
-  if (!trakBox) throw new Mp4MissingBoxError('trak', 'moov');
-  const track = parseTrak(trakBox, input, boxCount);
+  const tracks: Mp4Track[] = [];
+  const seenTrackIds = new Set<number>();
 
-  // Validate all sample offsets + sizes against file bounds.
-  const { sampleOffsets, sampleSizes, sampleCount } = track.sampleTable;
-  for (let i = 0; i < sampleCount; i++) {
-    const off = sampleOffsets[i] ?? 0;
-    const sz = sampleSizes[i] ?? 0;
-    if (off + sz > input.length) {
-      throw new Mp4CorruptSampleError(i, off, sz, input.length);
-    }
-  }
+  for (const trakBox of trakBoxes) {
+    const track = parseTrak(trakBox, input, boxCount);
 
-  // Duration consistency check (Trap §9 — warn, not throw).
-  const mdhdTimescale = track.mediaHeader.timescale;
-  if (mdhdTimescale > 0 && sampleCount > 0) {
-    const sttsTotal = track.sttsEntries.reduce((acc, e) => acc + e.sampleCount * e.sampleDelta, 0);
-    const mdhdDuration = track.mediaHeader.duration;
-    const delta = Math.abs(sttsTotal - mdhdDuration);
-    if (delta > mdhdTimescale) {
-      // One-sample tolerance exceeded — warning per spec.
+    if (track.trackId === 0) {
+      throw new Mp4TrackIdZeroError();
     }
+    if (seenTrackIds.has(track.trackId)) {
+      throw new Mp4DuplicateTrackIdError(track.trackId);
+    }
+    seenTrackIds.add(track.trackId);
+
+    // Validate all sample offsets + sizes against file bounds.
+    const { sampleOffsets, sampleSizes, sampleCount } = track.sampleTable;
+    for (let i = 0; i < sampleCount; i++) {
+      const off = sampleOffsets[i] ?? 0;
+      const sz = sampleSizes[i] ?? 0;
+      if (off + sz > input.length) {
+        throw new Mp4CorruptSampleError(i, off, sz, input.length);
+      }
+    }
+
+    tracks.push(track);
   }
 
   return {
     ftyp,
     movieHeader,
-    tracks: [track],
+    tracks,
     mdatRanges,
     fileBytes: input,
     metadata,
@@ -365,19 +374,29 @@ function parseFragmented(
   udtaOpaque: Uint8Array | null,
   boxCount: { value: number },
 ): Mp4File {
-  // Parse trak for audio sample entry info (stbl tables expected to be empty).
-  // We still require exactly one trak for sub-pass D.
-  if (trakBoxes.length !== 1) {
-    if (trakBoxes.length === 0) {
-      throw new Mp4MissingBoxError('trak', 'moov');
-    }
-    throw new Mp4MultiTrackNotSupportedError(trakBoxes.length);
+  // C.1: multi-track discovery — replace the single-track gate.
+  if (trakBoxes.length === 0) {
+    throw new Mp4NoTracksError();
   }
-  const trakBox = trakBoxes[0];
-  if (!trakBox) throw new Mp4MissingBoxError('trak', 'moov');
+  if (trakBoxes.length > MAX_TRACKS_PER_FILE) {
+    throw new Mp4TooManyTracksError(trakBoxes.length, MAX_TRACKS_PER_FILE);
+  }
 
-  // Parse trak but skip sample-table validation (stbl should be empty).
-  const track = parseTrakFragmented(trakBox, input, boxCount);
+  const tracks: Mp4Track[] = [];
+  const seenTrackIds = new Set<number>();
+
+  for (const trakBox of trakBoxes) {
+    const track = parseTrakFragmented(trakBox, input, boxCount);
+
+    if (track.trackId === 0) {
+      throw new Mp4TrackIdZeroError();
+    }
+    if (seenTrackIds.has(track.trackId)) {
+      throw new Mp4DuplicateTrackIdError(track.trackId);
+    }
+    seenTrackIds.add(track.trackId);
+    tracks.push(track);
+  }
 
   // Parse mvex → trex defaults.
   const mvexResult: Mp4MvexResult = parseMvex(mvexBox);
@@ -415,7 +434,7 @@ function parseFragmented(
   return {
     ftyp,
     movieHeader,
-    tracks: [track],
+    tracks,
     mdatRanges,
     fileBytes: input,
     metadata,

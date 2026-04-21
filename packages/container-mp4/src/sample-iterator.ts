@@ -29,12 +29,14 @@ import type { EditListEntry } from './boxes/elst.ts';
 import type { Mp4MovieFragment, Mp4TrackFragment } from './boxes/moof.ts';
 import type { Mp4FragmentSample, Mp4TrackRun } from './boxes/trun.ts';
 import {
+  Mp4AmbiguousTrackError,
   Mp4CorruptSampleError,
   Mp4DefaultsCascadeError,
   Mp4ElstMultiSegmentNotSupportedError,
   Mp4ElstValueOutOfRangeError,
   Mp4FragmentNotYetIteratedError,
   Mp4IterateWrongKindError,
+  Mp4TrackNotFoundError,
 } from './errors.ts';
 import type { Mp4File, Mp4Track, Mp4TrackExtends } from './parser.ts';
 
@@ -403,42 +405,70 @@ export function deriveCodecString(
 }
 
 // ---------------------------------------------------------------------------
+// Multi-track resolution helper (sub-pass C)
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the active track from an optional `track` argument.
+ *
+ * Behaviour:
+ * - Omitted + single-track file → returns the one track (back-compat).
+ * - Omitted + multi-track file → throws Mp4AmbiguousTrackError.
+ * - Provided → validates via reference equality; throws Mp4TrackNotFoundError
+ *   if the track does not belong to this file.
+ */
+function resolveTrack(file: Mp4File, track: Mp4Track | undefined): Mp4Track {
+  if (track !== undefined) {
+    if (!file.tracks.includes(track)) {
+      throw new Mp4TrackNotFoundError();
+    }
+    return track;
+  }
+  if (file.tracks.length === 1) {
+    const only = file.tracks[0];
+    if (!only) throw new Mp4TrackNotFoundError();
+    return only;
+  }
+  throw new Mp4AmbiguousTrackError();
+}
+
+// ---------------------------------------------------------------------------
 // Fragmented MP4 iteration (sub-pass D)
 // ---------------------------------------------------------------------------
 
 /**
- * Iterate over all audio samples in a fragmented MP4 file.
+ * Iterate over audio samples in a fragmented MP4 file.
  *
- * Walks all moof → traf → trun chains. For each trun, resolves sample duration
- * and size via the defaulting cascade: per-sample > tfhd > trex.
+ * Walks all moof → traf → trun chains, filtered to the given track.
  *
- * Validates byte bounds before each subarray access:
- *   byteOffset < 0 || byteOffset + size > fileBytes.length → Mp4CorruptSampleError.
+ * @param file   Parsed fragmented Mp4File (isFragmented must be true).
+ * @param track  Optional explicit track to iterate. When omitted:
+ *               - single-track file → back-compat (picks the one track).
+ *               - multi-track file → throws Mp4AmbiguousTrackError.
  *
- * @param file              Parsed fragmented Mp4File (isFragmented must be true).
- * @param movieTimescale    Timescale for timestamp computation. Defaults to file.movieHeader.timescale.
- *
- * @throws Mp4DefaultsCascadeError   — duration or size unresolvable.
- * @throws Mp4CorruptSampleError     — byte range out of bounds.
+ * @throws Mp4AmbiguousTrackError        — multi-track file, no track argument.
+ * @throws Mp4TrackNotFoundError         — track not from this file.
+ * @throws Mp4DefaultsCascadeError       — duration or size unresolvable.
+ * @throws Mp4CorruptSampleError         — byte range out of bounds.
  * @throws Mp4FragmentNotYetIteratedError — called on a non-fragmented file.
  */
 export function* iterateFragmentedAudioSamples(
   file: Mp4File,
-  movieTimescale: number = file.movieHeader.timescale,
+  track?: Mp4Track,
 ): Generator<AudioSample> {
   if (!file.isFragmented) {
     throw new Mp4FragmentNotYetIteratedError();
   }
 
-  const { fileBytes, trackExtends, fragments } = file;
-  const track = file.tracks[0];
-  if (!track) return;
+  const resolvedTrack = resolveTrack(file, track);
 
-  if (track.sampleEntry.kind === 'video') {
+  if (resolvedTrack.sampleEntry.kind === 'video') {
     throw new Mp4IterateWrongKindError('audio', 'video');
   }
 
-  const timescale = track.mediaHeader.timescale;
+  const { fileBytes, trackExtends, fragments } = file;
+  // Per-track timescale (C.3: use mdhd.timescale for each track).
+  const timescale = resolvedTrack.mediaHeader.timescale;
 
   // Build trex lookup by trackId.
   const trexByTrackId = new Map<number, Mp4TrackExtends>();
@@ -449,14 +479,16 @@ export function* iterateFragmentedAudioSamples(
   let globalSampleIndex = 0;
 
   for (const fragment of fragments) {
+    // C.3: filter traf entries to this track's trackId.
     for (const traf of fragment.trackFragments) {
+      if (traf.trackId !== resolvedTrack.trackId) {
+        continue;
+      }
       if (traf.durationIsEmpty) {
-        // duration-is-empty flag: this traf contributes 0 samples.
         continue;
       }
 
       const trex = trexByTrackId.get(traf.trackId);
-      // baseMediaDecodeTime from tfdt is the absolute media time for this traf.
       const trafBaseTick = traf.baseMediaDecodeTime ?? 0;
 
       for (const trun of traf.trackRuns) {
@@ -471,7 +503,6 @@ export function* iterateFragmentedAudioSamples(
           trafBaseTick,
         );
 
-        // Advance global index by this trun's sample count.
         globalSampleIndex += trun.samples.length;
       }
     }
@@ -559,22 +590,31 @@ function* iterateTrunSamples(
 /**
  * Auto-dispatching audio sample iterator.
  *
- * - Fragmented files (isFragmented == true): delegates to iterateFragmentedAudioSamples.
- * - Classic files: delegates to iterateAudioSamplesWithContext using the first track.
+ * - Fragmented files → delegates to iterateFragmentedAudioSamples.
+ * - Classic files → delegates to iterateAudioSamplesWithContext.
  *
- * @throws Mp4FragmentNotYetIteratedError — should never happen (internal guard).
- * @throws Mp4IterateWrongKindError when the first track is a video track.
+ * @param file   Parsed Mp4File.
+ * @param track  Optional explicit track. When omitted:
+ *               - single-track file → back-compat.
+ *               - multi-track file → throws Mp4AmbiguousTrackError.
+ *
+ * @throws Mp4AmbiguousTrackError    — multi-track file, no track argument.
+ * @throws Mp4TrackNotFoundError     — track not from this file.
+ * @throws Mp4IterateWrongKindError  — track is a video track.
  */
-export function* iterateAudioSamplesAuto(file: Mp4File): Generator<AudioSample> {
-  const track = file.tracks[0];
-  if (track?.sampleEntry.kind === 'video') {
+export function* iterateAudioSamplesAuto(file: Mp4File, track?: Mp4Track): Generator<AudioSample> {
+  const resolvedTrack = resolveTrack(file, track);
+  if (resolvedTrack.sampleEntry.kind === 'video') {
     throw new Mp4IterateWrongKindError('audio', 'video');
   }
   if (file.isFragmented) {
-    yield* iterateFragmentedAudioSamples(file);
+    yield* iterateFragmentedAudioSamples(file, resolvedTrack);
   } else {
-    if (!track) return;
-    yield* iterateAudioSamplesWithContext(track, file.fileBytes, file.movieHeader.timescale);
+    yield* iterateAudioSamplesWithContext(
+      resolvedTrack,
+      file.fileBytes,
+      file.movieHeader.timescale,
+    );
   }
 }
 
@@ -624,28 +664,37 @@ export function* iterateVideoSamples(track: Mp4Track, fileBytes: Uint8Array): Ge
 }
 
 /**
- * Iterate over all video samples in a fragmented MP4 file.
+ * Iterate over video samples in a fragmented MP4 file.
  *
- * @param file  Parsed fragmented Mp4File (isFragmented must be true).
- * @throws Mp4IterateWrongKindError       when the track is not a video track.
- * @throws Mp4FragmentNotYetIteratedError when called on a non-fragmented file.
- * @throws Mp4DefaultsCascadeError        when duration or size cannot be resolved.
- * @throws Mp4CorruptSampleError          when byte range is out of bounds.
+ * @param file   Parsed fragmented Mp4File (isFragmented must be true).
+ * @param track  Optional explicit track. When omitted:
+ *               - single-track file → back-compat.
+ *               - multi-track file → throws Mp4AmbiguousTrackError.
+ *
+ * @throws Mp4AmbiguousTrackError        — multi-track file, no track argument.
+ * @throws Mp4TrackNotFoundError         — track not from this file.
+ * @throws Mp4IterateWrongKindError      — track is an audio track.
+ * @throws Mp4FragmentNotYetIteratedError — called on a non-fragmented file.
+ * @throws Mp4DefaultsCascadeError       — duration or size cannot be resolved.
+ * @throws Mp4CorruptSampleError         — byte range is out of bounds.
  */
-export function* iterateFragmentedVideoSamples(file: Mp4File): Generator<Mp4Sample> {
+export function* iterateFragmentedVideoSamples(
+  file: Mp4File,
+  track?: Mp4Track,
+): Generator<Mp4Sample> {
   if (!file.isFragmented) {
     throw new Mp4FragmentNotYetIteratedError();
   }
 
-  const track = file.tracks[0];
-  if (!track) return;
+  const resolvedTrack = resolveTrack(file, track);
 
-  if (track.sampleEntry.kind === 'audio') {
+  if (resolvedTrack.sampleEntry.kind === 'audio') {
     throw new Mp4IterateWrongKindError('video', 'audio');
   }
 
   const { fileBytes, trackExtends, fragments } = file;
-  const timescale = track.mediaHeader.timescale;
+  // Per-track timescale (C.3).
+  const timescale = resolvedTrack.mediaHeader.timescale;
 
   // Build trex lookup by trackId.
   const trexByTrackId = new Map<number, Mp4TrackExtends>();
@@ -656,7 +705,11 @@ export function* iterateFragmentedVideoSamples(file: Mp4File): Generator<Mp4Samp
   let globalSampleIndex = 0;
 
   for (const fragment of fragments) {
+    // C.3: filter traf entries to this track's trackId.
     for (const traf of fragment.trackFragments) {
+      if (traf.trackId !== resolvedTrack.trackId) {
+        continue;
+      }
       if (traf.durationIsEmpty) {
         continue;
       }
@@ -769,26 +822,32 @@ function* iterateVideoTrunSamples(
 /**
  * Auto-dispatching unified sample iterator. Dispatches on track sampleEntry.kind.
  *
- * - Audio tracks → delegates to iterateAudioSamplesAuto (returns AudioSample shaped).
- * - Video tracks → delegates to iterateVideoSamples (classic) or iterateFragmentedVideoSamples.
+ * - Audio tracks → delegates to iterateAudioSamplesAuto.
+ * - Video tracks → delegates to iterateVideoSamples (classic) or
+ *   iterateFragmentedVideoSamples.
  *
- * Returns Mp4Sample objects in all cases.
+ * @param file   Parsed Mp4File.
+ * @param track  Optional explicit track. When omitted:
+ *               - single-track file → back-compat.
+ *               - multi-track file → throws Mp4AmbiguousTrackError.
+ *
+ * @throws Mp4AmbiguousTrackError  — multi-track file, no track argument.
+ * @throws Mp4TrackNotFoundError   — track not from this file.
  */
-export function* iterateSamples(file: Mp4File): Generator<Mp4Sample> {
-  const track = file.tracks[0];
-  if (!track) return;
+export function* iterateSamples(file: Mp4File, track?: Mp4Track): Generator<Mp4Sample> {
+  const resolvedTrack = resolveTrack(file, track);
 
-  if (track.sampleEntry.kind === 'video') {
+  if (resolvedTrack.sampleEntry.kind === 'video') {
     if (file.isFragmented) {
-      yield* iterateFragmentedVideoSamples(file);
+      yield* iterateFragmentedVideoSamples(file, resolvedTrack);
     } else {
-      yield* iterateVideoSamples(track, file.fileBytes);
+      yield* iterateVideoSamples(resolvedTrack, file.fileBytes);
     }
   } else {
     // Audio: adapt AudioSample → Mp4Sample.
     const audioGen = file.isFragmented
-      ? iterateFragmentedAudioSamples(file)
-      : iterateAudioSamplesWithContext(track, file.fileBytes, file.movieHeader.timescale);
+      ? iterateFragmentedAudioSamples(file, resolvedTrack)
+      : iterateAudioSamplesWithContext(resolvedTrack, file.fileBytes, file.movieHeader.timescale);
     for (const s of audioGen) {
       yield {
         kind: 'audio',

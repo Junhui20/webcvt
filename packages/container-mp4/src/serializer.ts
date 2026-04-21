@@ -2,17 +2,16 @@
  * MP4 muxer — serialize an Mp4File back to a Uint8Array.
  *
  * Algorithm (per design note §Muxer):
- * 1. Validate: only single-track audio files are supported.
- * 2. Emit in canonical faststart order: ftyp → moov → mdat.
- * 3. Fixed-point offset computation (Trap §16):
- *    a. Serialize moov once to determine its byte size.
- *    b. Compute where mdat payload will start.
- *    c. Patch stco/co64 chunk offsets to the new file positions.
- *    d. Re-serialize moov with patched offsets.
- *    e. If switching stco→co64 changes moov size, iterate (max 2 passes).
- * 4. Write ftyp box (8 + ftyp payload).
- * 5. Write moov box with patched offsets.
- * 6. Write mdat box: 8-byte (or 16-byte largesize) header + raw sample bytes.
+ * 1. Emit in canonical faststart order: ftyp → moov → mdat.
+ * 2. Fixed-point offset computation (per-track, Trap §16):
+ *    a. Serialize moov once with placeholder offsets (all zeros) to determine
+ *       its byte size.
+ *    b. Compute where mdat payload starts (ftyp + moov + mdat_header).
+ *    c. For each track, compute cumulative write position of its samples.
+ *    d. Patch stco/co64 chunk offsets per-track.
+ *    e. Re-serialize moov. If moov size changes (stco→co64 promotion), iterate.
+ * 3. mdat payload: track 0 samples, then track 1, etc. (flat layout, file order).
+ * 4. mvhd.next_track_ID = max(trackId) + 1 unless input already has larger value.
  *
  * Round-trip property: parse → serialize produces byte-identical moov/ftyp
  * content (sample data is copied verbatim from the original fileBytes).
@@ -33,12 +32,13 @@ import {
   serializeCo64,
   serializeStco,
   serializeStsc,
+  serializeStss,
   serializeStsz,
   serializeStts,
 } from './boxes/stbl.ts';
 import { buildUdtaBox } from './boxes/udta-meta-ilst.ts';
 import { serializeVisualSampleEntry } from './boxes/visual-sample-entry.ts';
-import { Mp4FragmentedSerializeNotSupportedError } from './errors.ts';
+import { Mp4FragmentedSerializeNotSupportedError, Mp4InvalidBoxError } from './errors.ts';
 import type { Mp4File, Mp4Track } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -49,54 +49,77 @@ import type { Mp4File, Mp4Track } from './parser.ts';
  * Serialize an Mp4File to a canonical MP4 byte stream.
  *
  * Always emits faststart layout (ftyp → moov → mdat) regardless of the
- * original box order.
+ * original box order. Tracks are emitted in the same order as file.tracks
+ * (file order, not sorted by trackId).
+ *
+ * mdat layout: track 0 samples, then track 1, etc. (flat, contiguous per track).
  *
  * @throws Mp4FragmentedSerializeNotSupportedError — input is a fragmented file (D.4).
- * @throws Mp4EncodeNotImplementedError — input has >1 track or video tracks.
  */
 export function serializeMp4(file: Mp4File): Uint8Array {
   // Sub-pass D guard: fragmented round-trip serialization is not yet supported.
-  // D.4 will implement this; for now throw a typed error so callers can catch it.
   if (file.isFragmented) {
     throw new Mp4FragmentedSerializeNotSupportedError();
   }
 
-  const track = file.tracks[0];
-  if (!track) {
+  if (file.tracks.length === 0) {
     return new Uint8Array(0);
   }
 
-  // Step 3a: Fixed-point offset computation.
-  // First pass: compute moov size with placeholder offsets (all zeros).
   const ftypBytes = buildFtypBox(file.ftyp);
-  const mdatPayloadSize = computeMdatPayloadSize(track, file.fileBytes);
-  const useLargesize = mdatPayloadSize + 8 > 0xffffffff;
 
-  // First pass moov (with placeholder chunk offsets = 0).
-  let moovBytes = buildMoovBox(track, file, Array(track.chunkOffsets.length).fill(0), false);
-
-  // Compute where mdat payload starts (after ftyp + moov + mdat_header).
+  // Compute total mdat payload size (all tracks combined).
+  const totalMdatPayloadSize = computeTotalMdatPayloadSize(file);
+  const useLargesize = totalMdatPayloadSize + 8 > 0xffffffff;
   const mdatHeaderSize = useLargesize ? 16 : 8;
+
+  // Fixed-point offset computation (Trap §16):
+  // Start with placeholder offsets (all zeros) to get initial moov size, then
+  // iterate until mdatPayloadOffset stabilises. A stco→co64 promotion can change
+  // moov size by (N chunks × 4 bytes) per affected track, so two normal passes
+  // are sufficient; we cap at 4 for safety and throw on non-convergence.
+  const placeholderOffsetsPerTrack = file.tracks.map((t) =>
+    Array<number>(t.chunkOffsets.length).fill(0),
+  );
+  const placeholderUseCo64PerTrack = file.tracks.map(() => false);
+
+  let moovBytes = buildMoovBox(file, placeholderOffsetsPerTrack, placeholderUseCo64PerTrack);
   let mdatPayloadOffset = ftypBytes.length + moovBytes.length + mdatHeaderSize;
 
-  // Compute patched chunk offsets.
-  let patchedChunkOffsets = computePatchedOffsets(track, file.fileBytes, mdatPayloadOffset);
+  let patchedOffsetsPerTrack: number[][] = [];
+  let useCo64PerTrack: boolean[] = [];
+  let iterations = 0;
 
-  // Check if we need co64 (any offset > u32 max).
-  const needsCo64 = patchedChunkOffsets.some((o) => o > 0xffffffff);
-  // Second pass: re-serialize moov with patched offsets.
-  moovBytes = buildMoovBox(track, file, patchedChunkOffsets, needsCo64);
+  while (iterations < 4) {
+    let trackWriteStart = mdatPayloadOffset;
+    patchedOffsetsPerTrack = [];
+    useCo64PerTrack = [];
 
-  // If moov size changed (rare — only when switching stco→co64), recompute.
-  const mdatPayloadOffset2 = ftypBytes.length + moovBytes.length + mdatHeaderSize;
-  if (mdatPayloadOffset2 !== mdatPayloadOffset) {
-    mdatPayloadOffset = mdatPayloadOffset2;
-    patchedChunkOffsets = computePatchedOffsets(track, file.fileBytes, mdatPayloadOffset);
-    moovBytes = buildMoovBox(track, file, patchedChunkOffsets, needsCo64);
+    for (const track of file.tracks) {
+      const patched = computePatchedOffsets(track, file.fileBytes, trackWriteStart);
+      patchedOffsetsPerTrack.push(patched);
+      useCo64PerTrack.push(patched.some((o) => o > 0xffffffff));
+      trackWriteStart += computeMdatPayloadSizeForTrack(track);
+    }
+
+    moovBytes = buildMoovBox(file, patchedOffsetsPerTrack, useCo64PerTrack);
+    const newOffset = ftypBytes.length + moovBytes.length + mdatHeaderSize;
+
+    if (newOffset === mdatPayloadOffset) {
+      break; // converged
+    }
+    mdatPayloadOffset = newOffset;
+    iterations++;
+  }
+
+  if (iterations === 4) {
+    throw new Mp4InvalidBoxError(
+      'Serializer did not converge after 4 passes; pathological file layout.',
+    );
   }
 
   // Assemble output.
-  const mdatBox = buildMdatBox(track, file.fileBytes, useLargesize, mdatPayloadSize);
+  const mdatBox = buildMdatBox(file, useLargesize, totalMdatPayloadSize);
 
   return concatBytes([ftypBytes, moovBytes, mdatBox]);
 }
@@ -119,18 +142,37 @@ function buildFtypBox(ftyp: Mp4Ftyp): Uint8Array {
 // ---------------------------------------------------------------------------
 
 function buildMoovBox(
-  track: Mp4Track,
   file: Mp4File,
-  chunkOffsets: readonly number[],
-  useCo64: boolean,
+  chunkOffsetsPerTrack: readonly (readonly number[])[],
+  useCo64PerTrack: readonly boolean[],
 ): Uint8Array {
-  const mvhdBytes = buildFullBox('mvhd', serializeMvhd(file.movieHeader));
-  const trakBytes = buildTrakBox(track, chunkOffsets, useCo64, file.movieHeader.duration);
+  // C.2: mvhd.next_track_ID = max(trackId) + 1 unless input already has larger value.
+  const maxTrackId = file.tracks.reduce((m, t) => Math.max(m, t.trackId), 0);
+  const recomputedNextTrackId = maxTrackId + 1;
+  const movieHeader = {
+    ...file.movieHeader,
+    nextTrackId:
+      file.movieHeader.nextTrackId > recomputedNextTrackId
+        ? file.movieHeader.nextTrackId
+        : recomputedNextTrackId,
+  };
 
-  // Insert udta after trak (canonical ffmpeg/mp4box order). Returns null when empty.
+  const mvhdBytes = buildFullBox('mvhd', serializeMvhd(movieHeader));
+
+  // Emit all tracks in file order.
+  const trakParts: Uint8Array[] = [];
+  for (let i = 0; i < file.tracks.length; i++) {
+    const track = file.tracks[i];
+    if (!track) continue;
+    const offsets = chunkOffsetsPerTrack[i] ?? [];
+    const co64 = useCo64PerTrack[i] ?? false;
+    trakParts.push(buildTrakBox(track, offsets, co64, file.movieHeader.duration));
+  }
+
+  // Insert udta after trak boxes (canonical ffmpeg/mp4box order).
   const udtaBytes = buildUdtaBox(file.metadata, file.udtaOpaque);
 
-  const parts: Uint8Array[] = [mvhdBytes, trakBytes];
+  const parts: Uint8Array[] = [mvhdBytes, ...trakParts];
   if (udtaBytes) {
     parts.push(udtaBytes);
   }
@@ -265,7 +307,15 @@ function buildStblBox(
   const stszBytes = serializeStsz(track.sampleTable.sampleSizes);
   const offsetBytes = useCo64 ? serializeCo64(chunkOffsets) : serializeStco(chunkOffsets);
 
-  const stblPayload = concatBytes([stsdBytes, sttsBytes, stscBytes, stszBytes, offsetBytes]);
+  // Emit stss (sync sample table) between stsz and stco/co64 per ISO 14496-12 §8.6 ordering.
+  // Only video tracks with B/P frames have a non-null syncSamples set; audio tracks omit it.
+  const stblParts: Uint8Array[] = [stsdBytes, sttsBytes, stscBytes, stszBytes];
+  if (track.syncSamples !== null) {
+    stblParts.push(serializeStss(track.syncSamples));
+  }
+  stblParts.push(offsetBytes);
+
+  const stblPayload = concatBytes(stblParts);
   return wrapContainer('stbl', stblPayload);
 }
 
@@ -306,12 +356,12 @@ function buildStsdBox(track: Mp4Track): Uint8Array {
 // mdat box
 // ---------------------------------------------------------------------------
 
-function buildMdatBox(
-  track: Mp4Track,
-  fileBytes: Uint8Array,
-  useLargesize: boolean,
-  mdatPayloadSize: number,
-): Uint8Array {
+/**
+ * Build the mdat box for all tracks in file order (flat layout).
+ * Track 0 samples are written first, then track 1, etc.
+ */
+function buildMdatBox(file: Mp4File, useLargesize: boolean, mdatPayloadSize: number): Uint8Array {
+  const { fileBytes } = file;
   const headerSize = useLargesize ? 16 : 8;
   const out = new Uint8Array(headerSize + mdatPayloadSize);
 
@@ -321,15 +371,17 @@ function buildMdatBox(
     writeBoxHeader(out, 0, headerSize + mdatPayloadSize, 'mdat');
   }
 
-  // Copy sample bytes in sample order from original fileBytes.
+  // Copy each track's samples contiguously in file order.
   let writePos = headerSize;
-  const { sampleOffsets, sampleSizes, sampleCount } = track.sampleTable;
-  for (let i = 0; i < sampleCount; i++) {
-    const offset = sampleOffsets[i] ?? 0;
-    const size = sampleSizes[i] ?? 0;
-    // Use subarray for zero-copy read, then set into output (Lesson #3).
-    out.set(fileBytes.subarray(offset, offset + size), writePos);
-    writePos += size;
+  for (const track of file.tracks) {
+    const { sampleOffsets, sampleSizes, sampleCount } = track.sampleTable;
+    for (let i = 0; i < sampleCount; i++) {
+      const offset = sampleOffsets[i] ?? 0;
+      const size = sampleSizes[i] ?? 0;
+      // Use subarray for zero-copy read (Lesson #3).
+      out.set(fileBytes.subarray(offset, offset + size), writePos);
+      writePos += size;
+    }
   }
 
   return out;
@@ -391,13 +443,19 @@ function computePatchedOffsets(
   return patchedChunkOffsets;
 }
 
-function computeMdatPayloadSize(track: Mp4Track, _fileBytes: Uint8Array): number {
+/** Compute the mdat payload size for a single track. */
+function computeMdatPayloadSizeForTrack(track: Mp4Track): number {
   let total = 0;
   const { sampleSizes, sampleCount } = track.sampleTable;
   for (let i = 0; i < sampleCount; i++) {
     total += sampleSizes[i] ?? 0;
   }
   return total;
+}
+
+/** Compute the total mdat payload size summed over all tracks. */
+function computeTotalMdatPayloadSize(file: Mp4File): number {
+  return file.tracks.reduce((acc, t) => acc + computeMdatPayloadSizeForTrack(t), 0);
 }
 
 // ---------------------------------------------------------------------------
