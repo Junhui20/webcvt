@@ -1,0 +1,33 @@
+{
+  "name": "@webcvt/playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"playground e2e: run pnpm test:e2e\" && exit 0",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@webcvt/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@webcvt/archive-zip": "workspace:*",
+    "@webcvt/backend-wasm": "workspace:*",
+    "@webcvt/codec-webcodecs": "workspace:*",
+    "@webcvt/container-mp4": "workspace:*",
+    "@webcvt/container-webm": "workspace:*",
+    "@webcvt/data-text": "workspace:*",
+    "@webcvt/image-canvas": "workspace:*",
+    "@webcvt/image-legacy": "workspace:*",
+    "@webcvt/subtitle": "workspace:*",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.0"
+  }
+}

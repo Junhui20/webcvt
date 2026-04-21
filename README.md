@@ -14,7 +14,7 @@
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
-- Phase 5 (launch prep): `@webcvt/cli` + `@webcvt/backend-wasm` shipped; `apps/playground`, `apps/docs`, examples, v0.1.0 release still open
+- Phase 5 (launch prep): `@webcvt/cli` + `@webcvt/backend-wasm` + `apps/playground` shipped; `apps/docs`, examples, v0.1.0 release still open
 
 See [`plan.md`](./plan.md) for the full project plan and
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to contribute or resume work.

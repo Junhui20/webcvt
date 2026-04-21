@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webcvt playground — browser-local file conversion</title>
+    <meta name="description" content="Convert files locally in the browser. No uploads. No servers. Powered by webcvt." />
+    <meta property="og:title" content="webcvt playground" />
+    <meta property="og:description" content="Convert files locally in the browser. No uploads. No servers." />
+    <meta property="og:url" content="https://github.com/Junhui20/webcvt" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="page-header">
+        <span class="logo">webcvt</span>
+        <span class="tagline">browser-local file conversion</span>
+        <span id="version-badge" class="version-badge"></span>
+        <nav class="header-links">
+          <a href="https://github.com/Junhui20/webcvt" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/Junhui20/webcvt/blob/main/docs/supported-formats.md" target="_blank" rel="noopener">Formats</a>
+        </nav>
+      </header>
+
+      <main>
+        <!-- Drop zone -->
+        <section aria-label="File drop zone">
+          <div id="dropzone" role="button" tabindex="0" aria-label="Drop a file or click to browse">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p id="drop-message">Drop a file here or click to browse</p>
+          </div>
+          <input type="file" id="file-input" aria-label="Choose file" />
+        </section>
+
+        <!-- Sample files -->
+        <section id="samples-section" aria-label="Sample files" hidden>
+          <p class="samples-label">Try a sample:</p>
+          <div id="samples-list" role="list"></div>
+        </section>
+
+        <!-- File preview -->
+        <section id="preview-section" aria-label="File preview" hidden>
+          <div id="preview-card" aria-live="polite"></div>
+        </section>
+
+        <!-- Format picker + convert button -->
+        <section id="picker-section" aria-label="Conversion options" hidden>
+          <div class="picker-row">
+            <span class="picker-label">Convert to:</span>
+            <select id="format-select" aria-label="Target format"></select>
+            <div class="picker-actions">
+              <button id="convert-btn" class="btn btn--primary" type="button" disabled>Convert</button>
+              <button id="cancel-btn" class="btn btn--ghost" type="button" hidden>Cancel</button>
+              <button id="reset-btn" class="btn btn--ghost" type="button" hidden>Reset</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Progress -->
+        <section id="progress-section" aria-label="Conversion progress" hidden>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="progress-bar-fill"></div>
+          </div>
+          <span id="progress-label" aria-live="polite">0%</span>
+        </section>
+
+        <!-- Error -->
+        <section id="error-section" aria-live="assertive" hidden></section>
+
+        <!-- Result / download -->
+        <section id="result-section" aria-label="Download result" hidden>
+          <div class="result-row">
+            <a id="download-btn" href="#" aria-label="Download converted file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download
+            </a>
+            <span id="result-meta" aria-live="polite"></span>
+          </div>
+        </section>
+      </main>
+
+      <footer class="page-footer">
+        <p>All conversion happens locally — your files never leave the browser. &nbsp;·&nbsp;
+          <a href="https://github.com/Junhui20/webcvt" target="_blank" rel="noopener">webcvt on GitHub</a>
+        </p>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
