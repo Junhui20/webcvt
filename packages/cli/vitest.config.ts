@@ -12,6 +12,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    // Bump from 5s default: register.test.ts dynamically imports 16 backend
+    // packages which is slow on low-spec CI runners (Node 22 hit 5s on GHA).
+    testTimeout: 15_000,
     pool: 'forks',
     poolOptions: {
       forks: {
