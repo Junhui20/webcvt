@@ -37,6 +37,7 @@ import {
   serializeStts,
 } from './boxes/stbl.ts';
 import { buildUdtaBox } from './boxes/udta-meta-ilst.ts';
+import { Mp4FragmentedSerializeNotSupportedError } from './errors.ts';
 import type { Mp4File, Mp4Track } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -49,9 +50,16 @@ import type { Mp4File, Mp4Track } from './parser.ts';
  * Always emits faststart layout (ftyp → moov → mdat) regardless of the
  * original box order.
  *
+ * @throws Mp4FragmentedSerializeNotSupportedError — input is a fragmented file (D.4).
  * @throws Mp4EncodeNotImplementedError — input has >1 track or video tracks.
  */
 export function serializeMp4(file: Mp4File): Uint8Array {
+  // Sub-pass D guard: fragmented round-trip serialization is not yet supported.
+  // D.4 will implement this; for now throw a typed error so callers can catch it.
+  if (file.isFragmented) {
+    throw new Mp4FragmentedSerializeNotSupportedError();
+  }
+
   const track = file.tracks[0];
   if (!track) {
     return new Uint8Array(0);

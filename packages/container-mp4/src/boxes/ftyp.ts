@@ -7,15 +7,15 @@
  *     4      4     minor_version      u32 (informational)
  *     8     4*N    compatible_brands  list of 4-char codes until end of payload
  *
- * Rejection rules (first pass):
- *   - Brands in REJECTED_BRANDS (iso5, iso6, dash) → Mp4UnsupportedBrandError
+ * Brand handling:
+ *   - Rejection is NO LONGER applied at the brand level. REJECTED_BRANDS is
+ *     intentionally empty (reserved for future use). Fragmented-vs-classic
+ *     detection is done by mvex presence at parse time, not by brand string.
  *   - If neither major_brand nor any compatible brand is in ACCEPTED_BRANDS,
- *     we proceed (the brand list on mp4ra.org is vast; we only hard-reject
- *     fragmented brands).
+ *     we proceed (the brand list on mp4ra.org is vast; we accept generously).
  */
 
-import { ACCEPTED_BRANDS, REJECTED_BRANDS } from '../constants.ts';
-import { Mp4UnsupportedBrandError } from '../errors.ts';
+import { ACCEPTED_BRANDS } from '../constants.ts';
 
 // Module-scope decoder (Lesson #2).
 const TEXT_DECODER = new TextDecoder('latin1');
@@ -55,18 +55,6 @@ export function parseFtyp(payload: Uint8Array): Mp4Ftyp {
   const compatibleBrands: string[] = [];
   for (let off = 8; off + 4 <= payload.length; off += 4) {
     compatibleBrands.push(decodeBrand(payload, off));
-  }
-
-  // Rejection: if major brand is fragmented, throw immediately.
-  if (REJECTED_BRANDS.has(majorBrand)) {
-    throw new Mp4UnsupportedBrandError(majorBrand);
-  }
-
-  // Rejection: if ANY compatible brand implies fragmented MP4, throw.
-  for (const brand of compatibleBrands) {
-    if (REJECTED_BRANDS.has(brand)) {
-      throw new Mp4UnsupportedBrandError(brand);
-    }
   }
 
   return { majorBrand, minorVersion, compatibleBrands };

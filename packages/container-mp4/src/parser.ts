@@ -4,11 +4,12 @@
  * Algorithm (per design note §Demuxer):
  * 1. Input size guard (200 MiB cap) — FIRST statement as required.
  * 2. Top-level scan: walk top-level boxes, record offsets, enforce caps.
- * 3. Locate ftyp (must be first), reject fragmented brands.
+ * 3. Locate ftyp (must be first). (Brands no longer rejected — fMP4 brands accepted.)
  * 4. Locate moov (may be after mdat — Trap §8). Throw if absent.
  * 5. Locate mdat ranges (do not copy contents).
  * 6. Descend into moov with iterative stack (depth cap = 10).
- * 7. Parse the single trak (throw if != 1 — Trap for multi-track).
+ * 7a. Classic path: parse the single trak (throw if != 1).
+ * 7b. Fragmented path: parse mvex/trex; walk top-level for moof boxes.
  * 8. Validate and return Mp4File.
  *
  * Security caps enforced:
@@ -19,7 +20,9 @@
  *   - MAX_TABLE_ENTRIES (1,000,000) via each table parser
  *   - MAX_DESCRIPTOR_BYTES (16 MiB) via esds parser
  *   - Sample offset + size validated against fileBytes.length
- *   - Zero-track parse from non-empty input → Mp4CorruptStreamError
+ *   - MAX_FRAGMENTS (100,000) for fragmented files
+ *   - MAX_TRAFS_PER_MOOF (64) per fragment
+ *   - MAX_SAMPLES_PER_TRUN (1,000,000) per trun
  */
 
 import { type Mp4Box, findChild, findChildren, walkBoxes } from './box-tree.ts';
@@ -31,6 +34,10 @@ import {
   parseStsd,
   validateDref,
 } from './boxes/hdlr-stsd-mp4a.ts';
+import type { Mp4MovieFragment, Mp4TrackFragment } from './boxes/moof.ts';
+import { parseMoof } from './boxes/moof.ts';
+import type { Mp4MvexResult, Mp4TrackExtends } from './boxes/mvex.ts';
+import { parseMvex } from './boxes/mvex.ts';
 import {
   type Mp4MediaHeader,
   type Mp4MovieHeader,
@@ -49,18 +56,29 @@ import {
   parseStsz,
   parseStts,
 } from './boxes/stbl.ts';
+import type { Mp4TrackRun } from './boxes/trun.ts';
 import { type MetadataAtoms, parseUdta } from './boxes/udta-meta-ilst.ts';
-import { MAX_INPUT_BYTES } from './constants.ts';
+import { MAX_FRAGMENTS, MAX_INPUT_BYTES } from './constants.ts';
 import {
   Mp4CorruptSampleError,
+  Mp4FragmentCountTooLargeError,
+  Mp4FragmentMixedSampleTablesError,
   Mp4InputTooLargeError,
   Mp4InvalidBoxError,
   Mp4MetaBadHandlerError,
   Mp4MissingBoxError,
   Mp4MissingFtypError,
   Mp4MissingMoovError,
+  Mp4MoofSequenceOutOfOrderError,
   Mp4MultiTrackNotSupportedError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// Re-export fragmented types for consumers
+// ---------------------------------------------------------------------------
+
+export type { Mp4MovieFragment, Mp4TrackFragment, Mp4TrackRun };
+export type { Mp4TrackExtends };
 
 // ---------------------------------------------------------------------------
 // Public Types
@@ -107,6 +125,46 @@ export interface Mp4File {
    * Null when udta was fully parsed into `metadata` or absent entirely.
    */
   udtaOpaque: Uint8Array | null;
+
+  // ---------------------------------------------------------------------------
+  // Fragmented MP4 fields (sub-pass D)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * True when the file contains an `mvex` box inside `moov`, indicating that
+   * sample data is in `moof/mdat` pairs rather than the classic `stbl` tables.
+   */
+  readonly isFragmented: boolean;
+
+  /**
+   * Track extension defaults from `mvex/trex` boxes. One entry per track.
+   * Empty array for classic (non-fragmented) files.
+   */
+  readonly trackExtends: readonly Mp4TrackExtends[];
+
+  /**
+   * Parsed `moof` (Movie Fragment) boxes, in file order.
+   * Empty array for classic (non-fragmented) files.
+   */
+  readonly fragments: readonly Mp4MovieFragment[];
+
+  /**
+   * Parsed `sidx` (Segment Index) box. Currently always null (D.3 will parse it).
+   * The sidx box is silently skipped in sub-pass D.
+   */
+  readonly sidx: null;
+
+  /**
+   * Bytes from end-of-moov to end-of-file for byte-equivalent round-trip (D.4).
+   * null in sub-pass D; D.4 will populate this field.
+   */
+  readonly fragmentedTail: Uint8Array | null;
+
+  /**
+   * Opaque `mfra` payload bytes (D.3 placeholder).
+   * null in sub-pass D; D.3 will parse this.
+   */
+  readonly mfra: Uint8Array | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -122,14 +180,15 @@ export interface Mp4File {
  *
  * @throws Mp4InputTooLargeError — input > 200 MiB.
  * @throws Mp4MissingFtypError — ftyp is not the first box.
- * @throws Mp4UnsupportedBrandError — fragmented MP4 brand detected.
  * @throws Mp4MissingMoovError — no moov box found.
- * @throws Mp4MultiTrackNotSupportedError — more than one trak box.
+ * @throws Mp4MultiTrackNotSupportedError — more than one trak box (classic path).
  * @throws Mp4UnsupportedTrackTypeError — hdlr handler is not 'soun'.
  * @throws Mp4UnsupportedSampleEntryError — sample entry is not 'mp4a'.
  * @throws Mp4ExternalDataRefError — dref is not self-contained.
  * @throws Mp4InvalidBoxError — malformed box structure.
- * @throws Mp4CorruptStreamError — non-empty input produced zero tracks.
+ * @throws Mp4FragmentMixedSampleTablesError — fragmented file with non-empty stbl.
+ * @throws Mp4MoofSequenceOutOfOrderError — mfhd sequence not monotonic.
+ * @throws Mp4FragmentCountTooLargeError — too many moof boxes.
  */
 export function parseMp4(input: Uint8Array): Mp4File {
   // Security cap #1: input size — MUST be the first statement.
@@ -164,6 +223,78 @@ export function parseMp4(input: Uint8Array): Mp4File {
   const movieHeader = parseMvhdFromMoov(moovBox);
   const trakBoxes = findChildren(moovBox, 'trak');
 
+  // Step 7: detect fragmented vs classic.
+  // F9: strict-reject duplicate mvex (consistent with edts/elst duplicate policy).
+  const mvexBoxes = findChildren(moovBox, 'mvex');
+  if (mvexBoxes.length > 1) {
+    throw new Mp4InvalidBoxError(
+      `moov contains ${mvexBoxes.length} mvex boxes; the spec allows exactly one.`,
+    );
+  }
+  const mvexBox = mvexBoxes[0] ?? null;
+
+  // Parse udta/metadata (shared between both paths).
+  let metadata: MetadataAtoms = [];
+  let udtaOpaque: Uint8Array | null = null;
+  const udtaBox = findChild(moovBox, 'udta');
+  if (udtaBox) {
+    try {
+      const result = parseUdta(udtaBox.payload);
+      metadata = result.metadata;
+      udtaOpaque = result.opaque;
+    } catch (err) {
+      if (err instanceof Mp4MetaBadHandlerError) {
+        udtaOpaque = udtaBox.payload.slice();
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  if (mvexBox) {
+    // --- FRAGMENTED PATH ---
+    return parseFragmented(
+      input,
+      ftyp,
+      movieHeader,
+      trakBoxes,
+      moovBox,
+      mvexBox,
+      topLevel,
+      mdatRanges,
+      metadata,
+      udtaOpaque,
+      boxCount,
+    );
+  }
+
+  // --- CLASSIC PATH ---
+  return parseClassic(
+    input,
+    ftyp,
+    movieHeader,
+    trakBoxes,
+    mdatRanges,
+    metadata,
+    udtaOpaque,
+    boxCount,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Classic path
+// ---------------------------------------------------------------------------
+
+function parseClassic(
+  input: Uint8Array,
+  ftyp: Mp4Ftyp,
+  movieHeader: Mp4MovieHeader,
+  trakBoxes: Mp4Box[],
+  mdatRanges: Array<{ offset: number; length: number }>,
+  metadata: MetadataAtoms,
+  udtaOpaque: Uint8Array | null,
+  boxCount: { value: number },
+): Mp4File {
   if (trakBoxes.length !== 1) {
     if (trakBoxes.length === 0) {
       throw new Mp4MissingBoxError('trak', 'moov');
@@ -175,7 +306,7 @@ export function parseMp4(input: Uint8Array): Mp4File {
   if (!trakBox) throw new Mp4MissingBoxError('trak', 'moov');
   const track = parseTrak(trakBox, input, boxCount);
 
-  // Step 7: validate all sample offsets + sizes against file bounds.
+  // Validate all sample offsets + sizes against file bounds.
   const { sampleOffsets, sampleSizes, sampleCount } = track.sampleTable;
   for (let i = 0; i < sampleCount; i++) {
     const off = sampleOffsets[i] ?? 0;
@@ -185,55 +316,112 @@ export function parseMp4(input: Uint8Array): Mp4File {
     }
   }
 
-  // Warn (not throw) on duration mismatch (Trap §9 — design note says "warn, not throw").
+  // Duration consistency check (Trap §9 — warn, not throw).
   const mdhdTimescale = track.mediaHeader.timescale;
   if (mdhdTimescale > 0 && sampleCount > 0) {
     const sttsTotal = track.sttsEntries.reduce((acc, e) => acc + e.sampleCount * e.sampleDelta, 0);
     const mdhdDuration = track.mediaHeader.duration;
     const delta = Math.abs(sttsTotal - mdhdDuration);
     if (delta > mdhdTimescale) {
-      // One-sample tolerance exceeded — this is a warning per spec (Trap §9).
-      // We proceed; the stts-derived durations are the authoritative source.
-    }
-  }
-
-  const tracks: Mp4Track[] = [track];
-
-  // Sec-M-4: The guard `tracks.length === 0` is unreachable here because
-  // `parseTrak` either returns a valid track or throws a typed structural error
-  // (Mp4MissingBoxError / Mp4InvalidBoxError). Those error types are more
-  // specific than Mp4CorruptStreamError and give consumers better diagnostics.
-  // Mp4CorruptStreamError is reserved for top-level structural failures (no ftyp,
-  // no moov) — see errors.ts for its defined use cases.
-
-  // Step 8: parse moov/udta/meta/ilst (optional — missing udta is normal).
-  let metadata: MetadataAtoms = [];
-  let udtaOpaque: Uint8Array | null = null;
-
-  const udtaBox = findChild(moovBox, 'udta');
-  if (udtaBox) {
-    try {
-      const result = parseUdta(udtaBox.payload);
-      metadata = result.metadata;
-      udtaOpaque = result.opaque;
-    } catch (err) {
-      if (err instanceof Mp4MetaBadHandlerError) {
-        // Trap 7: non-mdir handler → preserve entire udta payload as opaque
-        udtaOpaque = udtaBox.payload.slice();
-      } else {
-        throw err;
-      }
+      // One-sample tolerance exceeded — warning per spec.
     }
   }
 
   return {
     ftyp,
     movieHeader,
-    tracks,
+    tracks: [track],
     mdatRanges,
     fileBytes: input,
     metadata,
     udtaOpaque,
+    isFragmented: false,
+    trackExtends: [],
+    fragments: [],
+    sidx: null,
+    fragmentedTail: null,
+    mfra: null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fragmented path
+// ---------------------------------------------------------------------------
+
+function parseFragmented(
+  input: Uint8Array,
+  ftyp: Mp4Ftyp,
+  movieHeader: Mp4MovieHeader,
+  trakBoxes: Mp4Box[],
+  moovBox: Mp4Box,
+  mvexBox: Mp4Box,
+  topLevel: Mp4Box[],
+  mdatRanges: Array<{ offset: number; length: number }>,
+  metadata: MetadataAtoms,
+  udtaOpaque: Uint8Array | null,
+  boxCount: { value: number },
+): Mp4File {
+  // Parse trak for audio sample entry info (stbl tables expected to be empty).
+  // We still require exactly one trak for sub-pass D.
+  if (trakBoxes.length !== 1) {
+    if (trakBoxes.length === 0) {
+      throw new Mp4MissingBoxError('trak', 'moov');
+    }
+    throw new Mp4MultiTrackNotSupportedError(trakBoxes.length);
+  }
+  const trakBox = trakBoxes[0];
+  if (!trakBox) throw new Mp4MissingBoxError('trak', 'moov');
+
+  // Parse trak but skip sample-table validation (stbl should be empty).
+  const track = parseTrakFragmented(trakBox, input, boxCount);
+
+  // Parse mvex → trex defaults.
+  const mvexResult: Mp4MvexResult = parseMvex(mvexBox);
+
+  // Walk top-level boxes after moov for moof, sidx, mfra (D.1 scope: skip sidx/mfra).
+  const fragments: Mp4MovieFragment[] = [];
+  let lastSequenceNumber = -1;
+
+  for (const box of topLevel) {
+    if (box.type === 'moof') {
+      // Cap check.
+      if (fragments.length >= MAX_FRAGMENTS) {
+        throw new Mp4FragmentCountTooLargeError(fragments.length + 1, MAX_FRAGMENTS);
+      }
+
+      // Absolute offset of moof start = payloadOffset - headerSize.
+      const moofOffset = box.payloadOffset - box.headerSize;
+      const fragment = parseMoof(box, moofOffset, mvexResult.trackExtendsById);
+
+      // Trap 6: validate monotonic sequence number.
+      if (lastSequenceNumber >= 0 && fragment.sequenceNumber <= lastSequenceNumber) {
+        throw new Mp4MoofSequenceOutOfOrderError(
+          lastSequenceNumber,
+          fragment.sequenceNumber,
+          moofOffset,
+        );
+      }
+      lastSequenceNumber = fragment.sequenceNumber;
+
+      fragments.push(fragment);
+    }
+    // sidx and mfra: silently skip in sub-pass D.
+  }
+
+  return {
+    ftyp,
+    movieHeader,
+    tracks: [track],
+    mdatRanges,
+    fileBytes: input,
+    metadata,
+    udtaOpaque,
+    isFragmented: true,
+    trackExtends: mvexResult.trackExtends,
+    fragments,
+    sidx: null,
+    fragmentedTail: null,
+    mfra: null,
   };
 }
 
@@ -254,8 +442,6 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
   const trackHeader = parseTkhd(tkhdBox.payload);
 
   // edts / elst (optional; present in AAC files with priming silence)
-  // Spec allows exactly one edts per trak and exactly one elst per edts.
-  // Duplicates are rejected to prevent parser-differential smuggling.
   const edtsBoxes = findChildren(trakBox, 'edts');
   if (edtsBoxes.length > 1) {
     throw new Mp4InvalidBoxError(
@@ -329,6 +515,120 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
   const co64Box = findChild(stblBox, 'co64');
   let chunkOffsetVariant: 'stco' | 'co64';
   let chunkOffsets: readonly number[];
+
+  if (co64Box) {
+    const table = parseStcoOrCo64(co64Box.payload, 'co64');
+    chunkOffsets = table.offsets;
+    chunkOffsetVariant = 'co64';
+  } else if (stcoBox) {
+    const table = parseStcoOrCo64(stcoBox.payload, 'stco');
+    chunkOffsets = table.offsets;
+    chunkOffsetVariant = 'stco';
+  } else {
+    throw new Mp4MissingBoxError('stco or co64', 'stbl');
+  }
+
+  const sampleTable = buildSampleTable(sttsEntries, sampleSizes, stscEntries, chunkOffsets);
+
+  return {
+    trackId: trackHeader.trackId,
+    handlerType: handler.handlerType as 'soun',
+    mediaHeader,
+    trackHeader,
+    audioSampleEntry,
+    sampleTable,
+    sttsEntries,
+    stscEntries,
+    chunkOffsets,
+    chunkOffsetVariant,
+    editList,
+  };
+}
+
+/**
+ * Parse a trak box from a fragmented file. The stbl tables are expected to be
+ * zero-sample. We validate that and return the track.
+ */
+function parseTrakFragmented(
+  trakBox: Mp4Box,
+  fileData: Uint8Array,
+  boxCount: { value: number },
+): Mp4Track {
+  // Parse the full trak (same as classic) to extract codec info from stsd.
+  const tkhdBox = findChild(trakBox, 'tkhd');
+  if (!tkhdBox) throw new Mp4MissingBoxError('tkhd', 'trak');
+  const trackHeader = parseTkhd(tkhdBox.payload);
+
+  const edtsBoxes = findChildren(trakBox, 'edts');
+  if (edtsBoxes.length > 1) {
+    throw new Mp4InvalidBoxError(
+      `trak contains ${edtsBoxes.length} edts boxes; the spec allows exactly one.`,
+    );
+  }
+  const edtsBox = edtsBoxes[0];
+  let editList: readonly EditListEntry[] = [];
+  if (edtsBox) {
+    const elstBoxes = findChildren(edtsBox, 'elst');
+    if (elstBoxes.length > 1) {
+      throw new Mp4InvalidBoxError(
+        `edts contains ${elstBoxes.length} elst boxes; the spec allows exactly one.`,
+      );
+    }
+    const elstBox = elstBoxes[0];
+    if (!elstBox) throw new Mp4MissingBoxError('elst', 'edts');
+    editList = parseElst(elstBox.payload);
+  }
+
+  const mdiaBox = findChild(trakBox, 'mdia');
+  if (!mdiaBox) throw new Mp4MissingBoxError('mdia', 'trak');
+
+  const mdhdBox = findChild(mdiaBox, 'mdhd');
+  if (!mdhdBox) throw new Mp4MissingBoxError('mdhd', 'mdia');
+  const mediaHeader = parseMdhd(mdhdBox.payload);
+
+  const hdlrBox = findChild(mdiaBox, 'hdlr');
+  if (!hdlrBox) throw new Mp4MissingBoxError('hdlr', 'mdia');
+  const handler = parseHdlr(hdlrBox.payload);
+
+  const minfBox = findChild(mdiaBox, 'minf');
+  if (!minfBox) throw new Mp4MissingBoxError('minf', 'mdia');
+
+  const dinfBox = findChild(minfBox, 'dinf');
+  if (!dinfBox) throw new Mp4MissingBoxError('dinf', 'minf');
+  const drefBox = findChild(dinfBox, 'dref');
+  if (!drefBox) throw new Mp4MissingBoxError('dref', 'dinf');
+  validateDref(drefBox.payload);
+
+  const stblBox = findChild(minfBox, 'stbl');
+  if (!stblBox) throw new Mp4MissingBoxError('stbl', 'minf');
+
+  const stsdBox = findChild(stblBox, 'stsd');
+  if (!stsdBox) throw new Mp4MissingBoxError('stsd', 'stbl');
+  const audioSampleEntry = parseStsd(stsdBox.payload, fileData, boxCount);
+
+  // stts/stsc/stsz — parse but validate zero-sample (fragmented contract).
+  const sttsBox = findChild(stblBox, 'stts');
+  if (!sttsBox) throw new Mp4MissingBoxError('stts', 'stbl');
+  const sttsEntries = parseStts(sttsBox.payload);
+
+  const stscBox = findChild(stblBox, 'stsc');
+  if (!stscBox) throw new Mp4MissingBoxError('stsc', 'stbl');
+  const stscEntries = parseStsc(stscBox.payload);
+
+  const stszBox = findChild(stblBox, 'stsz');
+  if (!stszBox) throw new Mp4MissingBoxError('stsz', 'stbl');
+  const sampleSizes = parseStsz(stszBox.payload);
+
+  // Validate empty stbl (design §4: non-empty → Mp4FragmentMixedSampleTablesError).
+  if (sttsEntries.length > 0 || stscEntries.length > 0 || sampleSizes.length > 0) {
+    throw new Mp4FragmentMixedSampleTablesError(trackHeader.trackId);
+  }
+
+  // stco required by schema even if empty.
+  const stcoBox = findChild(stblBox, 'stco');
+  const co64Box = findChild(stblBox, 'co64');
+  let chunkOffsetVariant: 'stco' | 'co64' = 'stco';
+  let chunkOffsets: readonly number[] = [];
 
   if (co64Box) {
     const table = parseStcoOrCo64(co64Box.payload, 'co64');

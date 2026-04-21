@@ -12,6 +12,8 @@ export { serializeMp4 } from './serializer.ts';
 export {
   iterateAudioSamples,
   iterateAudioSamplesWithContext,
+  iterateFragmentedAudioSamples,
+  iterateAudioSamplesAuto,
   deriveCodecString,
   type AudioSample,
 } from './sample-iterator.ts';
@@ -52,6 +54,29 @@ export {
   Mp4MetaFreeformIncompleteError,
   Mp4MetaBadTrackNumberError,
   Mp4MetaPayloadTooLargeError,
+  // Fragmented MP4 errors (sub-pass D):
+  Mp4MoofMissingMfhdError,
+  Mp4MoofSequenceOutOfOrderError,
+  Mp4TfhdInvalidFlagsError,
+  Mp4TfhdUnknownTrackError,
+  Mp4TfhdValueOutOfRangeError,
+  Mp4TfhdLegacyBaseUnsupportedError,
+  Mp4TfdtVersionError,
+  Mp4TfdtValueOutOfRangeError,
+  Mp4TrunInvalidFlagsError,
+  Mp4TrunSampleCountTooLargeError,
+  Mp4TrunSizeMismatchError,
+  Mp4FragmentCountTooLargeError,
+  Mp4TrafCountTooLargeError,
+  Mp4DefaultsCascadeError,
+  Mp4SidxBadVersionError,
+  Mp4SidxNestedDepthExceededError,
+  Mp4SidxReferenceCountTooLargeError,
+  Mp4MfraOutOfBoundsError,
+  Mp4FragmentMixedSampleTablesError,
+  Mp4FragmentedSerializeNotSupportedError,
+  Mp4FragmentNotYetIteratedError,
+  Mp4FragmentedMoovSizeChangedError,
 } from './errors.ts';
 
 // Core types re-exported for convenience.
@@ -70,3 +95,8 @@ export type { Mp4SampleTable } from './boxes/stbl.ts';
 export type { EditListEntry } from './boxes/elst.ts';
 
 export type { MetadataAtom, MetadataAtoms, MetadataValue } from './boxes/udta-meta-ilst.ts';
+
+// Fragmented MP4 types (sub-pass D):
+export type { Mp4MovieFragment, Mp4TrackFragment, Mp4TrackRun } from './parser.ts';
+export type { Mp4TrackExtends } from './parser.ts';
+export type { Mp4FragmentSample } from './boxes/trun.ts';

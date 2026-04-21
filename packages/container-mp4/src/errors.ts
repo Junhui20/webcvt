@@ -27,12 +27,17 @@ export class Mp4MissingFtypError extends WebcvtError {
   }
 }
 
-/** Thrown when the ftyp brand is in the fragmented/unsupported list. */
+/**
+ * @deprecated REJECTED_BRANDS is now intentionally empty; this class is
+ * unreachable. Brand-level rejection was removed in sub-pass D fixes:
+ * fragmented-vs-classic detection uses mvex presence, not brand strings.
+ * Retained for source compatibility only.
+ */
 export class Mp4UnsupportedBrandError extends WebcvtError {
   constructor(brand: string) {
     super(
       'MP4_UNSUPPORTED_BRAND',
-      `ftyp brand "${brand}" implies fragmented or unsupported MP4 (Phase 3.5+). Only M4A , mp42, isom, M4V , qt   are supported in Phase 3.`,
+      `ftyp brand "${brand}" is in the reject list (currently empty in this build).`,
     );
     this.name = 'Mp4UnsupportedBrandError';
   }
@@ -335,6 +340,253 @@ export class Mp4MetaTooManyAtomsError extends WebcvtError {
     this.name = 'Mp4MetaTooManyAtomsError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// Fragmented MP4 errors (sub-pass D)
+// ---------------------------------------------------------------------------
+
+/** Thrown when a moof box is missing its required mfhd child. */
+export class Mp4MoofMissingMfhdError extends WebcvtError {
+  constructor(moofOffset: number) {
+    super(
+      'MP4_MOOF_MISSING_MFHD',
+      `moof at offset ${moofOffset} has no mfhd child box. The fragment is corrupt.`,
+    );
+    this.name = 'Mp4MoofMissingMfhdError';
+  }
+}
+
+/** Thrown when mfhd.sequence_number is not monotonically increasing. */
+export class Mp4MoofSequenceOutOfOrderError extends WebcvtError {
+  constructor(expected: number, got: number, moofOffset: number) {
+    super(
+      'MP4_MOOF_SEQUENCE_OUT_OF_ORDER',
+      `moof at offset ${moofOffset}: sequence_number ${got} is not greater than previous ${expected}. Fragments must have monotonically increasing sequence numbers.`,
+    );
+    this.name = 'Mp4MoofSequenceOutOfOrderError';
+  }
+}
+
+/** Thrown when tfhd has invalid flag bits (reserved bits set). */
+export class Mp4TfhdInvalidFlagsError extends WebcvtError {
+  constructor(flags: number, moofOffset: number) {
+    super(
+      'MP4_TFHD_INVALID_FLAGS',
+      `tfhd in moof at offset ${moofOffset} has invalid flags 0x${flags.toString(16).padStart(6, '0')}.`,
+    );
+    this.name = 'Mp4TfhdInvalidFlagsError';
+  }
+}
+
+/** Thrown when tfhd.track_ID has no corresponding trex in mvex. */
+export class Mp4TfhdUnknownTrackError extends WebcvtError {
+  constructor(trackId: number, moofOffset: number) {
+    super(
+      'MP4_TFHD_UNKNOWN_TRACK',
+      `tfhd in moof at offset ${moofOffset} references track_ID ${trackId} which has no trex in mvex.`,
+    );
+    this.name = 'Mp4TfhdUnknownTrackError';
+  }
+}
+
+/** Thrown when a tfhd u64 field value exceeds Number.MAX_SAFE_INTEGER. */
+export class Mp4TfhdValueOutOfRangeError extends WebcvtError {
+  constructor(field: string, hiWord: number, moofOffset: number) {
+    super(
+      'MP4_TFHD_VALUE_OUT_OF_RANGE',
+      `tfhd in moof at offset ${moofOffset}: field "${field}" hi-word 0x${hiWord.toString(16).toUpperCase()} exceeds Number.MAX_SAFE_INTEGER.`,
+    );
+    this.name = 'Mp4TfhdValueOutOfRangeError';
+  }
+}
+
+/**
+ * Thrown when tfhd has neither base-data-offset-present (0x000001) nor
+ * default-base-is-moof (0x020000) — the legacy moov-relative base is not supported.
+ */
+export class Mp4TfhdLegacyBaseUnsupportedError extends WebcvtError {
+  constructor(moofOffset: number) {
+    super(
+      'MP4_TFHD_LEGACY_BASE_UNSUPPORTED',
+      `tfhd in moof at offset ${moofOffset}: neither base-data-offset-present (0x000001) nor default-base-is-moof (0x020000) is set. Legacy moov-relative base offsets are not supported.`,
+    );
+    this.name = 'Mp4TfhdLegacyBaseUnsupportedError';
+  }
+}
+
+/** Thrown when tfdt version is not 0 or 1. */
+export class Mp4TfdtVersionError extends WebcvtError {
+  constructor(version: number, moofOffset: number) {
+    super(
+      'MP4_TFDT_VERSION_ERROR',
+      `tfdt in moof at offset ${moofOffset} has unsupported version ${version}; only 0 and 1 are valid.`,
+    );
+    this.name = 'Mp4TfdtVersionError';
+  }
+}
+
+/** Thrown when tfdt v1 value exceeds Number.MAX_SAFE_INTEGER. */
+export class Mp4TfdtValueOutOfRangeError extends WebcvtError {
+  constructor(hiWord: number, moofOffset: number) {
+    super(
+      'MP4_TFDT_VALUE_OUT_OF_RANGE',
+      `tfdt v1 in moof at offset ${moofOffset}: hi-word 0x${hiWord.toString(16).toUpperCase()} exceeds Number.MAX_SAFE_INTEGER.`,
+    );
+    this.name = 'Mp4TfdtValueOutOfRangeError';
+  }
+}
+
+/** Thrown when a trun box has invalid flags. */
+export class Mp4TrunInvalidFlagsError extends WebcvtError {
+  constructor(flags: number, moofOffset: number) {
+    super(
+      'MP4_TRUN_INVALID_FLAGS',
+      `trun in moof at offset ${moofOffset} has invalid flags 0x${flags.toString(16).padStart(6, '0')}.`,
+    );
+    this.name = 'Mp4TrunInvalidFlagsError';
+  }
+}
+
+/** Thrown when trun.sample_count exceeds MAX_SAMPLES_PER_TRUN. */
+export class Mp4TrunSampleCountTooLargeError extends WebcvtError {
+  constructor(count: number, max: number, moofOffset: number) {
+    super(
+      'MP4_TRUN_SAMPLE_COUNT_TOO_LARGE',
+      `trun in moof at offset ${moofOffset}: sample_count ${count} exceeds cap ${max}.`,
+    );
+    this.name = 'Mp4TrunSampleCountTooLargeError';
+  }
+}
+
+/** Thrown when the trun payload size does not match the declared fields and sample_count. */
+export class Mp4TrunSizeMismatchError extends WebcvtError {
+  constructor(expected: number, actual: number, moofOffset: number) {
+    super(
+      'MP4_TRUN_SIZE_MISMATCH',
+      `trun in moof at offset ${moofOffset}: expected payload ${expected} bytes, got ${actual} bytes.`,
+    );
+    this.name = 'Mp4TrunSizeMismatchError';
+  }
+}
+
+/** Thrown when the total fragment count exceeds MAX_FRAGMENTS. */
+export class Mp4FragmentCountTooLargeError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'MP4_FRAGMENT_COUNT_TOO_LARGE',
+      `Fragment count ${count} exceeds the maximum of ${max}. The file may be adversarially crafted.`,
+    );
+    this.name = 'Mp4FragmentCountTooLargeError';
+  }
+}
+
+/** Thrown when a moof contains more traf boxes than MAX_TRAFS_PER_MOOF. */
+export class Mp4TrafCountTooLargeError extends WebcvtError {
+  constructor(count: number, max: number, moofOffset: number) {
+    super(
+      'MP4_TRAF_COUNT_TOO_LARGE',
+      `moof at offset ${moofOffset} contains ${count} traf boxes; maximum is ${max}.`,
+    );
+    this.name = 'Mp4TrafCountTooLargeError';
+  }
+}
+
+/** Thrown when the defaulting cascade cannot resolve sample_duration or sample_size. */
+export class Mp4DefaultsCascadeError extends WebcvtError {
+  constructor(field: 'duration' | 'size', sampleIndex: number, moofOffset: number) {
+    super(
+      'MP4_DEFAULTS_CASCADE',
+      `Cannot resolve sample ${field} for sample ${sampleIndex} in moof at offset ${moofOffset}: neither per-sample, tfhd, nor trex provides a default value.`,
+    );
+    this.name = 'Mp4DefaultsCascadeError';
+  }
+}
+
+/** Thrown when a sidx box has an unsupported version (D.3 placeholder). */
+export class Mp4SidxBadVersionError extends WebcvtError {
+  constructor(version: number) {
+    super(
+      'MP4_SIDX_BAD_VERSION',
+      `sidx version ${version} is not supported; only 0 and 1 are valid.`,
+    );
+    this.name = 'Mp4SidxBadVersionError';
+  }
+}
+
+/** Thrown when sidx nesting depth exceeds MAX_SIDX_DEPTH (D.3 placeholder). */
+export class Mp4SidxNestedDepthExceededError extends WebcvtError {
+  constructor(max: number) {
+    super('MP4_SIDX_NESTED_DEPTH_EXCEEDED', `sidx nesting depth exceeds maximum of ${max}.`);
+    this.name = 'Mp4SidxNestedDepthExceededError';
+  }
+}
+
+/** Thrown when sidx reference_count exceeds MAX_SIDX_REFERENCES (D.3 placeholder). */
+export class Mp4SidxReferenceCountTooLargeError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'MP4_SIDX_REFERENCE_COUNT_TOO_LARGE',
+      `sidx reference_count ${count} exceeds maximum ${max}.`,
+    );
+    this.name = 'Mp4SidxReferenceCountTooLargeError';
+  }
+}
+
+/** Thrown when the mfra box is at an invalid position (D.3 placeholder). */
+export class Mp4MfraOutOfBoundsError extends WebcvtError {
+  constructor(reason: string) {
+    super('MP4_MFRA_OUT_OF_BOUNDS', `mfra parse error: ${reason}`);
+    this.name = 'Mp4MfraOutOfBoundsError';
+  }
+}
+
+/** Thrown when a fragmented file has non-empty sample tables (stbl) in moov. */
+export class Mp4FragmentMixedSampleTablesError extends WebcvtError {
+  constructor(trackId: number) {
+    super(
+      'MP4_FRAGMENT_MIXED_SAMPLE_TABLES',
+      `Track ${trackId} in a fragmented file (mvex present) has non-empty sample tables (stsz/stsc/stts). A fragmented file must have zero-sample stbl entries.`,
+    );
+    this.name = 'Mp4FragmentMixedSampleTablesError';
+  }
+}
+
+/** Thrown when the serializer is called on a fragmented file (D.4 guard). */
+export class Mp4FragmentedSerializeNotSupportedError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_FRAGMENTED_SERIALIZE_NOT_SUPPORTED',
+      'Serializing fragmented MP4 files is not supported in sub-pass D. Round-trip serialization of fragmented files is planned for sub-pass D.4.',
+    );
+    this.name = 'Mp4FragmentedSerializeNotSupportedError';
+  }
+}
+
+/** Thrown when the fragmented file sample iterator is called on a non-fragmented file or vice-versa. */
+export class Mp4FragmentNotYetIteratedError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_FRAGMENT_NOT_YET_ITERATED',
+      'iterateAudioSamples / iterateAudioSamplesWithContext cannot be used on fragmented MP4 files. Use iterateFragmentedAudioSamples or iterateAudioSamplesAuto instead.',
+    );
+    this.name = 'Mp4FragmentNotYetIteratedError';
+  }
+}
+
+/** Thrown when moov size changes after rebuild (D.4 guard placeholder). */
+export class Mp4FragmentedMoovSizeChangedError extends WebcvtError {
+  constructor(original: number, rebuilt: number) {
+    super(
+      'MP4_FRAGMENTED_MOOV_SIZE_CHANGED',
+      `Rebuilt moov is ${rebuilt} bytes but original was ${original} bytes. Mutating metadata on a fragmented file would corrupt all moof data offsets.`,
+    );
+    this.name = 'Mp4FragmentedMoovSizeChangedError';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cover art — placed after fragmented errors
+// ---------------------------------------------------------------------------
 
 /**
  * Thrown when a cover art payload exceeds MAX_COVER_ART_BYTES (16 MiB).

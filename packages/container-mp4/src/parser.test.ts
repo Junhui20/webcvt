@@ -142,10 +142,11 @@ describe('parseMp4 — error cases', () => {
     expect(() => parseMp4(file)).toThrow(Mp4MissingMoovError);
   });
 
-  it('throws Mp4UnsupportedBrandError for fragmented MP4 brand (iso5)', () => {
+  it('accepts iso5 brand (fragmented MP4 — sub-pass D) and throws MissingMoov when moov absent', () => {
+    // Sub-pass D: iso5 is no longer rejected at ftyp; parser proceeds until moov is missing.
     const ftypPayload = buildFtypPayload('iso5', 0, []);
     const ftyp = buildBoxWithPayload('ftyp', ftypPayload);
-    expect(() => parseMp4(ftyp)).toThrow(Mp4UnsupportedBrandError);
+    expect(() => parseMp4(ftyp)).toThrow(Mp4MissingMoovError);
   });
 
   it('tolerates moov-after-mdat layout (Trap §8)', async () => {

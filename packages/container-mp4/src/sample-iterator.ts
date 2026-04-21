@@ -1,6 +1,6 @@
 /**
- * Audio sample iterator — converts a parsed Mp4Track into a sequence of
- * EncodedAudioChunk-compatible descriptors.
+ * Audio sample iterator — converts a parsed Mp4Track or Mp4File into a sequence
+ * of EncodedAudioChunk-compatible descriptors.
  *
  * Per the design note §WebCodecs integration:
  *   - Each AAC frame is a key frame (type: 'key') — AAC frames are independent.
@@ -17,11 +17,25 @@
  *   - Normal edits with mediaTime>0 skip leading samples.
  *   - segmentDuration shorter than media truncates trailing samples.
  *   - Multiple non-empty edit segments throw Mp4ElstMultiSegmentNotSupportedError.
+ *
+ * Phase 3 sub-pass D: fragmented MP4 iteration.
+ *   - iterateFragmentedAudioSamples walks all moof/traf/trun boxes.
+ *   - iterateAudioSamplesAuto dispatches by file.isFragmented.
+ *   - Defaulting cascade: per-sample > tfhd > trex; unresolvable → Mp4DefaultsCascadeError.
+ *   - Bounds check: byteOffset out of range → Mp4CorruptSampleError.
  */
 
 import type { EditListEntry } from './boxes/elst.ts';
-import { Mp4ElstMultiSegmentNotSupportedError, Mp4ElstValueOutOfRangeError } from './errors.ts';
-import type { Mp4Track } from './parser.ts';
+import type { Mp4MovieFragment, Mp4TrackFragment } from './boxes/moof.ts';
+import type { Mp4FragmentSample, Mp4TrackRun } from './boxes/trun.ts';
+import {
+  Mp4CorruptSampleError,
+  Mp4DefaultsCascadeError,
+  Mp4ElstMultiSegmentNotSupportedError,
+  Mp4ElstValueOutOfRangeError,
+  Mp4FragmentNotYetIteratedError,
+} from './errors.ts';
+import type { Mp4File, Mp4Track, Mp4TrackExtends } from './parser.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -353,4 +367,172 @@ export function deriveCodecString(
   const firstByte = decoderSpecificInfo[0] ?? 0;
   const aot = (firstByte >> 3) & 0x1f;
   return `mp4a.40.${aot}`;
+}
+
+// ---------------------------------------------------------------------------
+// Fragmented MP4 iteration (sub-pass D)
+// ---------------------------------------------------------------------------
+
+/**
+ * Iterate over all audio samples in a fragmented MP4 file.
+ *
+ * Walks all moof → traf → trun chains. For each trun, resolves sample duration
+ * and size via the defaulting cascade: per-sample > tfhd > trex.
+ *
+ * Validates byte bounds before each subarray access:
+ *   byteOffset < 0 || byteOffset + size > fileBytes.length → Mp4CorruptSampleError.
+ *
+ * @param file              Parsed fragmented Mp4File (isFragmented must be true).
+ * @param movieTimescale    Timescale for timestamp computation. Defaults to file.movieHeader.timescale.
+ *
+ * @throws Mp4DefaultsCascadeError   — duration or size unresolvable.
+ * @throws Mp4CorruptSampleError     — byte range out of bounds.
+ * @throws Mp4FragmentNotYetIteratedError — called on a non-fragmented file.
+ */
+export function* iterateFragmentedAudioSamples(
+  file: Mp4File,
+  movieTimescale: number = file.movieHeader.timescale,
+): Generator<AudioSample> {
+  if (!file.isFragmented) {
+    throw new Mp4FragmentNotYetIteratedError();
+  }
+
+  const { fileBytes, trackExtends, fragments } = file;
+  const track = file.tracks[0];
+  if (!track) return;
+
+  const timescale = track.mediaHeader.timescale;
+
+  // Build trex lookup by trackId.
+  const trexByTrackId = new Map<number, Mp4TrackExtends>();
+  for (const trex of trackExtends) {
+    trexByTrackId.set(trex.trackId, trex);
+  }
+
+  let globalSampleIndex = 0;
+
+  for (const fragment of fragments) {
+    for (const traf of fragment.trackFragments) {
+      if (traf.durationIsEmpty) {
+        // duration-is-empty flag: this traf contributes 0 samples.
+        continue;
+      }
+
+      const trex = trexByTrackId.get(traf.trackId);
+      // baseMediaDecodeTime from tfdt is the absolute media time for this traf.
+      const trafBaseTick = traf.baseMediaDecodeTime ?? 0;
+
+      for (const trun of traf.trackRuns) {
+        yield* iterateTrunSamples(
+          trun,
+          traf,
+          trex,
+          traf.resolvedBase,
+          timescale,
+          fileBytes,
+          globalSampleIndex,
+          trafBaseTick,
+        );
+
+        // Advance global index by this trun's sample count.
+        globalSampleIndex += trun.samples.length;
+      }
+    }
+  }
+}
+
+function* iterateTrunSamples(
+  trun: Mp4TrackRun,
+  traf: Mp4TrackFragment,
+  trex: Mp4TrackExtends | undefined,
+  resolvedBase: number,
+  timescale: number,
+  fileBytes: Uint8Array,
+  globalSampleIndexStart: number,
+  trafBaseTick: number,
+): Generator<AudioSample> {
+  // Resolve base byte cursor.
+  // data_offset (SIGNED i32) is relative to resolvedBase.
+  const dataOffset = trun.dataOffset ?? 0;
+  let runByteCursor = resolvedBase + dataOffset;
+
+  // Validate defaults BEFORE emitting any sample (design §7: validate before first emit).
+  // F1: pre-flight checks ALL samples, not just sample 0. If any sample has a null
+  // duration/size AND no fallback exists, we throw before the yield loop starts.
+  if (trun.samples.length > 0) {
+    const durFallback = traf.defaultSampleDuration ?? trex?.defaultSampleDuration ?? null;
+    const szFallback = traf.defaultSampleSize ?? trex?.defaultSampleSize ?? null;
+    if (durFallback === null && trun.samples.some((s) => s.duration === null)) {
+      throw new Mp4DefaultsCascadeError('duration', 0, resolvedBase);
+    }
+    if (szFallback === null && trun.samples.some((s) => s.size === null)) {
+      throw new Mp4DefaultsCascadeError('size', 0, resolvedBase);
+    }
+  }
+
+  // Start tick from tfdt.baseMediaDecodeTime.
+  let localTick = trafBaseTick;
+
+  for (let i = 0; i < trun.samples.length; i++) {
+    const rawSample = trun.samples[i];
+    if (!rawSample) continue;
+
+    // Duration cascade.
+    const duration =
+      rawSample.duration ?? traf.defaultSampleDuration ?? trex?.defaultSampleDuration;
+
+    if (duration === undefined || duration === null) {
+      throw new Mp4DefaultsCascadeError('duration', globalSampleIndexStart + i, resolvedBase);
+    }
+
+    // Size cascade.
+    const size = rawSample.size ?? traf.defaultSampleSize ?? trex?.defaultSampleSize;
+
+    if (size === undefined || size === null) {
+      throw new Mp4DefaultsCascadeError('size', globalSampleIndexStart + i, resolvedBase);
+    }
+
+    // Bounds check (trap from design §9 / iterator).
+    if (runByteCursor < 0 || runByteCursor + size > fileBytes.length) {
+      throw new Mp4CorruptSampleError(
+        globalSampleIndexStart + i,
+        runByteCursor,
+        size,
+        fileBytes.length,
+      );
+    }
+
+    const data = fileBytes.subarray(runByteCursor, runByteCursor + size);
+
+    const timestampUs = timescale > 0 ? (localTick * 1_000_000) / timescale : 0;
+    const durationUs = timescale > 0 ? (duration * 1_000_000) / timescale : 0;
+
+    yield {
+      data,
+      timestampUs,
+      durationUs,
+      index: globalSampleIndexStart + i,
+    };
+
+    runByteCursor += size;
+    localTick += duration;
+  }
+}
+
+/**
+ * Auto-dispatching audio sample iterator.
+ *
+ * - Fragmented files (isFragmented == true): delegates to iterateFragmentedAudioSamples.
+ * - Classic files: delegates to iterateAudioSamplesWithContext using the first track.
+ *
+ * @throws Mp4FragmentNotYetIteratedError — should never happen (internal guard).
+ */
+export function* iterateAudioSamplesAuto(file: Mp4File): Generator<AudioSample> {
+  if (file.isFragmented) {
+    yield* iterateFragmentedAudioSamples(file);
+  } else {
+    const track = file.tracks[0];
+    if (!track) return;
+    yield* iterateAudioSamplesWithContext(track, file.fileBytes, file.movieHeader.timescale);
+  }
 }

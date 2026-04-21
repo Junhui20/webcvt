@@ -61,19 +61,25 @@ describe('parseFtyp', () => {
     expect(ftyp.minorVersion).toBe(512);
   });
 
-  it('rejects iso5 major brand with Mp4UnsupportedBrandError', () => {
+  it('accepts iso5 major brand (fragmented MP4 — sub-pass D)', () => {
+    // Sub-pass D: iso5/iso6/dash are now accepted brands (fMP4 supported).
     const payload = buildFtypPayload('iso5', 0, []);
-    expect(() => parseFtyp(payload)).toThrow(Mp4UnsupportedBrandError);
+    const ftyp = parseFtyp(payload);
+    expect(ftyp.majorBrand).toBe('iso5');
   });
 
-  it('rejects iso6 compatible brand with Mp4UnsupportedBrandError', () => {
+  it('accepts iso6 compatible brand (fragmented MP4 — sub-pass D)', () => {
+    // Sub-pass D: iso6 is now accepted.
     const payload = buildFtypPayload('isom', 0, ['iso5', 'iso6']);
-    expect(() => parseFtyp(payload)).toThrow(Mp4UnsupportedBrandError);
+    const ftyp = parseFtyp(payload);
+    expect(ftyp.compatibleBrands).toContain('iso6');
   });
 
-  it('rejects dash compatible brand with Mp4UnsupportedBrandError', () => {
+  it('accepts dash compatible brand (fragmented MP4 — sub-pass D)', () => {
+    // Sub-pass D: dash is now accepted.
     const payload = buildFtypPayload('isom', 0, ['dash']);
-    expect(() => parseFtyp(payload)).toThrow(Mp4UnsupportedBrandError);
+    const ftyp = parseFtyp(payload);
+    expect(ftyp.compatibleBrands).toContain('dash');
   });
 
   it('handles truncated payload (< 8 bytes) gracefully', () => {
