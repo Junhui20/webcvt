@@ -140,3 +140,25 @@ export const MAX_METADATA_PAYLOAD_BYTES = 4 * 1024 * 1024;
  * Cover images can legitimately be large (high-res album art).
  */
 export const MAX_COVER_ART_BYTES = 16 * 1024 * 1024;
+
+// ---------------------------------------------------------------------------
+// Video sample entry security caps (sub-pass B)
+// ---------------------------------------------------------------------------
+
+/** Maximum NAL units per SPS/PPS/VPS array in avcC or hvcC. */
+export const MAX_VIDEO_NAL_UNITS_PER_ARRAY = 256;
+
+/** Maximum single NAL unit byte length (u16 field, but we cap conservatively). */
+export const MAX_VIDEO_NAL_UNIT_BYTES = 65535;
+
+/** Maximum number of NALU arrays in an hvcC box. */
+export const MAX_HVC_ARRAYS = 16;
+
+/** Maximum bytes for the extraBoxes opaque trailing region in a visual sample entry. */
+export const MAX_VIDEO_EXTRA_BOXES_BYTES = 16 * 1024;
+
+/** Maximum encoded video dimension (width or height) in pixels. */
+export const MAX_VIDEO_DIMENSION = 16384;
+
+/** Maximum codec config box payload bytes (avcC/hvcC/vpcC/av1C). */
+export const MAX_VIDEO_CODEC_CONFIG_BYTES = 1024 * 1024;

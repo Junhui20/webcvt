@@ -154,9 +154,16 @@ describe('parseHdlr', () => {
     expect(h.name).toBe('Sound Handler');
   });
 
-  it('throws Mp4UnsupportedTrackTypeError for non-soun handler', () => {
-    const payload = buildHdlrPayload('vide', '');
+  it('throws Mp4UnsupportedTrackTypeError for non-soun/non-vide handler', () => {
+    // 'vide' is now accepted (sub-pass B). Use a genuinely unsupported type.
+    const payload = buildHdlrPayload('text', '');
     expect(() => parseHdlr(payload)).toThrow(Mp4UnsupportedTrackTypeError);
+  });
+
+  it('accepts vide handler type (sub-pass B)', () => {
+    const payload = buildHdlrPayload('vide', 'VideoHandler');
+    const h = parseHdlr(payload);
+    expect(h.handlerType).toBe('vide');
   });
 
   it('throws Mp4InvalidBoxError for too short payload', () => {
@@ -263,14 +270,16 @@ describe('validateDref', () => {
 // ---------------------------------------------------------------------------
 
 describe('parseStsd', () => {
-  it('parses a valid mp4a stsd payload', () => {
+  it('parses a valid mp4a stsd payload (returns Mp4SampleEntry with kind=audio)', () => {
     const asc = new Uint8Array([0x12, 0x10]);
     const payload = buildMinimalStsdWithMp4a(2, 44100, asc);
     const fileData = new Uint8Array(0); // not used in this code path
-    const entry = parseStsd(payload, fileData);
-    expect(entry.channelCount).toBe(2);
-    expect(entry.sampleRate).toBe(44100);
-    expect(entry.decoderSpecificInfo).toEqual(asc);
+    const sampleEntry = parseStsd(payload, fileData);
+    expect(sampleEntry.kind).toBe('audio');
+    if (sampleEntry.kind !== 'audio') throw new Error('expected audio');
+    expect(sampleEntry.entry.channelCount).toBe(2);
+    expect(sampleEntry.entry.sampleRate).toBe(44100);
+    expect(sampleEntry.entry.decoderSpecificInfo).toEqual(asc);
   });
 
   it('throws Mp4InvalidBoxError for too short payload', () => {
@@ -284,17 +293,20 @@ describe('parseStsd', () => {
     expect(() => parseStsd(payload, new Uint8Array(0))).toThrow(Mp4InvalidBoxError);
   });
 
-  it('throws Mp4UnsupportedSampleEntryError for non-mp4a entry type', () => {
-    // Build stsd with an 'avc1' sample entry.
-    const avc1Payload = new Uint8Array(100);
-    const view = new DataView(avc1Payload.buffer);
+  it('throws Mp4UnsupportedSampleEntryError for truly unknown entry type (e.g. zzzz)', () => {
+    // 'avc1' is now dispatched to the visual sample entry parser (sub-pass B).
+    // Use a truly unknown 4cc instead.
+    const unknownPayload = new Uint8Array(100);
+    const view = new DataView(unknownPayload.buffer);
     view.setUint32(4, 1, false); // entry_count=1
-    view.setUint32(8, 100 - 8, false); // entry size
-    avc1Payload[12] = 0x61;
-    avc1Payload[13] = 0x76;
-    avc1Payload[14] = 0x63;
-    avc1Payload[15] = 0x31; // 'avc1'
-    expect(() => parseStsd(avc1Payload, new Uint8Array(0))).toThrow(Mp4UnsupportedSampleEntryError);
+    view.setUint32(8, 100 - 8, false); // entry size = 92
+    unknownPayload[12] = 0x7a; // 'z'
+    unknownPayload[13] = 0x7a; // 'z'
+    unknownPayload[14] = 0x7a; // 'z'
+    unknownPayload[15] = 0x7a; // 'z' — 'zzzz'
+    expect(() => parseStsd(unknownPayload, new Uint8Array(0))).toThrow(
+      Mp4UnsupportedSampleEntryError,
+    );
   });
 
   it('throws Mp4TableTooLargeError when entry_count exceeds MAX_TABLE_ENTRIES', () => {

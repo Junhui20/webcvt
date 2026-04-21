@@ -14,8 +14,12 @@ export {
   iterateAudioSamplesWithContext,
   iterateFragmentedAudioSamples,
   iterateAudioSamplesAuto,
+  iterateVideoSamples,
+  iterateFragmentedVideoSamples,
+  iterateSamples,
   deriveCodecString,
   type AudioSample,
+  type Mp4Sample,
 } from './sample-iterator.ts';
 
 // Backend registration.
@@ -77,6 +81,22 @@ export {
   Mp4FragmentedSerializeNotSupportedError,
   Mp4FragmentNotYetIteratedError,
   Mp4FragmentedMoovSizeChangedError,
+  // Video sample entry errors (sub-pass B):
+  Mp4VisualSampleEntryTooSmallError,
+  Mp4VisualDimensionOutOfRangeError,
+  Mp4AvcCMissingError,
+  Mp4AvcCBadVersionError,
+  Mp4AvcCBadLengthSizeError,
+  Mp4AvcCNalLengthError,
+  Mp4HvcCMissingError,
+  Mp4HvcCBadVersionError,
+  Mp4HvcCBadLengthSizeError,
+  Mp4VpcCMissingError,
+  Mp4VpcCBadVersionError,
+  Mp4Av1CMissingError,
+  Mp4Av1CBadMarkerError,
+  Mp4UnsupportedVideoCodecError,
+  Mp4IterateWrongKindError,
 } from './errors.ts';
 
 // Core types re-exported for convenience.
@@ -89,6 +109,20 @@ export type {
 } from './boxes/mvhd-tkhd-mdhd.ts';
 
 export type { Mp4AudioSampleEntry } from './boxes/hdlr-stsd-mp4a.ts';
+
+export type {
+  Mp4VideoSampleEntry,
+  Mp4VideoCodecConfig,
+  Mp4VideoFormat,
+  Mp4SampleEntry,
+} from './boxes/visual-sample-entry.ts';
+
+export type { Mp4AvcConfig } from './boxes/avcC.ts';
+export type { Mp4HvcConfig, Mp4HvcArray } from './boxes/hvcC.ts';
+export type { Mp4VpcConfig } from './boxes/vpcC.ts';
+export type { Mp4Av1Config } from './boxes/av1C.ts';
+
+export { deriveVideoCodecString } from './boxes/codec-string.ts';
 
 export type { Mp4SampleTable } from './boxes/stbl.ts';
 

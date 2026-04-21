@@ -28,12 +28,7 @@
 import { type Mp4Box, findChild, findChildren, walkBoxes } from './box-tree.ts';
 import { type EditListEntry, parseElst } from './boxes/elst.ts';
 import { type Mp4Ftyp, parseFtyp } from './boxes/ftyp.ts';
-import {
-  type Mp4AudioSampleEntry,
-  parseHdlr,
-  parseStsd,
-  validateDref,
-} from './boxes/hdlr-stsd-mp4a.ts';
+import { type Mp4SampleEntry, parseHdlr, parseStsd, validateDref } from './boxes/hdlr-stsd-mp4a.ts';
 import type { Mp4MovieFragment, Mp4TrackFragment } from './boxes/moof.ts';
 import { parseMoof } from './boxes/moof.ts';
 import type { Mp4MvexResult, Mp4TrackExtends } from './boxes/mvex.ts';
@@ -53,6 +48,7 @@ import {
   buildSampleTable,
   parseStcoOrCo64,
   parseStsc,
+  parseStss,
   parseStsz,
   parseStts,
 } from './boxes/stbl.ts';
@@ -79,6 +75,7 @@ import {
 
 export type { Mp4MovieFragment, Mp4TrackFragment, Mp4TrackRun };
 export type { Mp4TrackExtends };
+export type { Mp4SampleEntry };
 
 // ---------------------------------------------------------------------------
 // Public Types
@@ -86,10 +83,11 @@ export type { Mp4TrackExtends };
 
 export interface Mp4Track {
   trackId: number;
-  handlerType: 'soun';
+  handlerType: 'soun' | 'vide';
   mediaHeader: Mp4MediaHeader;
   trackHeader: Mp4TrackHeader;
-  audioSampleEntry: Mp4AudioSampleEntry;
+  /** Discriminated union: { kind: 'audio', entry } | { kind: 'video', entry }. */
+  sampleEntry: Mp4SampleEntry;
   sampleTable: Mp4SampleTable;
   /** Raw stts entries preserved for round-trip serialization. */
   sttsEntries: SttsEntry[];
@@ -105,6 +103,12 @@ export interface Mp4Track {
    * Empty array when no `edts` box is present (most simple M4A files).
    */
   editList: readonly EditListEntry[];
+  /**
+   * 1-based set of keyframe sample numbers from stss box.
+   * null means no stss box was present → all samples are keyframes.
+   * Only populated for video tracks; always null for audio tracks.
+   */
+  syncSamples: ReadonlySet<number> | null;
 }
 
 export interface Mp4File {
@@ -496,7 +500,7 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
   // Parse sample table boxes — tolerate any order (Trap §12).
   const stsdBox = findChild(stblBox, 'stsd');
   if (!stsdBox) throw new Mp4MissingBoxError('stsd', 'stbl');
-  const audioSampleEntry = parseStsd(stsdBox.payload, fileData, boxCount);
+  const sampleEntry = parseStsd(stsdBox.payload, fileData, boxCount);
 
   const sttsBox = findChild(stblBox, 'stts');
   if (!sttsBox) throw new Mp4MissingBoxError('stts', 'stbl');
@@ -530,18 +534,26 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
 
   const sampleTable = buildSampleTable(sttsEntries, sampleSizes, stscEntries, chunkOffsets);
 
+  // Parse optional stss (Sync Sample Box) — video tracks only.
+  let syncSamples: ReadonlySet<number> | null = null;
+  const stssBox = findChild(stblBox, 'stss');
+  if (stssBox) {
+    syncSamples = parseStss(stssBox.payload);
+  }
+
   return {
     trackId: trackHeader.trackId,
-    handlerType: handler.handlerType as 'soun',
+    handlerType: handler.handlerType as 'soun' | 'vide',
     mediaHeader,
     trackHeader,
-    audioSampleEntry,
+    sampleEntry,
     sampleTable,
     sttsEntries,
     stscEntries,
     chunkOffsets,
     chunkOffsetVariant,
     editList,
+    syncSamples,
   };
 }
 
@@ -604,7 +616,7 @@ function parseTrakFragmented(
 
   const stsdBox = findChild(stblBox, 'stsd');
   if (!stsdBox) throw new Mp4MissingBoxError('stsd', 'stbl');
-  const audioSampleEntry = parseStsd(stsdBox.payload, fileData, boxCount);
+  const sampleEntry = parseStsd(stsdBox.payload, fileData, boxCount);
 
   // stts/stsc/stsz — parse but validate zero-sample (fragmented contract).
   const sttsBox = findChild(stblBox, 'stts');
@@ -644,17 +656,25 @@ function parseTrakFragmented(
 
   const sampleTable = buildSampleTable(sttsEntries, sampleSizes, stscEntries, chunkOffsets);
 
+  // stss optional (video only).
+  let syncSamples: ReadonlySet<number> | null = null;
+  const stssBox = findChild(stblBox, 'stss');
+  if (stssBox) {
+    syncSamples = parseStss(stssBox.payload);
+  }
+
   return {
     trackId: trackHeader.trackId,
-    handlerType: handler.handlerType as 'soun',
+    handlerType: handler.handlerType as 'soun' | 'vide',
     mediaHeader,
     trackHeader,
-    audioSampleEntry,
+    sampleEntry,
     sampleTable,
     sttsEntries,
     stscEntries,
     chunkOffsets,
     chunkOffsetVariant,
     editList,
+    syncSamples,
   };
 }

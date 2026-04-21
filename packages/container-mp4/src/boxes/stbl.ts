@@ -7,6 +7,7 @@
  *   stsz — Sample Size (§8.7.3.2), constant or per-sample (Trap §5)
  *   stco — Chunk Offset 32-bit (§8.7.5)
  *   co64 — Chunk Offset 64-bit (§8.7.5), (Trap §4)
+ *   stss — Sync Sample Box (§8.6.2) — optional; absent means all samples are keyframes
  *
  * All are FullBoxes: version(u8) + flags(u24) before the table data.
  * Entry counts are capped at MAX_TABLE_ENTRIES (1,000,000).
@@ -340,6 +341,55 @@ export function serializeCo64(offsets: readonly number[]): Uint8Array {
     off += 8;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// stss (Sync Sample Box) parser
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse the stss FullBox payload and return a Set of 1-based keyframe sample numbers.
+ *
+ * Spec: ISO/IEC 14496-12 §8.6.2
+ *
+ * stss FullBox payload:
+ *   version(u8) + flags(u24) + entry_count(u32) + sample_number(u32)[entry_count]
+ *
+ * When no stss box is present in stbl, all samples are sync samples (keyframes).
+ * This function only needs to be called when the stss box is present.
+ *
+ * Returns a ReadonlySet of 1-based sample numbers that are sync samples.
+ *
+ * @param payload  stss box payload (after the 8-byte box header).
+ * @throws Mp4InvalidBoxError        payload too short.
+ * @throws Mp4TableTooLargeError     entry_count > MAX_TABLE_ENTRIES.
+ */
+export function parseStss(payload: Uint8Array): ReadonlySet<number> {
+  // FullBox: version(1) + flags(3) + entry_count(4) = 8 bytes.
+  if (payload.length < 8) {
+    throw new Mp4InvalidBoxError('stss payload too short.');
+  }
+  const view = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+  const entryCount = view.getUint32(4, false);
+
+  if (entryCount > MAX_TABLE_ENTRIES) {
+    throw new Mp4TableTooLargeError('stss', entryCount, MAX_TABLE_ENTRIES);
+  }
+  if (payload.length < 8 + entryCount * 4) {
+    throw new Mp4InvalidBoxError(`stss payload too short for ${entryCount} entries.`);
+  }
+
+  const syncSet = new Set<number>();
+  let off = 8;
+  for (let i = 0; i < entryCount; i++) {
+    const sn = view.getUint32(off, false); // 1-based sample number
+    if (sn === 0) {
+      throw new Mp4InvalidBoxError('stss sample_number 0 is invalid (must be 1-based).');
+    }
+    syncSet.add(sn);
+    off += 4;
+  }
+  return syncSet;
 }
 
 // ---------------------------------------------------------------------------

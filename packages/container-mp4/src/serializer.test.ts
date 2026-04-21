@@ -8,6 +8,13 @@
 
 import { loadFixture } from '@webcvt/test-utils';
 import { describe, expect, it } from 'vitest';
+import {
+  buildAvcCPayload,
+  buildAvcSampleEntry,
+  extractFirstSampleEntryPayload,
+  wrapStsd,
+} from './_test-helpers/build-video-stsd.ts';
+import { parseVisualSampleEntry } from './boxes/visual-sample-entry.ts';
 import { parseMp4 } from './parser.ts';
 import { serializeMp4 } from './serializer.ts';
 
@@ -27,8 +34,14 @@ describe('serializeMp4 — round-trip', () => {
     const newTrack = reparsed.tracks[0]!;
     expect(newTrack.mediaHeader.timescale).toBe(origTrack.mediaHeader.timescale);
     expect(newTrack.sampleTable.sampleCount).toBe(origTrack.sampleTable.sampleCount);
-    expect(newTrack.audioSampleEntry.channelCount).toBe(origTrack.audioSampleEntry.channelCount);
-    expect(newTrack.audioSampleEntry.sampleRate).toBe(origTrack.audioSampleEntry.sampleRate);
+    // sampleEntry is now a discriminated union.
+    expect(newTrack.sampleEntry.kind).toBe(origTrack.sampleEntry.kind);
+    if (newTrack.sampleEntry.kind === 'audio' && origTrack.sampleEntry.kind === 'audio') {
+      expect(newTrack.sampleEntry.entry.channelCount).toBe(
+        origTrack.sampleEntry.entry.channelCount,
+      );
+      expect(newTrack.sampleEntry.entry.sampleRate).toBe(origTrack.sampleEntry.entry.sampleRate);
+    }
   });
 
   it('round-trip preserves sample data byte-for-byte', async () => {
@@ -182,5 +195,82 @@ describe('serializeMp4 — round-trip', () => {
     );
     expect(firstType).toBe('ftyp');
     expect(firstSize).toBeGreaterThan(8);
+  });
+
+  it('serializes a video track (exercises the video branch in buildStsdBox)', () => {
+    // Build a synthetic Mp4File with one avc1 video track.
+    const avcCPayload = buildAvcCPayload(
+      0x42,
+      0xe0,
+      0x1e,
+      3,
+      [new Uint8Array([0x67, 0x42, 0xe0, 0x1e])],
+      [new Uint8Array([0x68])],
+    );
+    const avc1Box = buildAvcSampleEntry('avc1', 1280, 720, avcCPayload);
+    const stsdBox = wrapStsd(avc1Box);
+    const videoEntry = parseVisualSampleEntry('avc1', extractFirstSampleEntryPayload(stsdBox), {
+      value: 0,
+    });
+
+    // Synthetic sample data: 2 samples of 8 bytes each.
+    const sampleData = new Uint8Array([
+      0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+      0x17,
+    ]);
+
+    const videoTrack = {
+      trackId: 1,
+      handlerType: 'vide' as const,
+      mediaHeader: { version: 0 as const, timescale: 90000, duration: 6000, language: 'und' },
+      trackHeader: { version: 0 as const, flags: 3, trackId: 1, duration: 6000, volume: 0 },
+      sampleEntry: { kind: 'video' as const, entry: videoEntry },
+      sampleTable: {
+        sampleCount: 2,
+        sampleSizes: new Uint32Array([8, 8]),
+        sampleOffsets: new Float64Array([0, 8]),
+        sampleDeltas: new Uint32Array([3000, 3000]),
+      },
+      sttsEntries: [{ sampleCount: 2, sampleDelta: 3000 }],
+      stscEntries: [{ firstChunk: 1, samplesPerChunk: 2, sampleDescriptionIndex: 1 }],
+      chunkOffsets: [0] as readonly number[],
+      chunkOffsetVariant: 'stco' as const,
+      editList: [] as const,
+      syncSamples: null,
+    };
+
+    const syntheticFile = {
+      ftyp: { majorBrand: 'isom', minorVersion: 0, compatibleBrands: ['isom', 'avc1'] },
+      movieHeader: { version: 0 as const, timescale: 90000, duration: 6000, nextTrackId: 2 },
+      tracks: [videoTrack],
+      mdatRanges: [],
+      fileBytes: sampleData,
+      metadata: [] as const,
+      udtaOpaque: null,
+      isFragmented: false,
+      moofBoxes: [],
+    };
+
+    const serialized = serializeMp4(syntheticFile);
+    expect(serialized.length).toBeGreaterThan(0);
+
+    // Verify ftyp → moov → mdat layout.
+    const view = new DataView(serialized.buffer, serialized.byteOffset, serialized.byteLength);
+    const firstSize = view.getUint32(0, false);
+    const firstType = String.fromCharCode(
+      serialized[4]!,
+      serialized[5]!,
+      serialized[6]!,
+      serialized[7]!,
+    );
+    expect(firstType).toBe('ftyp');
+
+    const secondType = String.fromCharCode(
+      serialized[firstSize + 4]!,
+      serialized[firstSize + 5]!,
+      serialized[firstSize + 6]!,
+      serialized[firstSize + 7]!,
+    );
+    expect(secondType).toBe('moov');
   });
 });

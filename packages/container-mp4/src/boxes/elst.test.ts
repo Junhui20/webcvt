@@ -110,12 +110,15 @@ function buildMockTrack(
       duration: sampleCount * sampleDelta,
       volume: 0x0100,
     },
-    audioSampleEntry: {
-      channelCount: 1,
-      sampleSize: 16,
-      sampleRate: mediaTimescale,
-      decoderSpecificInfo: new Uint8Array([0x12, 0x10]),
-      objectTypeIndication: 0x40,
+    sampleEntry: {
+      kind: 'audio' as const,
+      entry: {
+        channelCount: 1,
+        sampleSize: 16,
+        sampleRate: mediaTimescale,
+        decoderSpecificInfo: new Uint8Array([0x12, 0x10]),
+        objectTypeIndication: 0x40,
+      },
     },
     sampleTable: {
       sampleCount,
@@ -128,6 +131,7 @@ function buildMockTrack(
     chunkOffsets: Array.from(sampleOffsets),
     chunkOffsetVariant: 'stco',
     editList,
+    syncSamples: null,
   };
 }
 

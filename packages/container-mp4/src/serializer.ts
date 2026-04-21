@@ -25,7 +25,7 @@ import { writeBoxHeader, writeLargeBoxHeader } from './box-header.ts';
 import { isEditListTrivial, serializeElst } from './boxes/elst.ts';
 import { serializeEsdsPayload } from './boxes/esds.ts';
 import { type Mp4Ftyp, serializeFtyp } from './boxes/ftyp.ts';
-import { serializeHdlr, serializeMp4a, serializeStsd } from './boxes/hdlr-stsd-mp4a.ts';
+import { serializeHdlr, serializeMp4a } from './boxes/hdlr-stsd-mp4a.ts';
 import { serializeMdhd, serializeMvhd, serializeTkhd } from './boxes/mvhd-tkhd-mdhd.ts';
 import {
   type StscEntry,
@@ -37,6 +37,7 @@ import {
   serializeStts,
 } from './boxes/stbl.ts';
 import { buildUdtaBox } from './boxes/udta-meta-ilst.ts';
+import { serializeVisualSampleEntry } from './boxes/visual-sample-entry.ts';
 import { Mp4FragmentedSerializeNotSupportedError } from './errors.ts';
 import type { Mp4File, Mp4Track } from './parser.ts';
 
@@ -188,8 +189,9 @@ function buildMdiaBox(
 ): Uint8Array {
   const mdhdBytes = buildFullBox('mdhd', serializeMdhd(track.mediaHeader));
 
-  // hdlr
-  const hdlrPayload = serializeHdlr({ handlerType: 'soun', name: 'SoundHandler' });
+  // hdlr — use the handler type from the track.
+  const handlerName = track.handlerType === 'vide' ? 'VideoHandler' : 'SoundHandler';
+  const hdlrPayload = serializeHdlr({ handlerType: track.handlerType, name: handlerName });
   const hdlrBytes = buildFullBox('hdlr', hdlrPayload);
 
   const minfBytes = buildMinfBox(track, chunkOffsets, useCo64);
@@ -203,9 +205,18 @@ function buildMinfBox(
   chunkOffsets: readonly number[],
   useCo64: boolean,
 ): Uint8Array {
-  // smhd: version(1)+flags(3)+balance(2)+reserved(2) = 8 bytes payload
-  const smhdPayload = new Uint8Array(8); // all zeros = centered balance
-  const smhdBytes = buildFullBox('smhd', smhdPayload);
+  // smhd (audio) or vmhd (video) media header box.
+  let mediaInfoBytes: Uint8Array;
+  if (track.handlerType === 'vide') {
+    // vmhd: version(1)+flags(3)+graphicsMode(2)+opcolor(6) = 12 bytes payload
+    const vmhdPayload = new Uint8Array(12); // all zeros
+    mediaInfoBytes = buildFullBox('vmhd', vmhdPayload);
+  } else {
+    // smhd: version(1)+flags(3)+balance(2)+reserved(2) = 8 bytes payload
+    const smhdPayload = new Uint8Array(8); // all zeros = centered balance
+    mediaInfoBytes = buildFullBox('smhd', smhdPayload);
+  }
+  const smhdBytes = mediaInfoBytes;
 
   // dinf → dref with single self-contained url  entry.
   const drefBytes = buildDref();
@@ -246,13 +257,8 @@ function buildStblBox(
   chunkOffsets: readonly number[],
   useCo64: boolean,
 ): Uint8Array {
-  // Build stsd (with mp4a → esds).
-  const esdsPayload = serializeEsdsPayload(
-    track.audioSampleEntry.objectTypeIndication,
-    track.audioSampleEntry.decoderSpecificInfo,
-  );
-  const mp4aBytes = serializeMp4a(track.audioSampleEntry, esdsPayload);
-  const stsdBytes = serializeStsd(mp4aBytes);
+  // Build stsd dispatching on sample entry kind.
+  const stsdBytes = buildStsdBox(track);
 
   const sttsBytes = serializeStts(track.sttsEntries);
   const stscBytes = serializeStsc(track.stscEntries);
@@ -261,6 +267,39 @@ function buildStblBox(
 
   const stblPayload = concatBytes([stsdBytes, sttsBytes, stscBytes, stszBytes, offsetBytes]);
   return wrapContainer('stbl', stblPayload);
+}
+
+/**
+ * Build the stsd box from a track's sample entry (audio or video).
+ */
+function buildStsdBox(track: Mp4Track): Uint8Array {
+  const { sampleEntry } = track;
+
+  let sampleEntryBytes: Uint8Array;
+
+  if (sampleEntry.kind === 'audio') {
+    const { entry } = sampleEntry;
+    const esdsPayload = serializeEsdsPayload(entry.objectTypeIndication, entry.decoderSpecificInfo);
+    sampleEntryBytes = serializeMp4a(entry, esdsPayload);
+  } else {
+    // video
+    sampleEntryBytes = serializeVisualSampleEntry(sampleEntry.entry);
+  }
+
+  // stsd FullBox: version(1)+flags(3)+entry_count(4) + sample entry bytes
+  const payloadSize = 8 + sampleEntryBytes.length;
+  const boxSize = 8 + payloadSize;
+  const out = new Uint8Array(boxSize);
+  const view = new DataView(out.buffer);
+  view.setUint32(0, boxSize, false);
+  out[4] = 0x73;
+  out[5] = 0x74;
+  out[6] = 0x73;
+  out[7] = 0x64; // 'stsd'
+  // version=0, flags=0 at 8-11 (already zero)
+  view.setUint32(12, 1, false); // entry_count = 1
+  out.set(sampleEntryBytes, 16);
+  return out;
 }
 
 // ---------------------------------------------------------------------------

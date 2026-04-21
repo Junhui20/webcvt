@@ -29,8 +29,15 @@ import {
   Mp4UnsupportedSampleEntryError,
   Mp4UnsupportedSoundVersionError,
   Mp4UnsupportedTrackTypeError,
+  Mp4UnsupportedVideoCodecError,
 } from '../errors.ts';
 import { parseEsdsPayload } from './esds.ts';
+import {
+  type Mp4SampleEntry,
+  type Mp4VideoFormat,
+  isVideoFormat,
+  parseVisualSampleEntry,
+} from './visual-sample-entry.ts';
 
 // Module-scope decoders (Lesson #2).
 const TEXT_DECODER_UTF8 = new TextDecoder('utf-8');
@@ -58,10 +65,13 @@ export interface Mp4AudioSampleEntry {
 // hdlr parser
 // ---------------------------------------------------------------------------
 
+// Re-export for parser.ts callers.
+export type { Mp4SampleEntry };
+
 /**
  * Parse an hdlr FullBox payload.
  *
- * @throws Mp4UnsupportedTrackTypeError when handler_type != 'soun'.
+ * @throws Mp4UnsupportedTrackTypeError when handler_type is not 'soun' or 'vide'.
  */
 export function parseHdlr(payload: Uint8Array): Mp4Handler {
   // FullBox: 1(version) + 3(flags) = 4 bytes prefix
@@ -72,7 +82,7 @@ export function parseHdlr(payload: Uint8Array): Mp4Handler {
 
   const handlerType = TEXT_DECODER_LATIN1.decode(payload.subarray(8, 12));
 
-  if (handlerType !== 'soun') {
+  if (handlerType !== 'soun' && handlerType !== 'vide') {
     throw new Mp4UnsupportedTrackTypeError(handlerType);
   }
 
@@ -171,25 +181,29 @@ export function validateDref(payload: Uint8Array): void {
 // ---------------------------------------------------------------------------
 
 /**
- * Parse the stsd FullBox payload and return the audio sample entry.
+ * Parse the stsd FullBox payload and return a discriminated Mp4SampleEntry.
  *
  * stsd layout:
  *   version(u8) + flags(u24) + entry_count(u32) + sample_entry_boxes[]
  *
- * The single child must be an mp4a box; its payload is parsed to extract
- * channel count, sample rate, and the esds descriptor.
+ * Dispatches on the sample entry 4cc:
+ *   'mp4a'                       → { kind: 'audio', entry: Mp4AudioSampleEntry }
+ *   'avc1'|'avc3'|'hev1'|'hvc1'
+ *   |'vp09'|'av01'               → { kind: 'video', entry: Mp4VideoSampleEntry }
+ *   other                        → Mp4UnsupportedSampleEntryError (unknown) or
+ *                                   Mp4UnsupportedVideoCodecError (known-video-but-unsupported)
  *
  * @param payload   stsd box payload (after the 8-byte box header).
  * @param fileData  Full file buffer (needed to parse esds child of mp4a).
  * @param boxCount  Mutable counter shared across the walk for MAX_BOXES cap (Sec-H-3).
- * @throws Mp4UnsupportedSampleEntryError when entry is not 'mp4a'.
+ * @throws Mp4UnsupportedSampleEntryError when entry is unknown.
  * @throws Mp4TableTooLargeError when entry_count > MAX_TABLE_ENTRIES.
  */
 export function parseStsd(
   payload: Uint8Array,
   fileData: Uint8Array,
   boxCount: { value: number } = { value: 0 },
-): Mp4AudioSampleEntry {
+): Mp4SampleEntry {
   if (payload.length < 8) {
     throw new Mp4InvalidBoxError('stsd payload too short.');
   }
@@ -211,23 +225,33 @@ export function parseStsd(
   const entrySize = view.getUint32(8, false);
   const entryType = TEXT_DECODER_LATIN1.decode(payload.subarray(12, 16));
 
-  if (entryType !== 'mp4a') {
-    throw new Mp4UnsupportedSampleEntryError(entryType);
+  if (entrySize < 8 || 8 + entrySize > payload.length) {
+    throw new Mp4InvalidBoxError(`${entryType} sample entry size overruns stsd payload.`);
   }
 
-  if (8 + entrySize > payload.length) {
-    throw new Mp4InvalidBoxError('mp4a sample entry size overruns stsd payload.');
+  // Dispatch on 4cc.
+  if (entryType === 'mp4a') {
+    // mp4a payload starts at offset 16 within stsd payload.
+    const mp4aPayload = payload.subarray(16, 8 + entrySize);
+    const entry = parseMp4aPayload(mp4aPayload, fileData, boxCount);
+    return { kind: 'audio', entry };
   }
 
-  // mp4a payload starts at offset 8+8=16 within stsd payload.
-  // The mp4a payload itself: after the 8-byte header (size+type), the body is:
-  //   reserved(6) + data_reference_index(2) + [Trap §14: this 8 is the SampleEntry header]
-  //   + reserved(8) + channelcount(2) + samplesize(2) + pre_defined(2) + reserved(2)
-  //   + samplerate(4 Q16.16)
-  //   total header before child boxes = 28 bytes (SampleEntry 8 + AudioSampleEntry 20)
-  const mp4aPayload = payload.subarray(16, 8 + entrySize);
+  if (isVideoFormat(entryType)) {
+    // Visual sample entry payload starts at offset 16 within stsd payload.
+    const visualPayload = payload.subarray(16, 8 + entrySize);
+    const entry = parseVisualSampleEntry(entryType as Mp4VideoFormat, visualPayload, boxCount);
+    return { kind: 'video', entry };
+  }
 
-  return parseMp4aPayload(mp4aPayload, fileData, boxCount);
+  // Unknown 4cc — check if it looks like a video format we don't support (dvh1, etc.)
+  // The spec-defined video formats that we explicitly do NOT support yet:
+  const KNOWN_UNSUPPORTED_VIDEO = new Set(['dvh1', 'dvhe', 'dva1', 'dvav', 'encv', 'sinf']);
+  if (KNOWN_UNSUPPORTED_VIDEO.has(entryType)) {
+    throw new Mp4UnsupportedVideoCodecError(entryType);
+  }
+
+  throw new Mp4UnsupportedSampleEntryError(entryType);
 }
 
 /**

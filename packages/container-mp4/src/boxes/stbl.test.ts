@@ -16,6 +16,7 @@ import {
   buildSampleTable,
   parseStcoOrCo64,
   parseStsc,
+  parseStss,
   parseStsz,
   parseStts,
   serializeCo64,
@@ -421,5 +422,45 @@ describe('buildSampleTable', () => {
     expect(table.sampleOffsets[6]).toBe(1300);
     // Chunk 4 (1 sample at 1350): sample 7=1350
     expect(table.sampleOffsets[7]).toBe(1350);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// F10 regression — parseStss rejects sample_number == 0
+// ---------------------------------------------------------------------------
+
+describe('F10 regression — parseStss rejects sample_number 0', () => {
+  function buildStssPayload(sampleNumbers: number[]): Uint8Array {
+    // stss FullBox: version(1)+flags(3)+entry_count(4) + sample_number(u32)[n]
+    const out = new Uint8Array(8 + sampleNumbers.length * 4);
+    const view = new DataView(out.buffer);
+    // version=0, flags=0 at [0..3]
+    view.setUint32(4, sampleNumbers.length, false); // entry_count
+    let off = 8;
+    for (const sn of sampleNumbers) {
+      view.setUint32(off, sn, false);
+      off += 4;
+    }
+    return out;
+  }
+
+  it('throws Mp4InvalidBoxError when a stss entry has sample_number=0', () => {
+    const payload = buildStssPayload([0]);
+    expect(() => parseStss(payload)).toThrow(Mp4InvalidBoxError);
+    expect(() => parseStss(payload)).toThrow('stss sample_number 0 is invalid');
+  });
+
+  it('throws when sample_number=0 appears among valid entries', () => {
+    const payload = buildStssPayload([1, 0, 3]);
+    expect(() => parseStss(payload)).toThrow(Mp4InvalidBoxError);
+  });
+
+  it('accepts valid 1-based sample numbers without throwing', () => {
+    const payload = buildStssPayload([1, 3, 5]);
+    const syncSet = parseStss(payload);
+    expect(syncSet.has(1)).toBe(true);
+    expect(syncSet.has(3)).toBe(true);
+    expect(syncSet.has(5)).toBe(true);
+    expect(syncSet.size).toBe(3);
   });
 });

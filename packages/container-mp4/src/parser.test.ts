@@ -19,10 +19,16 @@
 import { loadFixture } from '@webcvt/test-utils';
 import { describe, expect, it } from 'vitest';
 import {
+  buildAvcCPayload,
+  buildAvcSampleEntry,
+  wrapStsd as wrapStsdHelper,
+} from './_test-helpers/build-video-stsd.ts';
+import {
   Mp4CorruptSampleError,
   Mp4ExternalDataRefError,
   Mp4InputTooLargeError,
   Mp4InvalidBoxError,
+  Mp4MissingBoxError,
   Mp4MissingFtypError,
   Mp4MissingMoovError,
   Mp4MultiTrackNotSupportedError,
@@ -83,7 +89,10 @@ describe('parseMp4 — fixture: sine-1s-44100-mono.m4a', () => {
   it('asserts decoderSpecificInfo (AudioSpecificConfig) is present', async () => {
     const bytes = await loadFixture('audio/sine-1s-44100-mono.m4a');
     const file = parseMp4(bytes);
-    const asc = file.tracks[0]!.audioSampleEntry.decoderSpecificInfo;
+    const track = file.tracks[0]!;
+    expect(track.sampleEntry.kind).toBe('audio');
+    if (track.sampleEntry.kind !== 'audio') throw new Error('expected audio track');
+    const asc = track.sampleEntry.entry.decoderSpecificInfo;
     expect(asc.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -293,9 +302,9 @@ describe('parseMp4 — error cases', () => {
 });
 
 describe('parseMp4 — track type rejection', () => {
-  it('throws Mp4UnsupportedTrackTypeError when hdlr handler_type is not soun', () => {
-    // Build a minimal file with a 'vide' handler.
-    const bytes = buildMinimalMp4WithHandler('vide');
+  it('throws Mp4UnsupportedTrackTypeError when hdlr handler_type is unsupported (e.g. text)', () => {
+    // 'vide' is now accepted (sub-pass B). Use a genuinely unsupported type.
+    const bytes = buildMinimalMp4WithHandler('text');
     expect(() => parseMp4(bytes)).toThrow(Mp4UnsupportedTrackTypeError);
   });
 });
@@ -635,3 +644,186 @@ function buildMinimalEsdsPayload(oti: number, asc: Uint8Array): Uint8Array {
   const es = buildDesc(0x03, esPayload);
   return concat([new Uint8Array(4), es]);
 }
+
+// ---------------------------------------------------------------------------
+// Branch coverage — parser.ts lines 659-660 (stco missing) and 668-669 (stss)
+// ---------------------------------------------------------------------------
+
+describe('parseMp4 — stss branch coverage (video track with sync sample table)', () => {
+  it('parses stss box in video track and sets syncSamples', () => {
+    // Build a synthetic MP4 with a vide handler track and an stss box.
+    // We use avc1 for the stsd. The stss contains sample numbers 1 and 3 (keyframes).
+
+    const ftyp = buildFtypBox('mp42');
+    const mvhd = buildFullBox('mvhd', buildMvhdV0Payload(90000, 90000));
+    const tkhd = buildFullBox('tkhd', buildMinimalTkhd());
+    const mdhd = buildFullBox('mdhd', buildMdhdV0Payload(90000, 90000));
+
+    // vide hdlr
+    const hdlrPayload = new Uint8Array(36);
+    hdlrPayload[8] = 0x76;
+    hdlrPayload[9] = 0x69;
+    hdlrPayload[10] = 0x64;
+    hdlrPayload[11] = 0x65; // 'vide'
+    const hdlr = buildFullBox('hdlr', hdlrPayload);
+
+    // avc1 stsd — wrapStsdHelper returns a complete stsd box (size+type+version+flags+entry_count+avc1)
+    const avcCPayload = buildAvcCPayload(
+      0x42,
+      0xe0,
+      0x1e,
+      3,
+      [new Uint8Array([0x67])],
+      [new Uint8Array([0x68])],
+    );
+    const avc1Box = buildAvcSampleEntry('avc1', 640, 480, avcCPayload);
+    const stsdFull = wrapStsdHelper(avc1Box);
+
+    // stts: 4 samples, delta=3000
+    const sttsPayload = new Uint8Array(16);
+    const sttsView = new DataView(sttsPayload.buffer);
+    sttsView.setUint32(4, 1, false);
+    sttsView.setUint32(8, 4, false);
+    sttsView.setUint32(12, 3000, false);
+    const stts = buildFullBox('stts', sttsPayload);
+
+    // stsc: 1 entry, 4 samples in chunk 1
+    const stscPayload = new Uint8Array(20);
+    const stscView = new DataView(stscPayload.buffer);
+    stscView.setUint32(4, 1, false);
+    stscView.setUint32(8, 1, false);
+    stscView.setUint32(12, 4, false);
+    stscView.setUint32(16, 1, false);
+    const stsc = buildFullBox('stsc', stscPayload);
+
+    // stsz: 4 samples of 8 bytes each
+    const stszPayload = new Uint8Array(20 + 4 * 4);
+    const stszView = new DataView(stszPayload.buffer);
+    stszView.setUint32(8, 4, false);
+    for (let i = 0; i < 4; i++) stszView.setUint32(12 + i * 4, 8, false);
+    const stsz = buildFullBox('stsz', stszPayload);
+
+    // stco: 1 chunk at offset of mdat payload (after ftyp+moov, but we'll use a placeholder)
+    const stcoPayload = new Uint8Array(16);
+    const stcoView = new DataView(stcoPayload.buffer);
+    stcoView.setUint32(4, 1, false);
+    // We'll set offset after knowing total moov size — set to a safe large value
+    stcoView.setUint32(8, 2000, false); // will point into mdat
+    const stco = buildFullBox('stco', stcoPayload);
+
+    // stss: sync sample table with entries [1, 3] (1-based sample numbers)
+    const stssPayload = new Uint8Array(16);
+    const stssView = new DataView(stssPayload.buffer);
+    stssView.setUint32(4, 2, false); // entry_count=2
+    stssView.setUint32(8, 1, false); // sample 1
+    stssView.setUint32(12, 3, false); // sample 3
+    const stss = buildFullBox('stss', stssPayload);
+
+    const stblPayload = concat([stsdFull, stts, stsc, stsz, stco, stss]);
+    const stbl = buildBox('stbl', stblPayload);
+
+    const dref = buildSelfContainedDref();
+    const dinf = buildBox('dinf', dref);
+    const vmhd = buildFullBox('vmhd', new Uint8Array(12));
+    const minf = buildBox('minf', concat([vmhd, dinf, stbl]));
+    const mdia = buildBox('mdia', concat([mdhd, hdlr, minf]));
+    const trak = buildBox('trak', concat([tkhd, mdia]));
+    const moov = buildBox('moov', concat([mvhd, trak]));
+    const mdat = buildBox('mdat', new Uint8Array(2048));
+
+    // Patch stco to point into mdat payload
+    const moovSize = moov.length;
+    const ftypSize = ftyp.length;
+    const mdatPayloadStart = ftypSize + moovSize + 8;
+    const fileBytes = concat([ftyp, moov, mdat]);
+    // Patch stco offset[0] in the assembled file. Find stco offset in the file.
+    // stco offset is 8 bytes into the stco FullBox payload = +12 from box start.
+    // We need to find stco box in the concatenated file — just check that parse succeeds.
+    // Actually, let's just set stco offset to a valid location (within mdat) directly.
+    // The mdat payload starts at ftypSize + moovSize + 8. Our samples are 4*8=32 bytes.
+    const patchedView = new DataView(fileBytes.buffer);
+    // Find and patch the stco entry_count=1 position by scanning for 'stco':
+    let stcoPos = -1;
+    for (let i = 0; i < fileBytes.length - 8; i++) {
+      if (
+        fileBytes[i] === 0x73 &&
+        fileBytes[i + 1] === 0x74 &&
+        fileBytes[i + 2] === 0x63 &&
+        fileBytes[i + 3] === 0x6f
+      ) {
+        stcoPos = i;
+        break;
+      }
+    }
+    if (stcoPos >= 0) {
+      // stco FullBox: size(4)+type(4)+version(1)+flags(3)+entry_count(4)+offset[0](4)
+      patchedView.setUint32(stcoPos + 16, mdatPayloadStart, false);
+    }
+
+    const parsed = parseMp4(fileBytes);
+    expect(parsed.tracks[0]?.syncSamples).not.toBeNull();
+    expect(parsed.tracks[0]?.syncSamples?.has(1)).toBe(true);
+    expect(parsed.tracks[0]?.syncSamples?.has(3)).toBe(true);
+    expect(parsed.tracks[0]?.syncSamples?.has(2)).toBe(false);
+  });
+});
+
+describe('parseMp4 — stco missing branch coverage', () => {
+  it('throws Mp4MissingBoxError when stbl has no stco or co64', () => {
+    // Build a valid MP4 where the stbl has stsd, stts, stsc, stsz but no stco/co64.
+    const ftyp = buildFtypBox('mp42');
+    const mvhd = buildFullBox('mvhd', buildMvhdV0Payload(44100, 44100));
+    const tkhd = buildFullBox('tkhd', buildMinimalTkhd());
+    const mdhd = buildFullBox('mdhd', buildMdhdV0Payload(44100, 44100));
+
+    const hdlrPayload = new Uint8Array(36);
+    hdlrPayload[8] = 0x73;
+    hdlrPayload[9] = 0x6f;
+    hdlrPayload[10] = 0x75;
+    hdlrPayload[11] = 0x6e;
+    const hdlr = buildFullBox('hdlr', hdlrPayload);
+
+    const stsdPayload = buildMinimalStsdPayload();
+    const stsd = buildFullBox('stsd', stsdPayload);
+
+    // stts: 1 entry, 1 sample, delta=1024
+    const sttsPayload = new Uint8Array(16);
+    const sttsView = new DataView(sttsPayload.buffer);
+    sttsView.setUint32(4, 1, false);
+    sttsView.setUint32(8, 1, false);
+    sttsView.setUint32(12, 1024, false);
+    const stts = buildFullBox('stts', sttsPayload);
+
+    // stsc: 1 entry
+    const stscPayload = new Uint8Array(20);
+    const stscView = new DataView(stscPayload.buffer);
+    stscView.setUint32(4, 1, false);
+    stscView.setUint32(8, 1, false);
+    stscView.setUint32(12, 1, false);
+    stscView.setUint32(16, 1, false);
+    const stsc = buildFullBox('stsc', stscPayload);
+
+    // stsz: 1 sample
+    const stszPayload = new Uint8Array(20);
+    const stszView = new DataView(stszPayload.buffer);
+    stszView.setUint32(8, 1, false);
+    stszView.setUint32(12, 8, false);
+    const stsz = buildFullBox('stsz', stszPayload);
+
+    // stbl WITHOUT stco or co64
+    const stblPayload = concat([stsd, stts, stsc, stsz]);
+    const stbl = buildBox('stbl', stblPayload);
+
+    const dref = buildSelfContainedDref();
+    const dinf = buildBox('dinf', dref);
+    const smhd = buildFullBox('smhd', new Uint8Array(8));
+    const minf = buildBox('minf', concat([smhd, dinf, stbl]));
+    const mdia = buildBox('mdia', concat([mdhd, hdlr, minf]));
+    const trak = buildBox('trak', concat([tkhd, mdia]));
+    const moov = buildBox('moov', concat([mvhd, trak]));
+    const mdat = buildBox('mdat', new Uint8Array(16));
+    const file = concat([ftyp, moov, mdat]);
+
+    expect(() => parseMp4(file)).toThrow(Mp4MissingBoxError);
+  });
+});

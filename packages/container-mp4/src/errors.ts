@@ -640,3 +640,163 @@ export class Mp4MetaPayloadTooLargeError extends WebcvtError {
     this.name = 'Mp4MetaPayloadTooLargeError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// Video sample entry errors (sub-pass B)
+// ---------------------------------------------------------------------------
+
+/** Thrown when a VisualSampleEntry payload is shorter than 78 bytes. */
+export class Mp4VisualSampleEntryTooSmallError extends WebcvtError {
+  constructor(size: number) {
+    super(
+      'MP4_VISUAL_SAMPLE_ENTRY_TOO_SMALL',
+      `VisualSampleEntry payload is ${size} bytes; minimum is 78 bytes (ISO/IEC 14496-12 §12.1).`,
+    );
+    this.name = 'Mp4VisualSampleEntryTooSmallError';
+  }
+}
+
+/** Thrown when width or height exceeds MAX_VIDEO_DIMENSION. */
+export class Mp4VisualDimensionOutOfRangeError extends WebcvtError {
+  constructor(field: 'width' | 'height', value: number, max: number) {
+    super(
+      'MP4_VISUAL_DIMENSION_OUT_OF_RANGE',
+      `VisualSampleEntry ${field}=${value} exceeds maximum ${max}.`,
+    );
+    this.name = 'Mp4VisualDimensionOutOfRangeError';
+  }
+}
+
+/** Thrown when the avcC child box is missing from a visual sample entry. */
+export class Mp4AvcCMissingError extends WebcvtError {
+  constructor() {
+    super('MP4_AVCC_MISSING', 'avc1/avc3 sample entry is missing the required avcC child box.');
+    this.name = 'Mp4AvcCMissingError';
+  }
+}
+
+/** Thrown when avcC configurationVersion != 1. */
+export class Mp4AvcCBadVersionError extends WebcvtError {
+  constructor(version: number) {
+    super(
+      'MP4_AVCC_BAD_VERSION',
+      `avcC configurationVersion=${version}; only version 1 is valid (ISO/IEC 14496-15 §5.2.4.1).`,
+    );
+    this.name = 'Mp4AvcCBadVersionError';
+  }
+}
+
+/** Thrown when avcC lengthSizeMinusOne == 2 (reserved by spec). */
+export class Mp4AvcCBadLengthSizeError extends WebcvtError {
+  constructor(value: number) {
+    super(
+      'MP4_AVCC_BAD_LENGTH_SIZE',
+      `avcC lengthSizeMinusOne=${value} is reserved. Valid values are 0 (1-byte), 1 (2-byte), 3 (4-byte).`,
+    );
+    this.name = 'Mp4AvcCBadLengthSizeError';
+  }
+}
+
+/** Thrown when an avcC SPS/PPS NAL unit length overruns the payload. */
+export class Mp4AvcCNalLengthError extends WebcvtError {
+  constructor(cursor: number, claimed: number, available: number) {
+    super(
+      'MP4_AVCC_NAL_LENGTH',
+      `avcC NAL unit at cursor=${cursor} claims length=${claimed} but only ${available} bytes available.`,
+    );
+    this.name = 'Mp4AvcCNalLengthError';
+  }
+}
+
+/** Thrown when the hvcC child box is missing from a visual sample entry. */
+export class Mp4HvcCMissingError extends WebcvtError {
+  constructor() {
+    super('MP4_HVCC_MISSING', 'hev1/hvc1 sample entry is missing the required hvcC child box.');
+    this.name = 'Mp4HvcCMissingError';
+  }
+}
+
+/** Thrown when hvcC configurationVersion != 1. */
+export class Mp4HvcCBadVersionError extends WebcvtError {
+  constructor(version: number) {
+    super(
+      'MP4_HVCC_BAD_VERSION',
+      `hvcC configurationVersion=${version}; only version 1 is valid (ISO/IEC 14496-15 §8.3.3.1).`,
+    );
+    this.name = 'Mp4HvcCBadVersionError';
+  }
+}
+
+/** Thrown when hvcC lengthSizeMinusOne == 2 (reserved by spec). */
+export class Mp4HvcCBadLengthSizeError extends WebcvtError {
+  constructor(value: number) {
+    super(
+      'MP4_HVCC_BAD_LENGTH_SIZE',
+      `hvcC lengthSizeMinusOne=${value} is reserved. Valid values are 0, 1, 3.`,
+    );
+    this.name = 'Mp4HvcCBadLengthSizeError';
+  }
+}
+
+/** Thrown when the vpcC child box is missing from a visual sample entry. */
+export class Mp4VpcCMissingError extends WebcvtError {
+  constructor() {
+    super('MP4_VPCC_MISSING', 'vp09 sample entry is missing the required vpcC child box.');
+    this.name = 'Mp4VpcCMissingError';
+  }
+}
+
+/** Thrown when vpcC version != 1. */
+export class Mp4VpcCBadVersionError extends WebcvtError {
+  constructor(version: number) {
+    super(
+      'MP4_VPCC_BAD_VERSION',
+      `vpcC version=${version}; only version 1 is valid (VP-Codec-ISOBMFF §2.2).`,
+    );
+    this.name = 'Mp4VpcCBadVersionError';
+  }
+}
+
+/** Thrown when the av1C child box is missing from a visual sample entry. */
+export class Mp4Av1CMissingError extends WebcvtError {
+  constructor() {
+    super('MP4_AV1C_MISSING', 'av01 sample entry is missing the required av1C child box.');
+    this.name = 'Mp4Av1CMissingError';
+  }
+}
+
+/** Thrown when av1C byte 0 marker bit != 1 or version != 1. */
+export class Mp4Av1CBadMarkerError extends WebcvtError {
+  constructor(byte0: number) {
+    super(
+      'MP4_AV1C_BAD_MARKER',
+      `av1C byte[0]=0x${byte0.toString(16).padStart(2, '0')}: marker bit must be 1 and version bits must be 1 (AV1-ISOBMFF §2.3.3).`,
+    );
+    this.name = 'Mp4Av1CBadMarkerError';
+  }
+}
+
+/** Thrown when a video sample entry uses an unsupported codec 4cc. */
+export class Mp4UnsupportedVideoCodecError extends WebcvtError {
+  constructor(fourCC: string) {
+    super(
+      'MP4_UNSUPPORTED_VIDEO_CODEC',
+      `Video sample entry type "${fourCC}" is not supported. Supported: avc1, avc3, hev1, hvc1, vp09, av01.`,
+    );
+    this.name = 'Mp4UnsupportedVideoCodecError';
+  }
+}
+
+/**
+ * Thrown when iterateAudioSamples / iterateAudioSamplesWithContext is called on
+ * a video track, or iterateVideoSamples is called on an audio track.
+ */
+export class Mp4IterateWrongKindError extends WebcvtError {
+  constructor(expected: 'audio' | 'video', got: 'audio' | 'video') {
+    super(
+      'MP4_ITERATE_WRONG_KIND',
+      `Iterator expected a ${expected} track but the track kind is ${got}.`,
+    );
+    this.name = 'Mp4IterateWrongKindError';
+  }
+}

@@ -34,6 +34,7 @@ import {
   Mp4ElstMultiSegmentNotSupportedError,
   Mp4ElstValueOutOfRangeError,
   Mp4FragmentNotYetIteratedError,
+  Mp4IterateWrongKindError,
 } from './errors.ts';
 import type { Mp4File, Mp4Track, Mp4TrackExtends } from './parser.ts';
 
@@ -41,6 +42,28 @@ import type { Mp4File, Mp4Track, Mp4TrackExtends } from './parser.ts';
 // Types
 // ---------------------------------------------------------------------------
 
+export interface Mp4Sample {
+  /** 'audio' or 'video'. */
+  readonly kind: 'audio' | 'video';
+  /** Sample index (0-based). */
+  readonly index: number;
+  /** Presentation timestamp in microseconds. */
+  readonly presentationTimeUs: number;
+  /** Duration in microseconds. */
+  readonly durationUs: number;
+  /**
+   * True when this sample is a sync sample (keyframe).
+   * Always true for audio samples. For video, derived from stss (absent stss → all keyframes).
+   */
+  readonly isKeyframe: boolean;
+  /** Raw sample bytes (zero-copy subarray into fileBytes). */
+  readonly data: Uint8Array;
+}
+
+/**
+ * Back-compat alias. AudioSample exposes the same fields as Mp4Sample plus
+ * the legacy `timestampUs` and optional `editStartSkipTicks` fields.
+ */
 export interface AudioSample {
   /** Raw AAC access unit bytes (zero-copy subarray into fileBytes). */
   data: Uint8Array;
@@ -176,11 +199,17 @@ function analyseEditList(
  * @deprecated Use {@link iterateAudioSamplesWithContext} to honour edit lists.
  * Calling this on a track with a non-empty editList silently bypasses
  * priming silence trim and segment_duration truncation.
+ *
+ * @throws Mp4IterateWrongKindError when called on a video track.
  */
 export function* iterateAudioSamples(
   track: Mp4Track,
   fileBytes: Uint8Array,
 ): Generator<AudioSample> {
+  if (track.sampleEntry.kind === 'video') {
+    throw new Mp4IterateWrongKindError('audio', 'video');
+  }
+
   const { sampleTable, mediaHeader } = track;
   const { sampleCount, sampleOffsets, sampleSizes, sampleDeltas } = sampleTable;
   const timescale = mediaHeader.timescale;
@@ -211,12 +240,16 @@ export function* iterateAudioSamples(
  * @param track          Parsed Mp4Track.
  * @param fileBytes      Original input buffer.
  * @param movieTimescale mvhd.timescale (pass 0 to skip duration truncation).
+ * @throws Mp4IterateWrongKindError when called on a video track.
  */
 export function* iterateAudioSamplesWithContext(
   track: Mp4Track,
   fileBytes: Uint8Array,
   movieTimescale: number,
 ): Generator<AudioSample> {
+  if (track.sampleEntry.kind === 'video') {
+    throw new Mp4IterateWrongKindError('audio', 'video');
+  }
   const { editList } = track;
 
   if (!editList || editList.length === 0) {
@@ -401,6 +434,10 @@ export function* iterateFragmentedAudioSamples(
   const track = file.tracks[0];
   if (!track) return;
 
+  if (track.sampleEntry.kind === 'video') {
+    throw new Mp4IterateWrongKindError('audio', 'video');
+  }
+
   const timescale = track.mediaHeader.timescale;
 
   // Build trex lookup by trackId.
@@ -526,13 +563,241 @@ function* iterateTrunSamples(
  * - Classic files: delegates to iterateAudioSamplesWithContext using the first track.
  *
  * @throws Mp4FragmentNotYetIteratedError — should never happen (internal guard).
+ * @throws Mp4IterateWrongKindError when the first track is a video track.
  */
 export function* iterateAudioSamplesAuto(file: Mp4File): Generator<AudioSample> {
+  const track = file.tracks[0];
+  if (track?.sampleEntry.kind === 'video') {
+    throw new Mp4IterateWrongKindError('audio', 'video');
+  }
   if (file.isFragmented) {
     yield* iterateFragmentedAudioSamples(file);
   } else {
-    const track = file.tracks[0];
     if (!track) return;
     yield* iterateAudioSamplesWithContext(track, file.fileBytes, file.movieHeader.timescale);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Video sample iteration (sub-pass B)
+// ---------------------------------------------------------------------------
+
+/**
+ * Iterate over all video samples in a classic (non-fragmented) MP4 track.
+ *
+ * Yields one Mp4Sample per sample in presentation order. The `isKeyframe` field
+ * is derived from the stss box: absent stss → all samples are keyframes.
+ *
+ * @param track     Parsed Mp4Track with sampleEntry.kind === 'video'.
+ * @param fileBytes Original input buffer.
+ * @throws Mp4IterateWrongKindError when called on an audio track.
+ */
+export function* iterateVideoSamples(track: Mp4Track, fileBytes: Uint8Array): Generator<Mp4Sample> {
+  if (track.sampleEntry.kind === 'audio') {
+    throw new Mp4IterateWrongKindError('video', 'audio');
+  }
+
+  const { sampleTable, mediaHeader, syncSamples } = track;
+  const { sampleCount, sampleOffsets, sampleSizes, sampleDeltas } = sampleTable;
+  const timescale = mediaHeader.timescale;
+
+  let cumulativeTicks = 0;
+  for (let i = 0; i < sampleCount; i++) {
+    const offset = sampleOffsets[i] ?? 0;
+    const size = sampleSizes[i] ?? 0;
+    const delta = sampleDeltas[i] ?? 0;
+
+    const presentationTimeUs = timescale > 0 ? (cumulativeTicks * 1_000_000) / timescale : 0;
+    const durationUs = timescale > 0 ? (delta * 1_000_000) / timescale : 0;
+
+    // 1-based sample number for stss lookup.
+    const sampleNumber = i + 1;
+    // Absent stss → syncSamples is null → all samples are keyframes.
+    const isKeyframe = syncSamples === null || syncSamples.has(sampleNumber);
+
+    const data = fileBytes.subarray(offset, offset + size);
+
+    yield { kind: 'video', index: i, presentationTimeUs, durationUs, isKeyframe, data };
+
+    cumulativeTicks += delta;
+  }
+}
+
+/**
+ * Iterate over all video samples in a fragmented MP4 file.
+ *
+ * @param file  Parsed fragmented Mp4File (isFragmented must be true).
+ * @throws Mp4IterateWrongKindError       when the track is not a video track.
+ * @throws Mp4FragmentNotYetIteratedError when called on a non-fragmented file.
+ * @throws Mp4DefaultsCascadeError        when duration or size cannot be resolved.
+ * @throws Mp4CorruptSampleError          when byte range is out of bounds.
+ */
+export function* iterateFragmentedVideoSamples(file: Mp4File): Generator<Mp4Sample> {
+  if (!file.isFragmented) {
+    throw new Mp4FragmentNotYetIteratedError();
+  }
+
+  const track = file.tracks[0];
+  if (!track) return;
+
+  if (track.sampleEntry.kind === 'audio') {
+    throw new Mp4IterateWrongKindError('video', 'audio');
+  }
+
+  const { fileBytes, trackExtends, fragments } = file;
+  const timescale = track.mediaHeader.timescale;
+
+  // Build trex lookup by trackId.
+  const trexByTrackId = new Map<number, Mp4TrackExtends>();
+  for (const trex of trackExtends) {
+    trexByTrackId.set(trex.trackId, trex);
+  }
+
+  let globalSampleIndex = 0;
+
+  for (const fragment of fragments) {
+    for (const traf of fragment.trackFragments) {
+      if (traf.durationIsEmpty) {
+        continue;
+      }
+
+      const trex = trexByTrackId.get(traf.trackId);
+      const trafBaseTick = traf.baseMediaDecodeTime ?? 0;
+
+      for (const trun of traf.trackRuns) {
+        yield* iterateVideoTrunSamples(
+          trun,
+          traf,
+          trex,
+          traf.resolvedBase,
+          timescale,
+          fileBytes,
+          globalSampleIndex,
+          trafBaseTick,
+        );
+        globalSampleIndex += trun.samples.length;
+      }
+    }
+  }
+}
+
+function* iterateVideoTrunSamples(
+  trun: Mp4TrackRun,
+  traf: Mp4TrackFragment,
+  trex: Mp4TrackExtends | undefined,
+  resolvedBase: number,
+  timescale: number,
+  fileBytes: Uint8Array,
+  globalSampleIndexStart: number,
+  trafBaseTick: number,
+): Generator<Mp4Sample> {
+  const dataOffset = trun.dataOffset ?? 0;
+  let runByteCursor = resolvedBase + dataOffset;
+
+  if (trun.samples.length > 0) {
+    const durFallback = traf.defaultSampleDuration ?? trex?.defaultSampleDuration ?? null;
+    const szFallback = traf.defaultSampleSize ?? trex?.defaultSampleSize ?? null;
+    if (durFallback === null && trun.samples.some((s) => s.duration === null)) {
+      throw new Mp4DefaultsCascadeError('duration', 0, resolvedBase);
+    }
+    if (szFallback === null && trun.samples.some((s) => s.size === null)) {
+      throw new Mp4DefaultsCascadeError('size', 0, resolvedBase);
+    }
+  }
+
+  let localTick = trafBaseTick;
+
+  for (let i = 0; i < trun.samples.length; i++) {
+    const rawSample = trun.samples[i];
+    if (!rawSample) continue;
+
+    const duration =
+      rawSample.duration ?? traf.defaultSampleDuration ?? trex?.defaultSampleDuration;
+    if (duration === undefined || duration === null) {
+      throw new Mp4DefaultsCascadeError('duration', globalSampleIndexStart + i, resolvedBase);
+    }
+
+    const size = rawSample.size ?? traf.defaultSampleSize ?? trex?.defaultSampleSize;
+    if (size === undefined || size === null) {
+      throw new Mp4DefaultsCascadeError('size', globalSampleIndexStart + i, resolvedBase);
+    }
+
+    if (runByteCursor < 0 || runByteCursor + size > fileBytes.length) {
+      throw new Mp4CorruptSampleError(
+        globalSampleIndexStart + i,
+        runByteCursor,
+        size,
+        fileBytes.length,
+      );
+    }
+
+    const data = fileBytes.subarray(runByteCursor, runByteCursor + size);
+    const presentationTimeUs = timescale > 0 ? (localTick * 1_000_000) / timescale : 0;
+    const durationUs = timescale > 0 ? (duration * 1_000_000) / timescale : 0;
+
+    // Determine isKeyframe from the sample flags cascade:
+    //   1. per-sample rawSample.flags (if present)
+    //   2. trun.firstSampleFlags overrides sample 0 only (when trun.firstSampleFlags != null)
+    //   3. traf.defaultSampleFlags (per-traf default, if present)
+    //   4. trex.defaultSampleFlags (per-track default)
+    // bit 16 of flags (mask 0x010000) = sample_is_non_sync_sample.
+    // isKeyframe = (sampleFlags & 0x010000) === 0
+    let sampleFlags: number | null = rawSample.flags;
+    if (i === 0 && trun.firstSampleFlags !== null) {
+      // firstSampleFlags overrides per-sample flags for sample 0
+      sampleFlags = trun.firstSampleFlags;
+    }
+    if (sampleFlags === null) {
+      sampleFlags = traf.defaultSampleFlags ?? trex?.defaultSampleFlags ?? 0;
+    }
+    const isKeyframe = (sampleFlags & 0x010000) === 0;
+
+    yield {
+      kind: 'video',
+      index: globalSampleIndexStart + i,
+      presentationTimeUs,
+      durationUs,
+      isKeyframe,
+      data,
+    };
+
+    runByteCursor += size;
+    localTick += duration;
+  }
+}
+
+/**
+ * Auto-dispatching unified sample iterator. Dispatches on track sampleEntry.kind.
+ *
+ * - Audio tracks → delegates to iterateAudioSamplesAuto (returns AudioSample shaped).
+ * - Video tracks → delegates to iterateVideoSamples (classic) or iterateFragmentedVideoSamples.
+ *
+ * Returns Mp4Sample objects in all cases.
+ */
+export function* iterateSamples(file: Mp4File): Generator<Mp4Sample> {
+  const track = file.tracks[0];
+  if (!track) return;
+
+  if (track.sampleEntry.kind === 'video') {
+    if (file.isFragmented) {
+      yield* iterateFragmentedVideoSamples(file);
+    } else {
+      yield* iterateVideoSamples(track, file.fileBytes);
+    }
+  } else {
+    // Audio: adapt AudioSample → Mp4Sample.
+    const audioGen = file.isFragmented
+      ? iterateFragmentedAudioSamples(file)
+      : iterateAudioSamplesWithContext(track, file.fileBytes, file.movieHeader.timescale);
+    for (const s of audioGen) {
+      yield {
+        kind: 'audio',
+        index: s.index,
+        presentationTimeUs: s.timestampUs,
+        durationUs: s.durationUs,
+        isKeyframe: true, // AAC frames are always key frames
+        data: s.data,
+      };
+    }
   }
 }
