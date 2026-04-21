@@ -1,5 +1,5 @@
-import { findByExt } from '@webcvt/core';
-import type { FormatDescriptor } from '@webcvt/core';
+import { defaultRegistry, findByExt } from '@webcvt/core';
+import type { Backend, FormatDescriptor } from '@webcvt/core';
 
 export interface TargetOption {
   readonly format: FormatDescriptor;
@@ -13,11 +13,37 @@ function fmt(ext: string): FormatDescriptor {
   return f;
 }
 
-const imageCanvasLoader = (): Promise<void> => import('@webcvt/image-canvas').then(() => undefined);
-const imageLegacyLoader = (): Promise<void> => import('@webcvt/image-legacy').then(() => undefined);
-const subtitleLoader = (): Promise<void> => import('@webcvt/subtitle').then(() => undefined);
-const dataTextLoader = (): Promise<void> => import('@webcvt/data-text').then(() => undefined);
-const archiveZipLoader = (): Promise<void> => import('@webcvt/archive-zip').then(() => undefined);
+/**
+ * Register a backend instance, tolerating duplicate registration (can happen
+ * when the same loader runs twice across a user session). Looks up by backend
+ * name rather than class identity because the Backend's `name` is the
+ * registry's primary key.
+ */
+function tryRegister(backend: Backend): void {
+  if (defaultRegistry.list().some((b) => b.name === backend.name)) return;
+  defaultRegistry.register(backend);
+}
+
+const imageCanvasLoader = async (): Promise<void> => {
+  const mod = await import('@webcvt/image-canvas');
+  tryRegister(new mod.CanvasBackend());
+};
+const imageLegacyLoader = async (): Promise<void> => {
+  const mod = await import('@webcvt/image-legacy');
+  tryRegister(new mod.ImageLegacyBackend());
+};
+const subtitleLoader = async (): Promise<void> => {
+  const mod = await import('@webcvt/subtitle');
+  tryRegister(new mod.SubtitleBackend());
+};
+const dataTextLoader = async (): Promise<void> => {
+  const mod = await import('@webcvt/data-text');
+  tryRegister(new mod.DataTextBackend());
+};
+const archiveZipLoader = async (): Promise<void> => {
+  const mod = await import('@webcvt/archive-zip');
+  tryRegister(new mod.ArchiveBackend());
+};
 
 /**
  * Allowlist mapping input file extension to available conversion targets.
