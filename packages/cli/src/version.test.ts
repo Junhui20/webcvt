@@ -13,9 +13,10 @@ describe('readPackageVersion', () => {
     await expect(readPackageVersion()).resolves.toBeDefined();
   });
 
-  it('returns the version from package.json (0.0.0 in development)', async () => {
+  it('returns the version from package.json', async () => {
     const version = await readPackageVersion();
-    // In the monorepo dev environment, this is 0.0.0
-    expect(version).toBe('0.0.0');
+    // Semver string read from the CLI's own package.json; pinned to the
+    // minor so this test doesn't break on every patch bump.
+    expect(version).toMatch(/^0\.1\.\d+/);
   });
 });

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>webcvt — vanilla HTML example</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #e0e0e0;
+      max-width: 640px;
+      margin: 2rem auto;
+      padding: 1rem;
+      line-height: 1.6;
+    }
+    h1 { font-size: 1.5rem; }
+    code, pre { background: #1a1a1a; padding: 0.2em 0.4em; border-radius: 4px; }
+    pre { padding: 1rem; overflow-x: auto; }
+    input[type=file] { padding: 1rem; background: #1a1a1a; border: 1px dashed #444; border-radius: 4px; width: 100%; cursor: pointer; }
+    button { background: #0af; color: #000; border: 0; padding: 0.5em 1em; border-radius: 4px; cursor: pointer; margin-top: 1rem; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .log { margin-top: 1rem; padding: 0.5rem; background: #1a1a1a; border-radius: 4px; font-family: monospace; font-size: 0.9rem; min-height: 2em; }
+    a { color: #0af; }
+  </style>
+</head>
+<body>
+  <h1>webcvt — SRT → VTT in the browser</h1>
+  <p>A minimal example: no build tool, no bundler. One HTML file, ~15 lines of JavaScript.</p>
+
+  <pre><code>&lt;script type="module"&gt;
+  import { parseSrt, serializeVtt } from 'https://esm.sh/@webcvt/subtitle@0.1.0';
+  const srt = await file.text();
+  const vtt = serializeVtt(parseSrt(srt));
+&lt;/script&gt;</code></pre>
+
+  <h2>Try it</h2>
+  <input type="file" id="file" accept=".srt">
+  <button id="convert" disabled>Convert to WebVTT</button>
+  <div class="log" id="log">Choose a .srt file to begin.</div>
+
+  <p><a href="https://github.com/Junhui20/webcvt">Source on GitHub</a> · <a href="https://webcvt-io.pages.dev">Full playground</a></p>
+
+  <script type="module">
+    // This will work after @webcvt/subtitle v0.1.0 is published to npm.
+    // Until then, this page shows the intended API — see apps/playground
+    // for the workspace-integrated version.
+    import { parseSrt, serializeVtt } from 'https://esm.sh/@webcvt/subtitle@0.1.0';
+
+    const fileInput = document.getElementById('file');
+    const convertBtn = document.getElementById('convert');
+    const log = document.getElementById('log');
+    let selectedFile = null;
+
+    fileInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0] ?? null;
+      convertBtn.disabled = !selectedFile;
+      log.textContent = selectedFile
+        ? `Loaded ${selectedFile.name} (${selectedFile.size} B)`
+        : 'Choose a .srt file to begin.';
+    });
+
+    convertBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      try {
+        const srt = await selectedFile.text();
+        const track = parseSrt(srt);
+        const vtt = serializeVtt(track);
+        const blob = new Blob([vtt], { type: 'text/vtt' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = selectedFile.name.replace(/\.srt$/i, '.vtt');
+        a.click();
+        URL.revokeObjectURL(url);
+        log.textContent = `Converted ${track.cues.length} cues → ${vtt.length} bytes. Downloaded.`;
+      } catch (err) {
+        log.textContent = `Error: ${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
