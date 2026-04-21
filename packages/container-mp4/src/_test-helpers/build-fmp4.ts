@@ -144,18 +144,44 @@ function buildMvhd(timescale = 1000, duration = 0): Uint8Array {
 // ---------------------------------------------------------------------------
 
 function buildTkhd(trackId = 1, duration = 0): Uint8Array {
-  // tkhd v0: version(1)+flags(3)+creation(4)+mod(4)+track_ID(4)+reserved(4)+
-  //          duration(4)+reserved2(8)+layer(2)+alt_group(2)+volume(2)+reserved3(2)+
-  //          matrix(36)+width(4)+height(4) = 92 bytes
-  const payload = new Uint8Array(92);
-  writeU8(payload, 0, 0); // version
-  writeU8(payload, 3, 0x03); // flags = track_enabled | track_in_movie
-  writeU32BE(payload, 12, trackId);
-  writeU32BE(payload, 20, duration);
-  // matrix: unity
-  writeU32BE(payload, 36, 0x00010000);
-  writeU32BE(payload, 52, 0x00010000);
-  writeU32BE(payload, 68, 0x40000000);
+  // tkhd v0 payload layout per ISO/IEC 14496-12 §8.3.2 (84 bytes total):
+  //   0:  version(1)+flags(3)
+  //   4:  creation_time(u32)
+  //   8:  modification_time(u32)
+  //  12:  track_ID(u32)
+  //  16:  reserved(u32)
+  //  20:  duration(u32)
+  //  24:  reserved(u64)   — 8 bytes
+  //  32:  layer(i16)
+  //  34:  alternate_group(i16)
+  //  36:  volume(16.16)   — 2 bytes
+  //  38:  reserved(u16)
+  //  40:  matrix(u32[9])  — 36 bytes
+  //  76:  width(u32)
+  //  80:  height(u32)
+  // Total: 84 bytes
+  const payload = new Uint8Array(84);
+  const view = new DataView(payload.buffer);
+  payload[0] = 0; // version = 0
+  payload[3] = 0x03; // flags = track_enabled | track_in_movie
+  // creation_time=0 at 4, modification_time=0 at 8
+  view.setUint32(12, trackId, false);
+  // reserved=0 at 16
+  view.setUint32(20, duration, false);
+  // reserved 8 bytes at 24
+  // layer=0 at 32, alternate_group=0 at 34
+  // volume=0 at 36, reserved=0 at 38
+  // identity matrix at 40: [a=1,b=0,u=0, c=0,d=1,v=0, tx=0,ty=0,w=0x40000000]
+  view.setUint32(40, 0x00010000, false); // a
+  view.setUint32(44, 0, false);
+  view.setUint32(48, 0, false);
+  view.setUint32(52, 0, false);
+  view.setUint32(56, 0x00010000, false); // d
+  view.setUint32(60, 0, false);
+  view.setUint32(64, 0, false);
+  view.setUint32(68, 0, false);
+  view.setUint32(72, 0x40000000, false); // w
+  // width=0 at 76, height=0 at 80
   return wrapBox('tkhd', payload);
 }
 

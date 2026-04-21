@@ -31,7 +31,7 @@ import { type Mp4Ftyp, parseFtyp } from './boxes/ftyp.ts';
 import { type Mp4SampleEntry, parseHdlr, parseStsd, validateDref } from './boxes/hdlr-stsd-mp4a.ts';
 import type { Mp4MovieFragment, Mp4TrackFragment } from './boxes/moof.ts';
 import { parseMoof } from './boxes/moof.ts';
-import type { Mp4MvexResult, Mp4TrackExtends } from './boxes/mvex.ts';
+import type { Mp4Mehd, Mp4MvexResult, Mp4TrackExtends } from './boxes/mvex.ts';
 import { parseMvex } from './boxes/mvex.ts';
 import {
   type Mp4MediaHeader,
@@ -87,6 +87,14 @@ export type { Mp4SampleEntry };
 export interface Mp4Track {
   trackId: number;
   handlerType: 'soun' | 'vide';
+  /**
+   * Handler name string from the hdlr box (null-terminated UTF-8, nul stripped).
+   * Common values: 'SoundHandler', 'VideoHandler', 'Core Media Video', etc.
+   * Preserved for byte-identical round-trip (F5: same-length names pass size guard
+   * but differ in content without this field).
+   * Empty string when no name bytes are present.
+   */
+  handlerName: string;
   mediaHeader: Mp4MediaHeader;
   trackHeader: Mp4TrackHeader;
   /** Discriminated union: { kind: 'audio', entry } | { kind: 'video', entry }. */
@@ -162,10 +170,24 @@ export interface Mp4File {
   readonly sidx: null;
 
   /**
-   * Bytes from end-of-moov to end-of-file for byte-equivalent round-trip (D.4).
-   * null in sub-pass D; D.4 will populate this field.
+   * Bytes from end-of-init-segment to end-of-file for byte-equivalent round-trip (D.4).
+   * Populated by parseFragmented as input.subarray(max(ftypEnd, moovEnd)).slice().
+   * null for classic (non-fragmented) files.
    */
   readonly fragmentedTail: Uint8Array | null;
+
+  /**
+   * Original byte size of the moov box as parsed from the input (headerSize + payloadSize).
+   * Used by the fragmented serializer to verify moov byte-equivalence (size-change guard).
+   * null for classic (non-fragmented) files.
+   */
+  readonly originalMoovSize: number | null;
+
+  /**
+   * Parsed mehd (Movie Extends Header) from mvex/mehd, if present.
+   * null when the file has no mehd box or for classic (non-fragmented) files.
+   */
+  readonly mehd: Mp4Mehd | null;
 
   /**
    * Opaque `mfra` payload bytes (D.3 placeholder).
@@ -266,6 +288,7 @@ export function parseMp4(input: Uint8Array): Mp4File {
     return parseFragmented(
       input,
       ftyp,
+      firstBox,
       movieHeader,
       trakBoxes,
       moovBox,
@@ -353,6 +376,8 @@ function parseClassic(
     fragments: [],
     sidx: null,
     fragmentedTail: null,
+    originalMoovSize: null,
+    mehd: null,
     mfra: null,
   };
 }
@@ -364,6 +389,7 @@ function parseClassic(
 function parseFragmented(
   input: Uint8Array,
   ftyp: Mp4Ftyp,
+  ftypBox: Mp4Box,
   movieHeader: Mp4MovieHeader,
   trakBoxes: Mp4Box[],
   moovBox: Mp4Box,
@@ -398,7 +424,7 @@ function parseFragmented(
     tracks.push(track);
   }
 
-  // Parse mvex → trex defaults.
+  // Parse mvex → trex defaults and optional mehd.
   const mvexResult: Mp4MvexResult = parseMvex(mvexBox);
 
   // Walk top-level boxes after moov for moof, sidx, mfra (D.1 scope: skip sidx/mfra).
@@ -431,6 +457,16 @@ function parseFragmented(
     // sidx and mfra: silently skip in sub-pass D.
   }
 
+  // D.4: Compute fragmentedTail and originalMoovSize for byte-equivalent round-trip.
+  // Trap 3: ftyp may precede or follow moov (legacy QT layout) — use max of both ends.
+  const ftypEnd = ftypBox.payloadOffset + ftypBox.payloadSize;
+  const moovEnd = moovBox.payloadOffset + moovBox.payloadSize;
+  const initSegmentEnd = Math.max(ftypEnd, moovEnd);
+
+  // slice() — copy so we own the bytes independently of the input buffer.
+  const fragmentedTail = input.subarray(initSegmentEnd, input.length).slice();
+  const originalMoovSize = moovBox.headerSize + moovBox.payloadSize;
+
   return {
     ftyp,
     movieHeader,
@@ -443,7 +479,9 @@ function parseFragmented(
     trackExtends: mvexResult.trackExtends,
     fragments,
     sidx: null,
-    fragmentedTail: null,
+    fragmentedTail,
+    originalMoovSize,
+    mehd: mvexResult.mehd,
     mfra: null,
   };
 }
@@ -563,6 +601,7 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
   return {
     trackId: trackHeader.trackId,
     handlerType: handler.handlerType as 'soun' | 'vide',
+    handlerName: handler.name,
     mediaHeader,
     trackHeader,
     sampleEntry,
@@ -685,6 +724,7 @@ function parseTrakFragmented(
   return {
     trackId: trackHeader.trackId,
     handlerType: handler.handlerType as 'soun' | 'vide',
+    handlerName: handler.name,
     mediaHeader,
     trackHeader,
     sampleEntry,

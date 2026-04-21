@@ -25,6 +25,7 @@ import { isEditListTrivial, serializeElst } from './boxes/elst.ts';
 import { serializeEsdsPayload } from './boxes/esds.ts';
 import { type Mp4Ftyp, serializeFtyp } from './boxes/ftyp.ts';
 import { serializeHdlr, serializeMp4a } from './boxes/hdlr-stsd-mp4a.ts';
+import { buildMvexBox } from './boxes/mvex-serialize.ts';
 import { serializeMdhd, serializeMvhd, serializeTkhd } from './boxes/mvhd-tkhd-mdhd.ts';
 import {
   type StscEntry,
@@ -38,7 +39,11 @@ import {
 } from './boxes/stbl.ts';
 import { buildUdtaBox } from './boxes/udta-meta-ilst.ts';
 import { serializeVisualSampleEntry } from './boxes/visual-sample-entry.ts';
-import { Mp4FragmentedSerializeNotSupportedError, Mp4InvalidBoxError } from './errors.ts';
+import {
+  Mp4FragmentedMoovSizeChangedError,
+  Mp4FragmentedTailMissingError,
+  Mp4InvalidBoxError,
+} from './errors.ts';
 import type { Mp4File, Mp4Track } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -48,18 +53,20 @@ import type { Mp4File, Mp4Track } from './parser.ts';
 /**
  * Serialize an Mp4File to a canonical MP4 byte stream.
  *
- * Always emits faststart layout (ftyp → moov → mdat) regardless of the
- * original box order. Tracks are emitted in the same order as file.tracks
- * (file order, not sorted by trackId).
+ * For classic (non-fragmented) files: always emits faststart layout
+ * (ftyp → moov → mdat) regardless of the original box order. Tracks are
+ * emitted in the same order as file.tracks (file order, not sorted by trackId).
  *
- * mdat layout: track 0 samples, then track 1, etc. (flat, contiguous per track).
+ * For fragmented files: emits ftyp → moov → fragmentedTail (verbatim). Moov
+ * must be byte-size-equivalent to the original or Mp4FragmentedMoovSizeChangedError
+ * is thrown. No mdat rebuilding or offset patching is performed.
  *
- * @throws Mp4FragmentedSerializeNotSupportedError — input is a fragmented file (D.4).
+ * @throws Mp4FragmentedTailMissingError — fragmented file with null fragmentedTail/originalMoovSize.
+ * @throws Mp4FragmentedMoovSizeChangedError — rebuilt moov has different byte size than original.
  */
 export function serializeMp4(file: Mp4File): Uint8Array {
-  // Sub-pass D guard: fragmented round-trip serialization is not yet supported.
   if (file.isFragmented) {
-    throw new Mp4FragmentedSerializeNotSupportedError();
+    return serializeFragmented(file);
   }
 
   if (file.tracks.length === 0) {
@@ -122,6 +129,149 @@ export function serializeMp4(file: Mp4File): Uint8Array {
   const mdatBox = buildMdatBox(file, useLargesize, totalMdatPayloadSize);
 
   return concatBytes([ftypBytes, moovBytes, mdatBox]);
+}
+
+// ---------------------------------------------------------------------------
+// Fragmented round-trip path (D.4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Serialize a fragmented Mp4File to a byte stream.
+ *
+ * Contract: ftyp → moov → fragmentedTail (verbatim). The rebuilt moov must
+ * be byte-size-identical to the original. If it differs by even one byte,
+ * every moof data offset in the tail would be silently corrupted, so we
+ * throw Mp4FragmentedMoovSizeChangedError instead.
+ *
+ * @throws Mp4FragmentedTailMissingError — defensive guard; should never occur
+ *   for Mp4File instances produced by parseMp4.
+ * @throws Mp4FragmentedMoovSizeChangedError — moov size mismatch; metadata was
+ *   mutated (or a codec config changed size) after parsing.
+ */
+function serializeFragmented(file: Mp4File): Uint8Array {
+  if (file.fragmentedTail === null || file.originalMoovSize === null) {
+    throw new Mp4FragmentedTailMissingError();
+  }
+
+  const ftypBytes = buildFtypBox(file.ftyp);
+  const moovBytes = buildMoovFragmented(file);
+
+  if (moovBytes.length !== file.originalMoovSize) {
+    throw new Mp4FragmentedMoovSizeChangedError(file.originalMoovSize, moovBytes.length);
+  }
+
+  return concatBytes([ftypBytes, moovBytes, file.fragmentedTail]);
+}
+
+/**
+ * Build the moov box for a fragmented file.
+ *
+ * Canonical child order per ISO 14496-12 §8.2.1:
+ *   mvhd → trak* → mvex (mehd? + trex*) → udta?
+ *
+ * Each trak is built with zero-entry stbl tables (stts/stsc/stsz/stco or
+ * co64 with entry_count=0), preserving the original stco vs co64 variant.
+ */
+function buildMoovFragmented(file: Mp4File): Uint8Array {
+  // mvhd — preserve the original nextTrackId exactly to ensure byte-identical round-trip.
+  // Unlike the classic path, fragmented moov must be byte-stable (same content, same size).
+  // Recomputing nextTrackId would change the moov bytes without changing the size,
+  // producing a semantically valid but not byte-identical output.
+  const mvhdBytes = buildFullBox('mvhd', serializeMvhd(file.movieHeader));
+
+  // trak* — zero-entry stbl, preserving co64 vs stco variant.
+  const trakParts: Uint8Array[] = [];
+  for (const track of file.tracks) {
+    trakParts.push(buildTrakBoxFragmented(track, file.movieHeader.duration));
+  }
+
+  // mvex — plain container: mehd? + trex* in parsed order.
+  const mvexBytes = buildMvexBox(file.mehd, file.trackExtends);
+
+  // udta (optional).
+  const udtaBytes = buildUdtaBox(file.metadata, file.udtaOpaque);
+
+  const parts: Uint8Array[] = [mvhdBytes, ...trakParts, mvexBytes];
+  if (udtaBytes) {
+    parts.push(udtaBytes);
+  }
+
+  const moovPayload = concatBytes(parts);
+  const moovSize = 8 + moovPayload.length;
+  const out = new Uint8Array(moovSize);
+  writeBoxHeader(out, 0, moovSize, 'moov');
+  out.set(moovPayload, 8);
+  return out;
+}
+
+/**
+ * Build a trak box for a fragmented file.
+ *
+ * The stbl has zero-entry tables (entry_count=0 for stts/stsc/stsz) and
+ * preserves the original stco vs co64 variant for the chunk offset box.
+ */
+function buildTrakBoxFragmented(track: Mp4Track, movieDuration: number): Uint8Array {
+  const tkhdBytes = buildFullBox('tkhd', serializeTkhd(track.trackHeader));
+  const edtsBytes = buildEdtsBoxIfNeeded(track, movieDuration);
+  const mdiaBytes = buildMdiaBoxFragmented(track);
+
+  const parts = edtsBytes ? [tkhdBytes, edtsBytes, mdiaBytes] : [tkhdBytes, mdiaBytes];
+  return wrapContainer('trak', concatBytes(parts));
+}
+
+function buildMdiaBoxFragmented(track: Mp4Track): Uint8Array {
+  const mdhdBytes = buildFullBox('mdhd', serializeMdhd(track.mediaHeader));
+
+  // Use the parsed handlerName for byte-identical round-trip (F5).
+  // Nullish coalesce to empty string: matches encoders that emit a single NUL terminator.
+  const handlerName = track.handlerName ?? '';
+  const hdlrPayload = serializeHdlr({ handlerType: track.handlerType, name: handlerName });
+  const hdlrBytes = buildFullBox('hdlr', hdlrPayload);
+
+  const minfBytes = buildMinfBoxFragmented(track);
+
+  return wrapContainer('mdia', concatBytes([mdhdBytes, hdlrBytes, minfBytes]));
+}
+
+function buildMinfBoxFragmented(track: Mp4Track): Uint8Array {
+  // smhd (audio) or vmhd (video) media header box.
+  let mediaInfoBytes: Uint8Array;
+  if (track.handlerType === 'vide') {
+    const vmhdPayload = new Uint8Array(12); // all zeros
+    mediaInfoBytes = buildFullBox('vmhd', vmhdPayload);
+  } else {
+    const smhdPayload = new Uint8Array(8); // all zeros
+    mediaInfoBytes = buildFullBox('smhd', smhdPayload);
+  }
+
+  const drefBytes = buildDref();
+  const dinfBytes = wrapContainer('dinf', drefBytes);
+
+  const stblBytes = buildStblBoxFragmented(track);
+
+  return wrapContainer('minf', concatBytes([mediaInfoBytes, dinfBytes, stblBytes]));
+}
+
+/**
+ * Build the stbl box for a fragmented trak (zero-entry tables).
+ *
+ * Preserves the stco vs co64 variant from the original file (Trap 9 from
+ * the design spec — byte-equivalence requires the same box type).
+ */
+function buildStblBoxFragmented(track: Mp4Track): Uint8Array {
+  const stsdBytes = buildStsdBox(track);
+
+  // Zero-entry stts/stsc/stsz — these serializers produce deterministic
+  // zero-entry bytes (no special-case branches for empty arrays/typed arrays).
+  const sttsBytes = serializeStts([]);
+  const stscBytes = serializeStsc([]);
+  const stszBytes = serializeStsz(new Uint32Array(0));
+
+  // Preserve original stco vs co64 variant ([] → zero-entry of correct type).
+  const offsetBytes = track.chunkOffsetVariant === 'co64' ? serializeCo64([]) : serializeStco([]);
+
+  const stblPayload = concatBytes([stsdBytes, sttsBytes, stscBytes, stszBytes, offsetBytes]);
+  return wrapContainer('stbl', stblPayload);
 }
 
 // ---------------------------------------------------------------------------
@@ -231,8 +381,9 @@ function buildMdiaBox(
 ): Uint8Array {
   const mdhdBytes = buildFullBox('mdhd', serializeMdhd(track.mediaHeader));
 
-  // hdlr — use the handler type from the track.
-  const handlerName = track.handlerType === 'vide' ? 'VideoHandler' : 'SoundHandler';
+  // Use the parsed handlerName for byte-identical round-trip (F5).
+  // Nullish coalesce to empty string: matches encoders that emit a single NUL terminator.
+  const handlerName = track.handlerName ?? '';
   const hdlrPayload = serializeHdlr({ handlerType: track.handlerType, name: handlerName });
   const hdlrBytes = buildFullBox('hdlr', hdlrPayload);
 

@@ -56,9 +56,10 @@ describe('D.1: Fragmented MP4 detection', () => {
     expect(file.isFragmented).toBe(true);
     expect(file.trackExtends).toHaveLength(1);
     expect(file.fragments).toHaveLength(1);
-    // Stub fields set to null/empty per D.1 spec.
+    // D.4: fragmentedTail is now populated (non-null) for fragmented files.
     expect(file.sidx).toBeNull();
-    expect(file.fragmentedTail).toBeNull();
+    expect(file.fragmentedTail).not.toBeNull(); // populated in D.4
+    expect(file.originalMoovSize).not.toBeNull(); // populated in D.4
     expect(file.mfra).toBeNull();
   });
 
@@ -471,11 +472,14 @@ describe('D.2: moof parse + trun flags', () => {
     expect(samples).toHaveLength(0);
   });
 
-  it('D.2.16: serializer throws Mp4FragmentedSerializeNotSupportedError on fragmented file', () => {
+  it('D.2.16: serializer no longer throws Mp4FragmentedSerializeNotSupportedError (D.4 round-trip implemented)', () => {
+    // D.4 replaced the throw-guard with real round-trip serialization.
+    // Mp4FragmentedSerializeNotSupportedError is now @deprecated and never thrown.
     const bytes = buildMinimalFmp4({ sampleCount: 2, sampleSize: 4 });
     const file = parseMp4(bytes);
 
-    expect(() => serializeMp4(file)).toThrow(Mp4FragmentedSerializeNotSupportedError);
+    // Should succeed (round-trip) rather than throw.
+    expect(() => serializeMp4(file)).not.toThrow();
   });
 
   it('D.2.17: iterateFragmentedAudioSamples throws when called on non-fragmented file', async () => {

@@ -95,9 +95,11 @@ export {
   Mp4SidxReferenceCountTooLargeError,
   Mp4MfraOutOfBoundsError,
   Mp4FragmentMixedSampleTablesError,
+  /** @deprecated Sub-pass D.4 replaced this guard with real round-trip serialization. Never thrown. */
   Mp4FragmentedSerializeNotSupportedError,
   Mp4FragmentNotYetIteratedError,
   Mp4FragmentedMoovSizeChangedError,
+  Mp4FragmentedTailMissingError,
   // Video sample entry errors (sub-pass B):
   Mp4VisualSampleEntryTooSmallError,
   Mp4VisualDimensionOutOfRangeError,
@@ -151,3 +153,4 @@ export type { MetadataAtom, MetadataAtoms, MetadataValue } from './boxes/udta-me
 export type { Mp4MovieFragment, Mp4TrackFragment, Mp4TrackRun } from './parser.ts';
 export type { Mp4TrackExtends } from './parser.ts';
 export type { Mp4FragmentSample } from './boxes/trun.ts';
+export type { Mp4Mehd } from './boxes/mvex.ts';

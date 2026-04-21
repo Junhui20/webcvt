@@ -645,7 +645,10 @@ export class Mp4FragmentMixedSampleTablesError extends WebcvtError {
   }
 }
 
-/** Thrown when the serializer is called on a fragmented file (D.4 guard). */
+/**
+ * @deprecated Sub-pass D.4 replaced this guard with real round-trip serialization.
+ * This class is never thrown. Retained for source compatibility only.
+ */
 export class Mp4FragmentedSerializeNotSupportedError extends WebcvtError {
   constructor() {
     super(
@@ -653,6 +656,23 @@ export class Mp4FragmentedSerializeNotSupportedError extends WebcvtError {
       'Serializing fragmented MP4 files is not supported in sub-pass D. Round-trip serialization of fragmented files is planned for sub-pass D.4.',
     );
     this.name = 'Mp4FragmentedSerializeNotSupportedError';
+  }
+}
+
+/**
+ * Thrown by serializeMp4 when a file has isFragmented=true but fragmentedTail
+ * or originalMoovSize is null. This is a defensive guard: parseMp4 always
+ * populates both fields for fragmented files, so this error should never occur
+ * in normal usage. It can occur only if a caller manually constructs an Mp4File
+ * with inconsistent state.
+ */
+export class Mp4FragmentedTailMissingError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_FRAGMENTED_TAIL_MISSING',
+      'Mp4File.isFragmented is true but fragmentedTail or originalMoovSize is null.',
+    );
+    this.name = 'Mp4FragmentedTailMissingError';
   }
 }
 
