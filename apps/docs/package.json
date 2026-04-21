@@ -1,0 +1,17 @@
+{
+  "name": "@webcvt/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "test": "echo \"(docs site — run 'pnpm dev' to preview)\" && exit 0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitepress": "^1.5.0"
+  }
+}
