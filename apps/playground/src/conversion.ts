@@ -1,4 +1,4 @@
-import { NoBackendError, UnsupportedFormatError, WebcvtError, convert } from '@webcvt/core';
+import { NoBackendError, UnsupportedFormatError, WebcvtError, defaultRegistry } from '@webcvt/core';
 import type { ConvertResult, FormatDescriptor, ProgressEvent } from '@webcvt/core';
 import { loadBackend } from './backend-loader.ts';
 import type { TargetOption } from './backend-loader.ts';
@@ -12,6 +12,13 @@ export interface ConversionCallbacks {
 
 /**
  * Load the backend for `target` then run the conversion.
+ *
+ * We dispatch directly via the registry (rather than core's convert() wrapper)
+ * because the playground has already detected the input format via
+ * detectFormatWithHint (filename-based, supports text formats like SRT that
+ * have no magic bytes). core's convert() re-runs detectFormat() internally
+ * which returns undefined for those formats and throws UnsupportedFormatError.
+ *
  * Maps webcvt error types to PlaygroundError with trusted-HTML messages.
  * All user-controlled text fragments are escaped with escHtml().
  */
@@ -24,7 +31,11 @@ export async function runConversion(
   await loadBackend(target);
 
   try {
-    return await convert(file, {
+    const backend = await defaultRegistry.findFor(inputFormat, target.format);
+    if (!backend) {
+      throw new NoBackendError(inputFormat.ext, target.format.ext);
+    }
+    return await backend.convert(file, target.format, {
       format: target.format,
       onProgress: callbacks.onProgress,
       signal: callbacks.signal,
