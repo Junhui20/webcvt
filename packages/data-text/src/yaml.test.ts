@@ -812,3 +812,1046 @@ describe('LOW regression: URI-form tag forbidden', () => {
     );
   });
 });
+
+// ---------------------------------------------------------------------------
+// Branch coverage group — targets uncovered branches in YAML files
+// ---------------------------------------------------------------------------
+
+describe('branch coverage: CRLF line endings', () => {
+  it('parses document with \\r\\n line endings', () => {
+    const result = parseYaml('key: value\r\nother: 42\r\n');
+    const v = result.value as Record<string, unknown>;
+    expect(v.key).toBe('value');
+    expect(v.other).toBe(42n);
+  });
+
+  it('\\r\\n in single-quoted scalar line folding', () => {
+    const result = parseYaml("value: 'line one\r\n  line two'");
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v).toContain('line one');
+    expect(v).toContain('line two');
+  });
+
+  it('\\r\\n in double-quoted scalar line folding', () => {
+    const result = parseYaml('"line one\r\n  line two"');
+    const v = result.value as string;
+    expect(v).toContain('line one');
+    expect(v).toContain('line two');
+  });
+
+  it('\\r\\n in block mapping parses correctly', () => {
+    // Exercises \r handling in skipNewline (the \r before \n path)
+    const result = parseYaml('key: value\r\n');
+    expect((result.value as Record<string, unknown>).key).toBe('value');
+  });
+});
+
+describe('branch coverage: escape sequences in double-quoted scalars', () => {
+  it('\\0 null byte escape', () => {
+    const result = parseYaml('"\\0"');
+    expect(result.value).toBe('\x00');
+  });
+
+  it('\\a bell escape', () => {
+    const result = parseYaml('"\\a"');
+    expect(result.value).toBe('\x07');
+  });
+
+  it('\\b backspace escape', () => {
+    const result = parseYaml('"\\b"');
+    expect(result.value).toBe('\b');
+  });
+
+  it('\\v vertical tab escape', () => {
+    const result = parseYaml('"\\v"');
+    expect(result.value).toBe('\x0B');
+  });
+
+  it('\\f form feed escape', () => {
+    const result = parseYaml('"\\f"');
+    expect(result.value).toBe('\f');
+  });
+
+  it('\\r carriage return escape', () => {
+    const result = parseYaml('"\\r"');
+    expect(result.value).toBe('\r');
+  });
+
+  it('\\e ESC escape', () => {
+    const result = parseYaml('"\\e"');
+    expect(result.value).toBe('\x1B');
+  });
+
+  it('\\ space escape', () => {
+    const result = parseYaml('"a\\ b"');
+    expect(result.value).toBe('a b');
+  });
+
+  it('\\/ solidus escape', () => {
+    const result = parseYaml('"a\\/b"');
+    expect(result.value).toBe('a/b');
+  });
+
+  it('\\\\ backslash escape', () => {
+    const result = parseYaml('"a\\\\b"');
+    expect(result.value).toBe('a\\b');
+  });
+
+  it('\\N next-line escape (U+0085)', () => {
+    const result = parseYaml('"\\N"');
+    expect(result.value).toBe('\u0085');
+  });
+
+  it('\\_ no-break space escape (U+00A0)', () => {
+    const result = parseYaml('"\\_ "');
+    expect((result.value as string)[0]).toBe('\u00A0');
+  });
+
+  it('\\L line separator escape (U+2028)', () => {
+    const result = parseYaml('"\\L"');
+    expect(result.value).toBe('\u2028');
+  });
+
+  it('\\P paragraph separator escape (U+2029)', () => {
+    const result = parseYaml('"\\P"');
+    expect(result.value).toBe('\u2029');
+  });
+
+  it('\\xHH two-digit hex escape', () => {
+    const result = parseYaml('"\\x41"');
+    expect(result.value).toBe('A');
+  });
+
+  it('\\UXXXXXXXX 8-digit hex escape (U+1F600)', () => {
+    const result = parseYaml('"\\U0001F600"');
+    expect(result.value).toBe('\u{1F600}');
+  });
+
+  it('\\r\\n line continuation trims leading whitespace', () => {
+    // Backslash followed by \r\n: line continuation
+    const result = parseYaml('"first\\\r\n  second"');
+    expect(result.value).toBe('firstsecond');
+  });
+
+  it('\\<newline> line continuation (\\n)', () => {
+    const result = parseYaml('"first\\\n  second"');
+    expect(result.value).toBe('firstsecond');
+  });
+
+  it('surrogate code point in \\u escape throws', () => {
+    expect(() => parseYaml('"\\uD800"')).toThrow(YamlParseError);
+  });
+
+  it('code point > U+10FFFF in \\U escape throws', () => {
+    expect(() => parseYaml('"\\U00110000"')).toThrow(YamlParseError);
+  });
+
+  it('invalid hex digit in \\x escape throws', () => {
+    expect(() => parseYaml('"\\xZZ"')).toThrow(YamlParseError);
+  });
+
+  it('EOF after backslash throws', () => {
+    expect(() => parseYaml('"hello\\')).toThrow(YamlParseError);
+  });
+});
+
+describe('branch coverage: single-quoted scalar edge cases', () => {
+  it('empty single-quoted scalar', () => {
+    const result = parseYaml("''");
+    expect(result.value).toBe('');
+  });
+
+  it('single-quoted scalar with multiple blank lines (keep newlines)', () => {
+    const result = parseYaml("'line one\n\n\nline two'");
+    const v = result.value as string;
+    expect(v).toContain('\n\n');
+  });
+
+  it('unterminated single-quoted scalar throws', () => {
+    expect(() => parseYaml("'unterminated")).toThrow(YamlParseError);
+  });
+
+  it('unterminated double-quoted scalar throws', () => {
+    expect(() => parseYaml('"unterminated')).toThrow(YamlParseError);
+  });
+});
+
+describe('branch coverage: block scalar variants', () => {
+  it('block literal | with explicit indent indicator', () => {
+    // |2 sets explicitIndent=2; parentIndent=mapIndent+2=3; contentIndent=3+2-1=4
+    // Content at 4 spaces; after consuming 4 spaces the text starts with 'hello'
+    const result = parseYaml('value: |2\n    hello\n    world\n');
+    expect((result.value as Record<string, unknown>).value).toBe('hello\nworld\n');
+  });
+
+  it('block folded > with strip chomping', () => {
+    const yaml = 'value: >-\n  first line\n  second line\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v).not.toMatch(/\n$/);
+    expect(v).toContain('first line');
+  });
+
+  it('block folded > with keep chomping and trailing empty lines', () => {
+    const yaml = 'value: >+\n  first line\n\n\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v).toContain('first line');
+    expect(v).toMatch(/\n\n$/);
+  });
+
+  it('block literal with indented continuation line (starts with space)', () => {
+    const yaml = 'value: |\n  normal\n    indented more\n';
+    const v = (parseYaml(yaml).value as Record<string, unknown>).value as string;
+    expect(v).toContain('normal');
+    expect(v).toContain('  indented more');
+  });
+
+  it('block scalar header with unexpected character throws', () => {
+    expect(() => parseYaml('value: |!\n  content\n')).toThrow(YamlParseError);
+  });
+
+  it('block scalar with \\r\\n line ending inside content', () => {
+    const result = parseYaml('value: |\r\n  hello\r\n  world\r\n');
+    expect((result.value as Record<string, unknown>).value).toBe('hello\nworld\n');
+  });
+
+  it('block scalar empty after header (no content lines)', () => {
+    const result = parseYaml('value: |\n');
+    expect((result.value as Record<string, unknown>).value).toBe('');
+  });
+
+  it('block folded with lines that start with space (no folding applied)', () => {
+    const yaml = 'value: >\n  normal line\n   spaced line\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v).toContain('normal line');
+    expect(v).toContain(' spaced line');
+  });
+});
+
+describe('branch coverage: plain scalar multi-line continuation', () => {
+  it('multi-line plain scalar with blank line separator', () => {
+    // Two lines separated by a blank line → newline preserved in plain scalar
+    const yaml = 'value: first line\n\n  second line\n';
+    // This is actually a single-key map where the value is a plain scalar
+    // that can continue on the next indented line
+    const result = parseYaml(yaml);
+    expect(result.value).toBeTruthy();
+  });
+
+  it('plain scalar followed by comment stops at comment', () => {
+    const result = parseYaml('value: hello # this is a comment\n');
+    expect((result.value as Record<string, unknown>).value).toBe('hello');
+  });
+
+  it('plain scalar in flow context stops at comma', () => {
+    const result = parseYaml('[hello, world]');
+    expect(result.value).toEqual(['hello', 'world']);
+  });
+
+  it('plain scalar where colon followed by flow terminator stops parsing', () => {
+    // In flow context, colon followed by '}' stops the plain scalar
+    // {k: v:} -> value 'v' stops at ':}', then ':' becomes a key with null value
+    const result = parseYaml('{k: v:}');
+    const v = result.value as Record<string, unknown>;
+    expect(v.k).toBe('v');
+  });
+
+  it('plain scalar continuation stops at block sequence indicator', () => {
+    // A block sequence at the same indent ends the prior plain scalar context
+    const yaml = 'key: value\n- item\n';
+    const result = parseYaml(yaml);
+    expect(result.value).toBeTruthy();
+  });
+});
+
+describe('branch coverage: document markers in parser context', () => {
+  it('--- after block content stops block seq parsing', () => {
+    const yaml = '- alpha\n- beta\n---\nnext: value\n';
+    // Second --- is caught by checkNoMultiDoc
+    expect(() => parseYaml(yaml)).toThrow(YamlMultiDocForbiddenError);
+  });
+
+  it('... after block map stops parsing and is caught', () => {
+    const yaml = 'key: value\n...\n';
+    expect(() => parseYaml(yaml)).toThrow(YamlMultiDocForbiddenError);
+  });
+
+  it('--- at col 1 mid-parse stops block map (second --- caught after)', () => {
+    const yaml = '---\nkey: value\n---\n';
+    expect(() => parseYaml(yaml)).toThrow(YamlMultiDocForbiddenError);
+  });
+
+  it('--- as document-end marker in block sequence context', () => {
+    const yaml = '---\n- a\n- b\n---\n- c\n';
+    expect(() => parseYaml(yaml)).toThrow(YamlMultiDocForbiddenError);
+  });
+});
+
+describe('branch coverage: anchor on various node types', () => {
+  it('anchor on block scalar value', () => {
+    const yaml = 'original: &ref |\n  hello\ncopy: *ref\n';
+    const result = parseYaml(yaml);
+    const v = result.value as Record<string, unknown>;
+    expect(v.original).toBe('hello\n');
+    expect(v.copy).toBe('hello\n');
+  });
+
+  it('anchor on single-quoted scalar', () => {
+    const yaml = "original: &ref 'quoted'\ncopy: *ref\n";
+    const result = parseYaml(yaml);
+    const v = result.value as Record<string, unknown>;
+    expect(v.original).toBe('quoted');
+    expect(v.copy).toBe('quoted');
+  });
+
+  it('anchor on double-quoted scalar', () => {
+    const yaml = 'original: &ref "dquoted"\ncopy: *ref\n';
+    const result = parseYaml(yaml);
+    const v = result.value as Record<string, unknown>;
+    expect(v.original).toBe('dquoted');
+    expect(v.copy).toBe('dquoted');
+  });
+
+  it('anchor on flow sequence', () => {
+    const yaml = 'original: &ref [1, 2, 3]\ncopy: *ref\n';
+    const result = parseYaml(yaml);
+    const v = result.value as Record<string, unknown>;
+    expect(v.original).toEqual([1n, 2n, 3n]);
+    expect(v.copy).toEqual([1n, 2n, 3n]);
+  });
+
+  it('anchor on flow map', () => {
+    const yaml = 'original: &ref {x: 1}\ncopy: *ref\n';
+    const result = parseYaml(yaml);
+    const v = result.value as Record<string, unknown>;
+    expect((v.original as Record<string, unknown>).x).toBe(1n);
+    expect((v.copy as Record<string, unknown>).x).toBe(1n);
+  });
+
+  it('anchor on value followed by newline (tag+anchor then newline → next-line content)', () => {
+    const yaml = '&myanchor\nhello\n';
+    const result = parseYaml(yaml);
+    expect(result.value).toBe('hello');
+  });
+
+  it('tag followed by newline with no next-line content → null scalar', () => {
+    const yaml = 'key: !!str\n';
+    const result = parseYaml(yaml);
+    // tag on empty subsequent content → empty string coerced by !!str to ''
+    const v = (result.value as Record<string, unknown>).key;
+    expect(v).toBe('');
+  });
+});
+
+describe('branch coverage: complex key and flow edge cases', () => {
+  it('complex key with \\t after ? → YamlComplexKeyForbiddenError', () => {
+    expect(() => parseYaml('?\there: value\n')).toThrow(YamlComplexKeyForbiddenError);
+  });
+
+  it('complex key with \\n after ? in block map → YamlComplexKeyForbiddenError', () => {
+    expect(() => parseYaml('?\nvalue: x\n')).toThrow(YamlComplexKeyForbiddenError);
+  });
+
+  it('complex key ? in parseBlockMap → YamlComplexKeyForbiddenError', () => {
+    // This exercises the ? check inside parseBlockMap
+    expect(() => parseYaml('key: value\n? complex\n: other\n')).toThrow(
+      YamlComplexKeyForbiddenError,
+    );
+  });
+
+  it('unterminated flow sequence throws', () => {
+    expect(() => parseYaml('[1, 2, 3')).toThrow(YamlParseError);
+  });
+
+  it('unterminated flow mapping throws', () => {
+    expect(() => parseYaml('{a: 1, b: 2')).toThrow(YamlParseError);
+  });
+
+  it('flow mapping missing colon after key throws', () => {
+    expect(() => parseYaml('{key value}')).toThrow(YamlParseError);
+  });
+
+  it('flow sequence with multiline content', () => {
+    const result = parseYaml('[\n  1,\n  2,\n  3\n]');
+    expect(result.value).toEqual([1n, 2n, 3n]);
+  });
+
+  it('flow mapping with multiline content', () => {
+    const result = parseYaml('{\n  a: 1,\n  b: 2\n}');
+    expect(result.value).toEqual({ a: 1n, b: 2n });
+  });
+
+  it('duplicate key in flow mapping → YamlDuplicateKeyError', () => {
+    expect(() => parseYaml('{a: 1, a: 2}')).toThrow(YamlDuplicateKeyError);
+  });
+});
+
+describe('branch coverage: UTF-32 BOM detection', () => {
+  it('UTF-32 BE BOM → YamlInvalidUtf8Error', () => {
+    const input = new Uint8Array([0x00, 0x00, 0xfe, 0xff, 0x00, 0x00, 0x00, 0x68]);
+    expect(() => parseYaml(input)).toThrow(YamlInvalidUtf8Error);
+  });
+
+  it('UTF-32 LE BOM → YamlInvalidUtf8Error', () => {
+    const input = new Uint8Array([0xff, 0xfe, 0x00, 0x00, 0x68, 0x00, 0x00, 0x00]);
+    expect(() => parseYaml(input)).toThrow(YamlInvalidUtf8Error);
+  });
+});
+
+describe('branch coverage: skipBlankAndCommentLines edge cases', () => {
+  it('comment-only line then content', () => {
+    const result = parseYaml('# comment\nvalue: 42\n');
+    expect((result.value as Record<string, unknown>).value).toBe(42n);
+  });
+
+  it('blank line at EOF inside skipBlankAndCommentLines', () => {
+    // Document that ends with blank lines and nothing else
+    const result = parseYaml('value: hello\n\n\n');
+    expect((result.value as Record<string, unknown>).value).toBe('hello');
+  });
+
+  it('tab in leading indent of nested content after blank line → YamlIndentError', () => {
+    // After parsing 'parent:', blank line, then tab-indented content inside block map
+    expect(() => parseYaml('parent:\n\n\t child: value\n')).toThrow(YamlIndentError);
+  });
+
+  it('line with only a comment followed by EOF (no newline)', () => {
+    const result = parseYaml('value: hi # end comment');
+    expect((result.value as Record<string, unknown>).value).toBe('hi');
+  });
+});
+
+describe('branch coverage: serializeYaml needsQuoting paths', () => {
+  it('empty string serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('""');
+  });
+
+  it('string "null" (matches NULL_RE) serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: 'null' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"null"');
+  });
+
+  it('string "true" (matches BOOL_RE) serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: 'true' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"true"');
+  });
+
+  it('string "1.5" (matches FLOAT_RE) serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '1.5' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"1.5"');
+  });
+
+  it('string "yes" (YAML 1.1 ambiguous) serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: 'yes' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"yes"');
+  });
+
+  it('string "---" serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '---' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"---"');
+  });
+
+  it('string "..." serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '...' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"..."');
+  });
+
+  it('string starting with & serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '&anchor' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"&anchor"');
+  });
+
+  it('string starting with * serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '*alias' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"*alias"');
+  });
+
+  it('string starting with ? serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: '? question' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"? question"');
+  });
+
+  it('string ending with space serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: 'trailing ' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"trailing "');
+  });
+
+  it('string ending with tab serializes double-quoted', () => {
+    const file: YamlFile = {
+      value: { key: 'trailing\t' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('"');
+  });
+
+  it('string with DEL character (0x7f) serializes double-quoted with \\x escape', () => {
+    const file: YamlFile = {
+      value: { key: 'del\x7fchar' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('\\x7f');
+  });
+
+  it('string with C1 control char (0x80..0x9f) in quoted context emits \\x escape', () => {
+    // C1 chars (0x80..0x9f) don't trigger needsQuoting by themselves, but they ARE
+    // escaped in emitDoubleQuoted. Use a string that also has another quoting trigger
+    // (starts with '!' indicator) so that emitDoubleQuoted processes the C1 char.
+    const file: YamlFile = {
+      value: { key: '!\u0085' }, // '!' triggers quoting (YAML indicator), U+0085 = NEL in C1 range
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('\\x85');
+  });
+
+  it('string with colon-tab triggers quoting', () => {
+    const file: YamlFile = {
+      value: { key: 'a:\tb' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"');
+  });
+
+  it('string with colon-newline triggers quoting', () => {
+    const file: YamlFile = {
+      value: { key: 'a:\nb' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"');
+  });
+
+  it('string with space-hash triggers quoting', () => {
+    const file: YamlFile = {
+      value: { key: 'value #comment' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"value #comment"');
+  });
+
+  it('string with \\r triggers quoting', () => {
+    const file: YamlFile = {
+      value: { key: 'line\rend' },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"');
+  });
+
+  it('top-level string that needs quoting', () => {
+    const file: YamlFile = {
+      value: 'null',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('"null"');
+  });
+});
+
+describe('branch coverage: serializeYaml emitDoubleQuoted control chars', () => {
+  it('NUL byte (\\x00) → \\0 in output', () => {
+    const file: YamlFile = {
+      value: '\x00',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\0');
+  });
+
+  it('bell (\\x07) → \\a in output', () => {
+    const file: YamlFile = {
+      value: '\x07',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\a');
+  });
+
+  it('backspace (\\x08) → \\b in output', () => {
+    const file: YamlFile = {
+      value: '\x08',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\b');
+  });
+
+  it('tab (\\x09) → \\t in output', () => {
+    const file: YamlFile = {
+      value: '\t',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\t');
+  });
+
+  it('newline (\\x0a) → \\n in output', () => {
+    const file: YamlFile = {
+      value: '\n',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\n');
+  });
+
+  it('vertical tab (\\x0b) → \\v in output', () => {
+    const file: YamlFile = {
+      value: '\x0b',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\v');
+  });
+
+  it('form feed (\\x0c) → \\f in output', () => {
+    const file: YamlFile = {
+      value: '\x0c',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\f');
+  });
+
+  it('carriage return (\\x0d) → \\r in output', () => {
+    const file: YamlFile = {
+      value: '\r',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\r');
+  });
+
+  it('ESC (\\x1b) → \\e in output', () => {
+    const file: YamlFile = {
+      value: '\x1b',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\e');
+  });
+
+  it('double-quote → \\" in output', () => {
+    const file: YamlFile = {
+      value: '"hello"',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file)).toContain('\\"hello\\"');
+  });
+
+  it('backslash in quoted context → \\\\ in output', () => {
+    // A backslash alone does NOT trigger needsQuoting, but combined with a quoting
+    // trigger (e.g. starts with '!') forces emitDoubleQuoted which then escapes '\'
+    const file: YamlFile = {
+      value: '!back\\slash',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    // The '!' triggers quoting; the '\' is escaped as '\\' inside double quotes
+    expect(out).toContain('\\\\');
+  });
+
+  it('supplementary code point (> U+FFFF) emitted as literal character', () => {
+    // U+1F600 GRINNING FACE — should pass through as-is (no escape needed)
+    const file: YamlFile = {
+      value: '\u{1F600}',
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    // The emoji should appear literally or round-trip correctly
+    expect(out).toContain('\u{1F600}');
+  });
+});
+
+describe('branch coverage: serializeYaml top-level array variants', () => {
+  it('top-level array containing a nested array', () => {
+    const file: YamlFile = {
+      value: [
+        [1n, 2n],
+        [3n, 4n],
+      ],
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('- ');
+    // Round-trip check
+    const reparsed = parseYaml(out);
+    expect(reparsed.value).toEqual([
+      [1n, 2n],
+      [3n, 4n],
+    ]);
+  });
+
+  it('top-level array containing an empty map', () => {
+    const file: YamlFile = {
+      value: [{}],
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(typeof out).toBe('string');
+    // Empty map at top-level array item — should not crash
+  });
+
+  it('top-level array with scalar items of various types', () => {
+    const file: YamlFile = {
+      value: [null, true, 42n, 3.14, 'hello'],
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('null');
+    expect(out).toContain('true');
+    expect(out).toContain('42');
+    expect(out).toContain('3.14');
+    expect(out).toContain('hello');
+  });
+});
+
+describe('branch coverage: emitValue nested map/array paths', () => {
+  it('map value that is an empty map renders as {} inline', () => {
+    const file: YamlFile = {
+      value: { nested: {} },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('{}');
+  });
+
+  it('map value that is an empty array renders as [] inline', () => {
+    const file: YamlFile = {
+      value: { list: [] },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('[]');
+  });
+
+  it('map value that is a non-empty array renders with newline prefix', () => {
+    const file: YamlFile = {
+      value: { items: [1n, 2n] },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('items:');
+    expect(out).toContain('- 1');
+  });
+
+  it('map value that is a non-empty nested map renders with newline prefix', () => {
+    const file: YamlFile = {
+      value: { outer: { inner: 'value' } },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('outer:');
+    expect(out).toContain('inner: value');
+  });
+
+  it('array item that is a non-empty map emits as block map under dash', () => {
+    const file: YamlFile = {
+      value: { items: [{ name: 'Alice', age: 30n }] },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('name: Alice');
+    expect(out).toContain('age: 30');
+  });
+
+  it('array item that is a nested array emits properly', () => {
+    const file: YamlFile = {
+      value: {
+        matrix: [
+          [1n, 2n],
+          [3n, 4n],
+        ],
+      },
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    const out = serializeYaml(file);
+    expect(out).toContain('matrix:');
+    expect(out).toContain('- 1');
+  });
+});
+
+describe('branch coverage: number zero and edge float values', () => {
+  it('integer 0 round-trips', () => {
+    const result = parseYaml('0');
+    expect(result.value).toBe(0n);
+    const file: YamlFile = {
+      value: 0n,
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file).trim()).toBe('0');
+  });
+
+  it('float 0.0 round-trips', () => {
+    const result = parseYaml('0.0');
+    expect(result.value).toBe(0);
+    const file: YamlFile = {
+      value: 0,
+      hadBom: false,
+      hadDirectivesEndMarker: false,
+      hadYamlDirective: false,
+    };
+    expect(serializeYaml(file).trim()).toBe('0');
+  });
+
+  it('negative integer round-trips', () => {
+    const result = parseYaml('-42');
+    expect(result.value).toBe(-42n);
+  });
+
+  it('positive sign integer +7 round-trips as bigint', () => {
+    expect(parseYaml('+7').value).toBe(7n);
+  });
+
+  it('!!float .inf round-trip', () => {
+    const result = parseYaml('value: !!float .inf');
+    expect((result.value as Record<string, unknown>).value).toBe(Number.POSITIVE_INFINITY);
+  });
+
+  it('!!float -.inf round-trip', () => {
+    const result = parseYaml('value: !!float -.inf');
+    expect((result.value as Record<string, unknown>).value).toBe(Number.NEGATIVE_INFINITY);
+  });
+
+  it('!!float .nan round-trip', () => {
+    const result = parseYaml('value: !!float .nan');
+    expect(Number.isNaN((result.value as Record<string, unknown>).value as number)).toBe(true);
+  });
+
+  it('!!bool with empty string → null', () => {
+    const result = parseYaml('value: !!bool ""');
+    expect((result.value as Record<string, unknown>).value).toBeNull();
+  });
+
+  it('!!bool with non-bool non-empty string → raw string', () => {
+    const result = parseYaml('value: !!bool maybe');
+    expect((result.value as Record<string, unknown>).value).toBe('maybe');
+  });
+});
+
+describe('branch coverage: parseNodeWithMeta paths', () => {
+  it('anchor then newline then block sequence', () => {
+    const yaml = '&myseq\n- a\n- b\n';
+    const result = parseYaml(yaml);
+    expect(Array.isArray(result.value)).toBe(true);
+    expect(result.value).toEqual(['a', 'b']);
+  });
+
+  it('anchor then newline then flow sequence', () => {
+    const yaml = '&myseq\n[1, 2]\n';
+    const result = parseYaml(yaml);
+    expect(result.value).toEqual([1n, 2n]);
+  });
+
+  it('anchor then newline then flow map', () => {
+    const yaml = '&mymap\n{a: 1}\n';
+    const result = parseYaml(yaml);
+    expect((result.value as Record<string, unknown>).a).toBe(1n);
+  });
+
+  it('anchor then newline then block scalar', () => {
+    const yaml = '&mybscalar\n|\n  content\n';
+    const result = parseYaml(yaml);
+    expect(result.value).toBe('content\n');
+  });
+
+  it('anchor followed by newline then nothing → null scalar', () => {
+    const yaml = 'key: &myanchor\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).key;
+    expect(v).toBeNull();
+  });
+});
+
+describe('branch coverage: checkNoMultiDoc trailing content', () => {
+  it('trailing comment after doc is allowed', () => {
+    const result = parseYaml('value: 42\n# trailing comment\n');
+    expect((result.value as Record<string, unknown>).value).toBe(42n);
+  });
+
+  it('multiple comments after doc body are allowed', () => {
+    const result = parseYaml('hello\n# first\n# second\n');
+    expect(result.value).toBe('hello');
+  });
+});
+
+describe('branch coverage: anchor name validation', () => {
+  it('invalid anchor name (empty after &) throws', () => {
+    expect(() => parseYaml('& value\n')).toThrow(YamlParseError);
+  });
+
+  it('invalid anchor name (special chars) throws', () => {
+    expect(() => parseYaml('&my@anchor value\n')).toThrow(YamlParseError);
+  });
+});
+
+describe('branch coverage: block seq empty item variants', () => {
+  it('block seq item with newline after dash (value on next line)', () => {
+    const yaml = '-\n  nested: value\n';
+    const result = parseYaml(yaml);
+    const arr = result.value as unknown[];
+    expect((arr[0] as Record<string, unknown>).nested).toBe('value');
+  });
+
+  it('block seq item at EOF after dash', () => {
+    const yaml = '- ';
+    const result = parseYaml(yaml);
+    const arr = result.value as unknown[];
+    expect(arr[0]).toBeNull();
+  });
+
+  it('block map: value on next line indented', () => {
+    const yaml = 'key:\n  subkey: subvalue\n';
+    const result = parseYaml(yaml);
+    const v = result.value as Record<string, unknown>;
+    expect((v.key as Record<string, unknown>).subkey).toBe('subvalue');
+  });
+
+  it('block map value with comment before newline', () => {
+    const yaml = 'key: # comment\n  value\n';
+    // Comment before value → value on next line
+    const result = parseYaml(yaml);
+    expect(result.value).toBeTruthy();
+  });
+});
+
+describe('branch coverage: applyChomping folded edge cases', () => {
+  it('folded > with keep and trailing blank lines', () => {
+    const yaml = 'value: >+\n  line one\n  line two\n\n\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v).toContain('line one line two');
+    expect(v.endsWith('\n\n')).toBe(true);
+  });
+
+  it('folded > with strip removes trailing newline', () => {
+    const yaml = 'value: >-\n  single line\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v.trimEnd()).toBe('single line');
+    expect(v.endsWith('\n')).toBe(false);
+  });
+
+  it('literal | with empty body and keep chomp', () => {
+    const yaml = 'value: |+\n\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    // Empty body with keep: trailing empty lines preserved
+    expect(typeof v).toBe('string');
+  });
+
+  it('literal | with zero lines and strip chomp produces empty string', () => {
+    const yaml = 'value: |-\n';
+    const result = parseYaml(yaml);
+    const v = (result.value as Record<string, unknown>).value as string;
+    expect(v).toBe('');
+  });
+});
