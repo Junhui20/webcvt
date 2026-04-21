@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: 5/6 (+ second-pass A/F: elst shipped) · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: 2/8 (`@webcvt/cli` + `@webcvt/backend-wasm`)** · CI green · 3,733 tests passing · 22 packages · last revised 2026-04-20
+- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: 5/6 (+ second-pass A/F + E/F: elst, udta/meta/ilst shipped) · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: 2/8 (`@webcvt/cli` + `@webcvt/backend-wasm`)** · CI green · 3,776 tests passing · 22 packages · last revised 2026-04-20
 
 ---
 

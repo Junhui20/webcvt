@@ -77,3 +77,25 @@ export const CANONICAL_COMPATIBLE_BRANDS = ['isom', 'mp42', 'M4A '];
  * Real files have ≤4 entries. 4096 keeps worst-case allocation under 100 KB.
  */
 export const MAX_ELST_ENTRIES = 4096;
+
+// ---------------------------------------------------------------------------
+// udta/meta/ilst security caps
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum number of ilst child atoms (metadata entries).
+ * Real files have ≤30 entries. 1024 is a generous cap.
+ */
+export const MAX_METADATA_ATOMS = 1024;
+
+/**
+ * Maximum payload bytes for a single non-cover-art metadata atom (4 MiB).
+ * Bounds memory use from crafted large payloads.
+ */
+export const MAX_METADATA_PAYLOAD_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Maximum payload bytes for a single cover art (covr) data atom (16 MiB).
+ * Cover images can legitimately be large (high-res album art).
+ */
+export const MAX_COVER_ART_BYTES = 16 * 1024 * 1024;

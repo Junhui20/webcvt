@@ -36,6 +36,7 @@ import {
   serializeStsz,
   serializeStts,
 } from './boxes/stbl.ts';
+import { buildUdtaBox } from './boxes/udta-meta-ilst.ts';
 import type { Mp4File, Mp4Track } from './parser.ts';
 
 // ---------------------------------------------------------------------------
@@ -117,7 +118,15 @@ function buildMoovBox(
   const mvhdBytes = buildFullBox('mvhd', serializeMvhd(file.movieHeader));
   const trakBytes = buildTrakBox(track, chunkOffsets, useCo64, file.movieHeader.duration);
 
-  const moovPayload = concatBytes([mvhdBytes, trakBytes]);
+  // Insert udta after trak (canonical ffmpeg/mp4box order). Returns null when empty.
+  const udtaBytes = buildUdtaBox(file.metadata, file.udtaOpaque);
+
+  const parts: Uint8Array[] = [mvhdBytes, trakBytes];
+  if (udtaBytes) {
+    parts.push(udtaBytes);
+  }
+
+  const moovPayload = concatBytes(parts);
   const moovSize = 8 + moovPayload.length;
   const out = new Uint8Array(moovSize);
   writeBoxHeader(out, 0, moovSize, 'moov');

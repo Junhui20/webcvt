@@ -49,11 +49,13 @@ import {
   parseStsz,
   parseStts,
 } from './boxes/stbl.ts';
+import { type MetadataAtoms, parseUdta } from './boxes/udta-meta-ilst.ts';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import {
   Mp4CorruptSampleError,
   Mp4InputTooLargeError,
   Mp4InvalidBoxError,
+  Mp4MetaBadHandlerError,
   Mp4MissingBoxError,
   Mp4MissingFtypError,
   Mp4MissingMoovError,
@@ -95,6 +97,16 @@ export interface Mp4File {
   mdatRanges: Array<{ offset: number; length: number }>;
   /** Reference to the original input buffer for zero-copy sample access. */
   fileBytes: Uint8Array;
+  /**
+   * Parsed iTunes-style movie metadata from moov/udta/meta/ilst.
+   * Empty array when no udta/meta/ilst is present or handler is non-mdir.
+   */
+  metadata: MetadataAtoms;
+  /**
+   * Opaque bytes from `udta` when `meta` is absent or `hdlr.handler_type != 'mdir'`.
+   * Null when udta was fully parsed into `metadata` or absent entirely.
+   */
+  udtaOpaque: Uint8Array | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -194,12 +206,34 @@ export function parseMp4(input: Uint8Array): Mp4File {
   // Mp4CorruptStreamError is reserved for top-level structural failures (no ftyp,
   // no moov) — see errors.ts for its defined use cases.
 
+  // Step 8: parse moov/udta/meta/ilst (optional — missing udta is normal).
+  let metadata: MetadataAtoms = [];
+  let udtaOpaque: Uint8Array | null = null;
+
+  const udtaBox = findChild(moovBox, 'udta');
+  if (udtaBox) {
+    try {
+      const result = parseUdta(udtaBox.payload);
+      metadata = result.metadata;
+      udtaOpaque = result.opaque;
+    } catch (err) {
+      if (err instanceof Mp4MetaBadHandlerError) {
+        // Trap 7: non-mdir handler → preserve entire udta payload as opaque
+        udtaOpaque = udtaBox.payload.slice();
+      } else {
+        throw err;
+      }
+    }
+  }
+
   return {
     ftyp,
     movieHeader,
     tracks,
     mdatRanges,
     fileBytes: input,
+    metadata,
+    udtaOpaque,
   };
 }
 

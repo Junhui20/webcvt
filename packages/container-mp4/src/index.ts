@@ -45,6 +45,13 @@ export {
   Mp4ElstSignBitError,
   Mp4ElstValueOutOfRangeError,
   Mp4ElstMultiSegmentNotSupportedError,
+  Mp4MetaBadHandlerError,
+  Mp4MetaBadDataTypeError,
+  Mp4MetaTooManyAtomsError,
+  Mp4MetaCoverArtTooLargeError,
+  Mp4MetaFreeformIncompleteError,
+  Mp4MetaBadTrackNumberError,
+  Mp4MetaPayloadTooLargeError,
 } from './errors.ts';
 
 // Core types re-exported for convenience.
@@ -61,3 +68,5 @@ export type { Mp4AudioSampleEntry } from './boxes/hdlr-stsd-mp4a.ts';
 export type { Mp4SampleTable } from './boxes/stbl.ts';
 
 export type { EditListEntry } from './boxes/elst.ts';
+
+export type { MetadataAtom, MetadataAtoms, MetadataValue } from './boxes/udta-meta-ilst.ts';

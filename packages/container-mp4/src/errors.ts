@@ -290,3 +290,101 @@ export class Mp4ElstMultiSegmentNotSupportedError extends WebcvtError {
     this.name = 'Mp4ElstMultiSegmentNotSupportedError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// udta/meta/ilst (Movie Metadata) errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when hdlr.handler_type inside meta is not 'mdir'.
+ * The caller should preserve the entire udta as opaque bytes.
+ */
+export class Mp4MetaBadHandlerError extends WebcvtError {
+  constructor(handlerType: string) {
+    super(
+      'MP4_META_BAD_HANDLER',
+      `meta hdlr handler_type is "${handlerType}"; expected "mdir" for iTunes-style metadata. udta will be preserved as opaque bytes.`,
+    );
+    this.name = 'Mp4MetaBadHandlerError';
+  }
+}
+
+/**
+ * Thrown when the high byte of a `data` sub-box type_indicator is non-zero.
+ * The spec requires the high byte to be 0x00.
+ */
+export class Mp4MetaBadDataTypeError extends WebcvtError {
+  constructor(typeIndicatorFull: number) {
+    super(
+      'MP4_META_BAD_DATA_TYPE',
+      `ilst 'data' box type_indicator 0x${typeIndicatorFull.toString(16).toUpperCase().padStart(8, '0')} has a non-zero high byte; this is not a valid well-known type indicator.`,
+    );
+    this.name = 'Mp4MetaBadDataTypeError';
+  }
+}
+
+/**
+ * Thrown when the number of ilst child atoms exceeds MAX_METADATA_ATOMS.
+ */
+export class Mp4MetaTooManyAtomsError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'MP4_META_TOO_MANY_ATOMS',
+      `ilst contains more than ${max} atoms (found at least ${count}). Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4MetaTooManyAtomsError';
+  }
+}
+
+/**
+ * Thrown when a cover art payload exceeds MAX_COVER_ART_BYTES (16 MiB).
+ */
+export class Mp4MetaCoverArtTooLargeError extends WebcvtError {
+  constructor(size: number, max: number) {
+    super(
+      'MP4_META_COVER_ART_TOO_LARGE',
+      `covr data payload is ${size} bytes; maximum is ${max} bytes (16 MiB). Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4MetaCoverArtTooLargeError';
+  }
+}
+
+/**
+ * Thrown when a '----' freeform atom is missing mean, name, or data children
+ * or they appear in the wrong order.
+ */
+export class Mp4MetaFreeformIncompleteError extends WebcvtError {
+  constructor(reason: string) {
+    super(
+      'MP4_META_FREEFORM_INCOMPLETE',
+      `'----' freeform atom is incomplete or malformed: ${reason}`,
+    );
+    this.name = 'Mp4MetaFreeformIncompleteError';
+  }
+}
+
+/**
+ * Thrown when a 'trkn' or 'disk' atom has a binary payload that is not exactly 8 bytes.
+ */
+export class Mp4MetaBadTrackNumberError extends WebcvtError {
+  constructor(key: string, length: number) {
+    super(
+      'MP4_META_BAD_TRACK_NUMBER',
+      `'${key}' binary payload must be exactly 8 bytes ([u16 0][u16 cur][u16 total][u16 0]); got ${length} bytes.`,
+    );
+    this.name = 'Mp4MetaBadTrackNumberError';
+  }
+}
+
+/**
+ * Thrown when a non-cover-art metadata payload exceeds MAX_METADATA_PAYLOAD_BYTES (4 MiB).
+ */
+export class Mp4MetaPayloadTooLargeError extends WebcvtError {
+  constructor(key: string, size: number, max: number) {
+    super(
+      'MP4_META_PAYLOAD_TOO_LARGE',
+      `Metadata atom '${key}' payload is ${size} bytes; maximum is ${max} bytes (4 MiB). Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4MetaPayloadTooLargeError';
+  }
+}
