@@ -22,6 +22,7 @@
  */
 
 import { writeBoxHeader, writeLargeBoxHeader } from './box-header.ts';
+import { isEditListTrivial, serializeElst } from './boxes/elst.ts';
 import { serializeEsdsPayload } from './boxes/esds.ts';
 import { type Mp4Ftyp, serializeFtyp } from './boxes/ftyp.ts';
 import { serializeHdlr, serializeMp4a, serializeStsd } from './boxes/hdlr-stsd-mp4a.ts';
@@ -114,7 +115,7 @@ function buildMoovBox(
   useCo64: boolean,
 ): Uint8Array {
   const mvhdBytes = buildFullBox('mvhd', serializeMvhd(file.movieHeader));
-  const trakBytes = buildTrakBox(track, chunkOffsets, useCo64);
+  const trakBytes = buildTrakBox(track, chunkOffsets, useCo64, file.movieHeader.duration);
 
   const moovPayload = concatBytes([mvhdBytes, trakBytes]);
   const moovSize = 8 + moovPayload.length;
@@ -128,12 +129,39 @@ function buildTrakBox(
   track: Mp4Track,
   chunkOffsets: readonly number[],
   useCo64: boolean,
+  movieDuration: number,
 ): Uint8Array {
   const tkhdBytes = buildFullBox('tkhd', serializeTkhd(track.trackHeader));
+  const edtsBytes = buildEdtsBoxIfNeeded(track, movieDuration);
   const mdiaBytes = buildMdiaBox(track, chunkOffsets, useCo64);
 
-  const trakPayload = concatBytes([tkhdBytes, mdiaBytes]);
+  const parts = edtsBytes ? [tkhdBytes, edtsBytes, mdiaBytes] : [tkhdBytes, mdiaBytes];
+  const trakPayload = concatBytes(parts);
   return wrapContainer('trak', trakPayload);
+}
+
+/**
+ * Build the `edts` container (with `elst` child) when the edit list is
+ * non-trivial. Returns null when trivial so the caller omits `edts` entirely.
+ *
+ * Trivial = empty list, or single identity edit (mediaTime=0,
+ * segmentDuration=movieDuration, rate=1). Mirrors the existing stco→co64
+ * promotion pattern.
+ */
+function buildEdtsBoxIfNeeded(track: Mp4Track, movieDuration: number): Uint8Array | null {
+  const { editList } = track;
+
+  if (isEditListTrivial(editList, movieDuration)) {
+    return null;
+  }
+
+  const elstPayload = serializeElst(editList);
+  if (!elstPayload) {
+    return null;
+  }
+
+  const elstBox = buildFullBox('elst', elstPayload);
+  return wrapContainer('edts', elstBox);
 }
 
 function buildMdiaBox(

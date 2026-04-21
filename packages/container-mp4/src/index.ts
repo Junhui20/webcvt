@@ -9,7 +9,12 @@ export { parseMp4, type Mp4File, type Mp4Track } from './parser.ts';
 export { serializeMp4 } from './serializer.ts';
 
 // Sample iteration.
-export { iterateAudioSamples, deriveCodecString, type AudioSample } from './sample-iterator.ts';
+export {
+  iterateAudioSamples,
+  iterateAudioSamplesWithContext,
+  deriveCodecString,
+  type AudioSample,
+} from './sample-iterator.ts';
 
 // Backend registration.
 export { Mp4Backend, M4A_FORMAT } from './backend.ts';
@@ -34,6 +39,12 @@ export {
   Mp4CorruptStreamError,
   Mp4MissingBoxError,
   Mp4EncodeNotImplementedError,
+  Mp4ElstBadEntryCountError,
+  Mp4ElstTooManyEntriesError,
+  Mp4ElstUnsupportedRateError,
+  Mp4ElstSignBitError,
+  Mp4ElstValueOutOfRangeError,
+  Mp4ElstMultiSegmentNotSupportedError,
 } from './errors.ts';
 
 // Core types re-exported for convenience.
@@ -48,3 +59,5 @@ export type {
 export type { Mp4AudioSampleEntry } from './boxes/hdlr-stsd-mp4a.ts';
 
 export type { Mp4SampleTable } from './boxes/stbl.ts';
+
+export type { EditListEntry } from './boxes/elst.ts';

@@ -71,3 +71,9 @@ export const CONTAINER_BOX_TYPES = new Set([
 /** Canonical output brand set when synthesising a new M4A file. */
 export const CANONICAL_MAJOR_BRAND = 'mp42';
 export const CANONICAL_COMPATIBLE_BRANDS = ['isom', 'mp42', 'M4A '];
+
+/**
+ * Maximum entry_count allowed in an `elst` (Edit List) box.
+ * Real files have ≤4 entries. 4096 keeps worst-case allocation under 100 KB.
+ */
+export const MAX_ELST_ENTRIES = 4096;

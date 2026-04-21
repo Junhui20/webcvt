@@ -23,6 +23,7 @@
  */
 
 import { type Mp4Box, findChild, findChildren, walkBoxes } from './box-tree.ts';
+import { type EditListEntry, parseElst } from './boxes/elst.ts';
 import { type Mp4Ftyp, parseFtyp } from './boxes/ftyp.ts';
 import {
   type Mp4AudioSampleEntry,
@@ -52,6 +53,7 @@ import { MAX_INPUT_BYTES } from './constants.ts';
 import {
   Mp4CorruptSampleError,
   Mp4InputTooLargeError,
+  Mp4InvalidBoxError,
   Mp4MissingBoxError,
   Mp4MissingFtypError,
   Mp4MissingMoovError,
@@ -77,6 +79,12 @@ export interface Mp4Track {
   chunkOffsets: readonly number[];
   /** 'stco' or 'co64' from the original file. */
   chunkOffsetVariant: 'stco' | 'co64';
+  /**
+   * Parsed edit list entries from the `edts/elst` box, preserved for both
+   * round-trip serialization and sample-iterator presentation-time adjustment.
+   * Empty array when no `edts` box is present (most simple M4A files).
+   */
+  editList: readonly EditListEntry[];
 }
 
 export interface Mp4File {
@@ -211,6 +219,31 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
   if (!tkhdBox) throw new Mp4MissingBoxError('tkhd', 'trak');
   const trackHeader = parseTkhd(tkhdBox.payload);
 
+  // edts / elst (optional; present in AAC files with priming silence)
+  // Spec allows exactly one edts per trak and exactly one elst per edts.
+  // Duplicates are rejected to prevent parser-differential smuggling.
+  const edtsBoxes = findChildren(trakBox, 'edts');
+  if (edtsBoxes.length > 1) {
+    throw new Mp4InvalidBoxError(
+      `trak contains ${edtsBoxes.length} edts boxes; the spec allows exactly one.`,
+    );
+  }
+  const edtsBox = edtsBoxes[0];
+  let editList: readonly EditListEntry[];
+  if (edtsBox) {
+    const elstBoxes = findChildren(edtsBox, 'elst');
+    if (elstBoxes.length > 1) {
+      throw new Mp4InvalidBoxError(
+        `edts contains ${elstBoxes.length} elst boxes; the spec allows exactly one.`,
+      );
+    }
+    const elstBox = elstBoxes[0];
+    if (!elstBox) throw new Mp4MissingBoxError('elst', 'edts');
+    editList = parseElst(elstBox.payload);
+  } else {
+    editList = [];
+  }
+
   // mdia
   const mdiaBox = findChild(trakBox, 'mdia');
   if (!mdiaBox) throw new Mp4MissingBoxError('mdia', 'trak');
@@ -288,5 +321,6 @@ function parseTrak(trakBox: Mp4Box, fileData: Uint8Array, boxCount: { value: num
     stscEntries,
     chunkOffsets,
     chunkOffsetVariant,
+    editList,
   };
 }

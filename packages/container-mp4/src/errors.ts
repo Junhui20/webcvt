@@ -198,3 +198,95 @@ export class Mp4EncodeNotImplementedError extends WebcvtError {
     this.name = 'Mp4EncodeNotImplementedError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// elst (Edit List) errors
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when elst entry_count * entry_size + 8 does not equal the payload length.
+ * Indicates a truncated or malformed elst box.
+ */
+export class Mp4ElstBadEntryCountError extends WebcvtError {
+  constructor(entryCount: number, entrySize: number, actual: number, expected: number) {
+    super(
+      'MP4_ELST_BAD_ENTRY_COUNT',
+      `elst entry_count=${entryCount} × entry_size=${entrySize} + 8 = ${expected} bytes, ` +
+        `but payload is ${actual} bytes. Box is truncated or corrupt.`,
+    );
+    this.name = 'Mp4ElstBadEntryCountError';
+  }
+}
+
+/**
+ * Thrown when elst entry_count exceeds MAX_ELST_ENTRIES.
+ * Guards against adversarially large entry counts.
+ */
+export class Mp4ElstTooManyEntriesError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'MP4_ELST_TOO_MANY_ENTRIES',
+      `elst entry_count ${count} exceeds maximum ${max}. Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4ElstTooManyEntriesError';
+  }
+}
+
+/**
+ * Thrown when media_rate_integer != 1 or media_rate_fraction != 0.
+ * Dwell edits (rate=0) and slow-mo / fast-forward / reverse rates are
+ * out of scope for Phase 3.
+ */
+export class Mp4ElstUnsupportedRateError extends WebcvtError {
+  constructor(rateInt: number, rateFrac: number) {
+    super(
+      'MP4_ELST_UNSUPPORTED_RATE',
+      `elst entry has unsupported media_rate ${rateInt}.${rateFrac} (fixed-point 16.16). Only rate 1.0 (integer=1, fraction=0) is supported in Phase 3. Dwell edits (rate=0) and fractional rates are Phase 3.5+.`,
+    );
+    this.name = 'Mp4ElstUnsupportedRateError';
+  }
+}
+
+/**
+ * Thrown when media_time is a negative value other than -1 (the empty-edit sentinel).
+ * Negative media_time < -1 indicates a corrupt or non-spec-compliant elst entry.
+ */
+export class Mp4ElstSignBitError extends WebcvtError {
+  constructor(mediaTime: number) {
+    super(
+      'MP4_ELST_SIGN_BIT_ERROR',
+      `elst entry media_time=${mediaTime} is negative but not -1 (the empty-edit sentinel). The box appears corrupt.`,
+    );
+    this.name = 'Mp4ElstSignBitError';
+  }
+}
+
+/**
+ * Thrown when a v1 (64-bit) elst field value exceeds Number.MAX_SAFE_INTEGER.
+ * Files requiring segment_duration or media_time > 2^53 are not supported.
+ */
+export class Mp4ElstValueOutOfRangeError extends WebcvtError {
+  constructor(field: string, hiWord: number) {
+    super(
+      'MP4_ELST_VALUE_OUT_OF_RANGE',
+      `elst v1 field "${field}" has hi-word 0x${hiWord.toString(16).toUpperCase()} which exceeds Number.MAX_SAFE_INTEGER. Files requiring 64-bit elst values beyond 2^53 are not supported.`,
+    );
+    this.name = 'Mp4ElstValueOutOfRangeError';
+  }
+}
+
+/**
+ * Thrown by the sample iterator when the track's edit list contains more than
+ * one non-empty edit segment. Multi-segment playback is Phase 3.5+.
+ */
+export class Mp4ElstMultiSegmentNotSupportedError extends WebcvtError {
+  constructor() {
+    super(
+      'MP4_ELST_MULTI_SEGMENT_NOT_SUPPORTED',
+      'The track edit list contains more than one non-empty edit segment. ' +
+        'Multi-segment edit lists are not supported in Phase 3. ' +
+        'The parser preserved all entries for round-trip; iterator support is Phase 3.5+.',
+    );
+    this.name = 'Mp4ElstMultiSegmentNotSupportedError';
+  }
+}

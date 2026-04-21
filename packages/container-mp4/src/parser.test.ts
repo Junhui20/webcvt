@@ -22,6 +22,7 @@ import {
   Mp4CorruptSampleError,
   Mp4ExternalDataRefError,
   Mp4InputTooLargeError,
+  Mp4InvalidBoxError,
   Mp4MissingFtypError,
   Mp4MissingMoovError,
   Mp4MultiTrackNotSupportedError,
@@ -304,6 +305,83 @@ describe('parseMp4 — external data reference rejection', () => {
     // This is done via a full minimal M4A minus the self-contained flag.
     const bytes = buildMinimalMp4WithExternalDref();
     expect(() => parseMp4(bytes)).toThrow(Mp4ExternalDataRefError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// F7 regression tests — duplicate edts/elst box rejection
+// ---------------------------------------------------------------------------
+
+describe('parseMp4 — F7: duplicate edts/elst rejection', () => {
+  it('F7-a: trak with two edts boxes → Mp4InvalidBoxError', () => {
+    // Build a minimal valid trak that has two edts children.
+    // Each edts contains a single elst to satisfy the box-tree walker.
+    const ftyp = buildFtypBox('mp42');
+    const mvhd = buildFullBox('mvhd', buildMvhdV0Payload(44100, 44100));
+    const tkhd = buildFullBox('tkhd', buildMinimalTkhd());
+    const mdhd = buildFullBox('mdhd', buildMdhdV0Payload(44100, 44100));
+
+    const hdlrPayload = new Uint8Array(36);
+    hdlrPayload[8] = 0x73;
+    hdlrPayload[9] = 0x6f;
+    hdlrPayload[10] = 0x75;
+    hdlrPayload[11] = 0x6e; // 'soun'
+    const hdlr = buildFullBox('hdlr', hdlrPayload);
+
+    const dref = buildSelfContainedDref();
+    const dinf = buildBox('dinf', dref);
+    const smhd = buildFullBox('smhd', new Uint8Array(8));
+    const stbl = buildBox('stbl', new Uint8Array(0));
+    const minf = buildBox('minf', concat([smhd, dinf, stbl]));
+    const mdia = buildBox('mdia', concat([mdhd, hdlr, minf]));
+
+    // Build a minimal elst payload: v0, entry_count=0 (empty list).
+    const elstPayload = new Uint8Array(8); // version=0, flags=0, entry_count=0
+    const elst = buildFullBox('elst', elstPayload);
+    const edts1 = buildBox('edts', elst);
+    const edts2 = buildBox('edts', elst);
+
+    const trak = buildBox('trak', concat([tkhd, edts1, edts2, mdia]));
+    const moov = buildBox('moov', concat([mvhd, trak]));
+    const mdat = buildBox('mdat', new Uint8Array(8));
+    const file = concat([ftyp, moov, mdat]);
+
+    expect(() => parseMp4(file)).toThrow(Mp4InvalidBoxError);
+  });
+
+  it('F7-b: edts with two elst boxes → Mp4InvalidBoxError', () => {
+    // Build a trak with a single edts that contains two elst children.
+    const ftyp = buildFtypBox('mp42');
+    const mvhd = buildFullBox('mvhd', buildMvhdV0Payload(44100, 44100));
+    const tkhd = buildFullBox('tkhd', buildMinimalTkhd());
+    const mdhd = buildFullBox('mdhd', buildMdhdV0Payload(44100, 44100));
+
+    const hdlrPayload = new Uint8Array(36);
+    hdlrPayload[8] = 0x73;
+    hdlrPayload[9] = 0x6f;
+    hdlrPayload[10] = 0x75;
+    hdlrPayload[11] = 0x6e; // 'soun'
+    const hdlr = buildFullBox('hdlr', hdlrPayload);
+
+    const dref = buildSelfContainedDref();
+    const dinf = buildBox('dinf', dref);
+    const smhd = buildFullBox('smhd', new Uint8Array(8));
+    const stbl = buildBox('stbl', new Uint8Array(0));
+    const minf = buildBox('minf', concat([smhd, dinf, stbl]));
+    const mdia = buildBox('mdia', concat([mdhd, hdlr, minf]));
+
+    // Two elst boxes inside one edts.
+    const elstPayload = new Uint8Array(8); // v0, entry_count=0
+    const elst1 = buildFullBox('elst', elstPayload);
+    const elst2 = buildFullBox('elst', elstPayload);
+    const edts = buildBox('edts', concat([elst1, elst2]));
+
+    const trak = buildBox('trak', concat([tkhd, edts, mdia]));
+    const moov = buildBox('moov', concat([mvhd, trak]));
+    const mdat = buildBox('mdat', new Uint8Array(8));
+    const file = concat([ftyp, moov, mdat]);
+
+    expect(() => parseMp4(file)).toThrow(Mp4InvalidBoxError);
   });
 });
 
