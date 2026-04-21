@@ -86,13 +86,29 @@ See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months. Next up:
 `apps/playground` (browser demo), `apps/docs` (VitePress), examples, v0.1.0
 npm release.
 
-## Quickstart (once v0.1 is published)
+## Quickstart
+
+### Try it in the browser
+[`apps/playground`](./apps/playground) — drag-drop any supported file,
+pick a target format, download the result. Zero network requests.
+
+### Use it in Node.js
 
 ```typescript
-import { convert } from 'webcvt';
-
-const output = await convert(file, { format: 'webp' });
+// Low-level parse/serialize API (text formats — no setup needed)
+import { parseSrt, serializeVtt } from '@webcvt/subtitle';
+const vtt = serializeVtt(parseSrt(srtString));
 ```
+
+```typescript
+// High-level convert() API (binary formats — browser or Node)
+import { convert, defaultRegistry } from '@webcvt/core';
+import { CanvasBackend } from '@webcvt/image-canvas';
+defaultRegistry.register(new CanvasBackend());
+const result = await convert(pngBlob, { format: 'webp' });
+```
+
+Working examples in [`examples/`](./examples/).
 
 ## Development
 

@@ -79,6 +79,15 @@ importers:
         specifier: ^5.4.0
         version: 5.4.21(@types/node@22.19.17)
 
+  examples/node-subtitle:
+    dependencies:
+      '@webcvt/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@webcvt/subtitle':
+        specifier: workspace:*
+        version: link:../../packages/subtitle
+
   packages/archive-zip:
     dependencies:
       '@webcvt/core':
