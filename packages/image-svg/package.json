@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/image-svg",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "SVG detect, validate, parse, serialize, and rasterize for webcvt — pure TypeScript, browser Canvas API",
   "type": "module",
   "main": "./dist/index.cjs",

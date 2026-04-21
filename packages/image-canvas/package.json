@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/image-canvas",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Browser-native image conversion backend for webcvt — PNG, JPG, WebP, BMP, ICO via Canvas API",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -3,7 +3,7 @@
 > Browser-first, hardware-accelerated file conversion library. Convert anything in the browser, no upload required.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-![Status](https://img.shields.io/badge/status-pre--alpha-red)
+![Status](https://img.shields.io/badge/status-v0.1.0--prep-orange)
 
 ## Status
 
@@ -16,8 +16,11 @@
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
 - Phase 5 (launch prep): `@webcvt/cli` + `@webcvt/backend-wasm` + `apps/playground` shipped; `apps/docs`, examples, v0.1.0 release still open
 
-See [`plan.md`](./plan.md) for the full project plan and
+See [`plan.md`](./plan.md) for the full project plan,
+[`CHANGELOG.md`](./CHANGELOG.md) for release notes, and
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to contribute or resume work.
+
+Try the live demo: **[webcvt-io.pages.dev](https://webcvt-io.pages.dev)** — drag a file, pick a format, download in-browser.
 
 ## What is it
 

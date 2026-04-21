@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/container-wav",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "RIFF/WAV container muxer and demuxer for webcvt — pure TypeScript, no native dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

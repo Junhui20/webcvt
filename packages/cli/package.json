@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Command-line interface for webcvt — thin shell around @webcvt/core",
   "type": "module",
   "bin": {

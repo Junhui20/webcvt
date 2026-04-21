@@ -88,6 +88,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/subtitle
 
+  examples/vanilla-html: {}
+
   packages/archive-zip:
     dependencies:
       '@webcvt/core':

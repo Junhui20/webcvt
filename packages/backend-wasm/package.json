@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/backend-wasm",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "FFmpeg.wasm fallback backend for webcvt — lazy-loaded, idle-reaped, strict allowlist (~180 MIME pairs).",
   "type": "module",
   "main": "./dist/index.cjs",

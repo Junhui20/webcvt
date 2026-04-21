@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/image-legacy",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "PBM, PGM, PPM, PFM, and QOI parse/serialize for webcvt — pure TypeScript, no runtime dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

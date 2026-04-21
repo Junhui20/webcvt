@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/archive-zip",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "ZIP / TAR / GZip archive demuxer and muxer for webcvt — pure TypeScript, no native dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

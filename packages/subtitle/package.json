@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/subtitle",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Browser-first subtitle conversion for webcvt — SRT, VTT, ASS, SSA, MicroDVD, MPL2",
   "type": "module",
   "main": "./dist/index.cjs",

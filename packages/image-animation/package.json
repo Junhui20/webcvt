@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/image-animation",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "GIF, APNG, and animated WebP parse/serialize for webcvt — pure TypeScript, no runtime dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

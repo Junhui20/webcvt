@@ -1,6 +1,6 @@
 {
   "name": "@webcvt/ebml",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Shared EBML primitives (VINT codec, element walker, typed readers/writers) for webcvt container packages",
   "type": "module",
   "main": "./dist/index.cjs",
