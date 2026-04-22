@@ -17,6 +17,19 @@
 #   bash scripts/release.sh --dry-run       # build + show what would happen
 set -euo pipefail
 
+# ─── Git Bash / MSYS PATH augmentation ─────────────────────────────────────
+# Windows-installed tools (node.exe, wrangler.cmd) live in dirs that MSYS
+# bash doesn't include by default. Add them here so the script works when
+# invoked from cmd/PowerShell via `bash scripts/release.sh`.
+if [ -n "${MSYSTEM:-}" ] || [[ "${OSTYPE:-}" == msys* ]] || [[ "${OSTYPE:-}" == cygwin* ]]; then
+  [ -d "/c/Program Files/nodejs" ] && PATH="/c/Program Files/nodejs:$PATH"
+  if [ -n "${APPDATA:-}" ]; then
+    _appdata_unix="$(cygpath -u "$APPDATA" 2>/dev/null || echo "${APPDATA//\\//}")"
+    [ -d "$_appdata_unix/npm" ] && PATH="$_appdata_unix/npm:$PATH"
+  fi
+  export PATH
+fi
+
 # ─── colors ────────────────────────────────────────────────────────────────
 if [ -t 1 ]; then
   R=$'\e[31m'; G=$'\e[32m'; Y=$'\e[33m'; B=$'\e[34m'; N=$'\e[0m'; BOLD=$'\e[1m'
