@@ -55,7 +55,7 @@ Initial public release. **22 packages, 3,970 tests, ~110,000 LOC.** All packages
 
 ### Added — apps
 
-- **`apps/playground`** — Cloudflare Pages demo site. Vanilla TypeScript + Vite; ~9.3 KB gz landing bundle + lazy format chunks; drag-drop conversion flow; zero network requests during conversion (verified via DevTools); COEP/COOP headers for WebCodecs + SharedArrayBuffer; 5 Playwright smoke tests. Live at [`webcvt-io.pages.dev`](https://webcvt-io.pages.dev).
+- **`apps/playground`** — Cloudflare Pages demo site. Vanilla TypeScript + Vite; ~9.3 KB gz landing bundle + lazy format chunks; drag-drop conversion flow; zero network requests during conversion (verified via DevTools); COEP/COOP headers for WebCodecs + SharedArrayBuffer; 5 Playwright smoke tests. Live at [`webcvt.pages.dev`](https://webcvt.pages.dev).
 
 ### Added — examples
 

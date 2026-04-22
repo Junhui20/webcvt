@@ -6,7 +6,7 @@ webcvt is a browser-first, hardware-accelerated file conversion library. It ship
 
 ### Try the playground
 
-The fastest way to see webcvt in action is the [live playground](https://webcvt-io.pages.dev). Drop a file, pick an output format, convert — no setup required.
+The fastest way to see webcvt in action is the [live playground](https://webcvt.pages.dev). Drop a file, pick an output format, convert — no setup required.
 
 ### Node.js (3 lines)
 

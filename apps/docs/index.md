@@ -7,7 +7,7 @@ hero:
   actions:
     - theme: brand
       text: Try the playground
-      link: https://webcvt-io.pages.dev
+      link: https://webcvt.pages.dev
     - theme: alt
       text: Get started
       link: /guide/getting-started

@@ -20,7 +20,7 @@ See [`plan.md`](./plan.md) for the full project plan,
 [`CHANGELOG.md`](./CHANGELOG.md) for release notes, and
 [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to contribute or resume work.
 
-Try the live demo: **[webcvt-io.pages.dev](https://webcvt-io.pages.dev)** — drag a file, pick a format, download in-browser.
+Try the live demo: **[webcvt.pages.dev](https://webcvt.pages.dev)** — drag a file, pick a format, download in-browser.
 
 ## What is it
 

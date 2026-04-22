@@ -11,7 +11,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Packages', link: '/packages/core' },
       { text: 'Reference', link: '/reference/error-codes' },
-      { text: 'Playground', link: 'https://webcvt-io.pages.dev' },
+      { text: 'Playground', link: 'https://webcvt.pages.dev' },
       { text: 'GitHub', link: 'https://github.com/Junhui20/webcvt' },
     ],
     sidebar: {
