@@ -53,17 +53,17 @@ cd "$REPO_ROOT"
 # ─── prerequisite checks ───────────────────────────────────────────────────
 say "checking prerequisites"
 
-command -v pnpm >/dev/null    || die "pnpm not installed"
-command -v node >/dev/null    || die "node not installed"
+pnpm --version >/dev/null 2>&1 || die "pnpm not installed"
+node --version >/dev/null 2>&1 || die "node not installed"
 
 if [ "$SKIP_DEPLOY" -eq 0 ]; then
-  command -v wrangler >/dev/null || die "wrangler not installed → npm i -g wrangler"
+  wrangler --version >/dev/null 2>&1 || die "wrangler not installed → npm i -g wrangler"
   wrangler whoami >/dev/null 2>&1 || die "wrangler not logged in → wrangler login"
   ok "wrangler ready ($(wrangler whoami 2>&1 | grep -oE '[a-zA-Z0-9._@-]+@[a-zA-Z0-9.-]+' | head -1 || echo authenticated))"
 fi
 
 if [ "$SKIP_PUBLISH" -eq 0 ]; then
-  command -v npm >/dev/null || die "npm not installed"
+  npm --version >/dev/null 2>&1 || die "npm not installed"
   NPM_USER="$(npm whoami 2>/dev/null)" || die "npm not logged in → npm login"
   ok "npm logged in as $NPM_USER"
 
