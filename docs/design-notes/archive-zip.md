@@ -1,6 +1,6 @@
 # archive-zip design
 
-> Implementation reference for `@webcvt/archive-zip`. Write the code
+> Implementation reference for `@catlabtech/webcvt-archive-zip`. Write the code
 > from this note plus the linked official specs. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -28,7 +28,7 @@ entries use **raw Deflate** (no zlib header), so we wire them through
 `'deflate-raw'`. GZip files wire through `'gzip'`. **bzip2 and xz are
 NOT supported by Compression Streams** — the W3C spec lists only the
 three above — so the first-pass `archive-zip` package detects the
-magic and delegates to `@webcvt/backend-wasm` rather than attempting
+magic and delegates to `@catlabtech/webcvt-backend-wasm` rather than attempting
 native decode.
 
 ## Scope statement
@@ -68,7 +68,7 @@ extensions, multi-member gzip, and native bz2/xz. See "Out of scope
   (concatenated members) deferred to Phase 4.5.
 - **bz2 / xz fallback note**: detect the magic and throw
   `ArchiveBz2NotSupportedError` / `ArchiveXzNotSupportedError`. The
-  BackendRegistry then routes to `@webcvt/backend-wasm`.
+  BackendRegistry then routes to `@catlabtech/webcvt-backend-wasm`.
 - **Combined `tar.gz` / `.tgz` support**: pipe the input through
   `DecompressionStream('gzip')`, then feed the resulting stream to
   `parseTar`. Most real-world `.tar.gz` is one gzip member wrapping a
@@ -223,7 +223,7 @@ We use the three formats as follows in this package:
 
 For **bzip2** and **xz** the package detects the file magic and
 returns a typed error so the BackendRegistry can route to
-`@webcvt/backend-wasm`. The WASM backend already includes ffmpeg's
+`@catlabtech/webcvt-backend-wasm`. The WASM backend already includes ffmpeg's
 libbz2 and liblzma builds.
 
 ## Required structures for first pass
@@ -649,7 +649,7 @@ rather than DOSing memory after the bomb is decoded — Trap #1.
 **bz2 / xz routing:** detect magic in `parser.ts`, throw
 typed error, BackendRegistry tries the next backend. The error
 implements `webcvt-core`'s `BackendDelegationError` interface so the
-registry can transparently pass to `@webcvt/backend-wasm` rather than
+registry can transparently pass to `@catlabtech/webcvt-backend-wasm` rather than
 surfacing the error to the caller.
 
 ## Fixture strategy
@@ -961,7 +961,7 @@ the wrapper format that `'deflate-raw'` deliberately omits), IETF RFC
 1951 (DEFLATE — the substantive compression algorithm used by both ZIP
 method 8 and gzip), IETF RFC 1952 (GZIP file format), the bzip2 and XZ
 file format documentation (referenced solely for magic-byte detection;
-native parsing deferred to `@webcvt/backend-wasm`), and the W3C
+native parsing deferred to `@catlabtech/webcvt-backend-wasm`), and the W3C
 Compression Streams specification (which defines the
 `'gzip'` / `'deflate'` / `'deflate-raw'` formats consumed by this
 package's stream wrappers). No code was copied from yauzl, jszip,

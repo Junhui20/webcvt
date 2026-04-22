@@ -1,6 +1,6 @@
 # MP4 Movie Metadata: `udta` / `meta` / `ilst` Sub-Pass E
 
-> Phase 3 second-pass sub-pass E. Adds Apple iTunes-style movie metadata to `@webcvt/container-mp4` so `Title`, `Artist`, `Album`, cover art, and other tags survive parse-and-serialize round-trip.
+> Phase 3 second-pass sub-pass E. Adds Apple iTunes-style movie metadata to `@catlabtech/webcvt-container-mp4` so `Title`, `Artist`, `Album`, cover art, and other tags survive parse-and-serialize round-trip.
 
 ## 1. Goal
 

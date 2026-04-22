@@ -1,5 +1,5 @@
 /**
- * YAML 1.2 tokenizer for @webcvt/data-text.
+ * YAML 1.2 tokenizer for @catlabtech/webcvt-data-text.
  *
  * Hand-rolled character-at-a-time tokenizer. O(n) guaranteed.
  * NO regex on untrusted variable-length scalar bodies (ReDoS defense).

@@ -1,5 +1,5 @@
 /**
- * @webcvt/cli — entry point.
+ * @catlabtech/webcvt-cli — entry point.
  *
  * The shebang (#!/usr/bin/env node) is injected by tsup's banner option in
  * tsup.config.ts — do not add it here or the compiled output will have two.
@@ -14,7 +14,7 @@ import {
   WebcvtError,
   defaultRegistry,
   detectFormat,
-} from '@webcvt/core';
+} from '@catlabtech/webcvt-core';
 import { parseArgv } from './argv.ts';
 import { CliBadUsageError, USAGE_HINT } from './errors.ts';
 import { inferFormatFromPath, resolveHint } from './format.ts';

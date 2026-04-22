@@ -1,7 +1,7 @@
 # image-legacy TGA design (third pass)
 
 > Implementation reference for the TGA (Truevision Targa) extension to
-> `@webcvt/image-legacy`. Third-pass extension; read
+> `@catlabtech/webcvt-image-legacy`. Third-pass extension; read
 > [image-legacy.md](./image-legacy.md) and
 > [image-legacy-tiff.md](./image-legacy-tiff.md) first for the shared
 > package-level conventions.

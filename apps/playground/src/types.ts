@@ -1,4 +1,4 @@
-import type { ConvertResult, FormatDescriptor } from '@webcvt/core';
+import type { ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
 
 /** Maximum allowed input file size (256 MiB). */
 export const MAX_FILE_BYTES = 256 * 1024 * 1024;

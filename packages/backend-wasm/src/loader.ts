@@ -1,5 +1,5 @@
 /**
- * Lazy FFmpeg.wasm loader for @webcvt/backend-wasm.
+ * Lazy FFmpeg.wasm loader for @catlabtech/webcvt-backend-wasm.
  *
  * Critical constraints:
  * - NEVER static-import @ffmpeg/ffmpeg (Trap #13 / tree-shaking).

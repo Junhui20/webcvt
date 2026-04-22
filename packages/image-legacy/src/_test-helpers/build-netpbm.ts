@@ -1,5 +1,5 @@
 /**
- * Netpbm file builder helpers for @webcvt/image-legacy tests.
+ * Netpbm file builder helpers for @catlabtech/webcvt-image-legacy tests.
  *
  * Constructs on-disk byte sequences for parser tests.
  * All outputs follow the canonical Netpbm binary format.

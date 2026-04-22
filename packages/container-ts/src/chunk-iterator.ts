@@ -50,7 +50,7 @@ export interface EncodedAudioChunkInit {
 
 // ---------------------------------------------------------------------------
 // ADTS inline parser (~30 LOC) — re-implemented per design note instructions.
-// Do NOT import from @webcvt/container-aac.
+// Do NOT import from @catlabtech/webcvt-container-aac.
 // ---------------------------------------------------------------------------
 
 const ADTS_SAMPLE_RATE_TABLE: readonly number[] = [

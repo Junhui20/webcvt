@@ -2,7 +2,7 @@
  * Tests for MkvBackend (backend.ts).
  */
 
-import type { FormatDescriptor } from '@webcvt/core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
 import { describe, expect, it, vi } from 'vitest';
 import { MKV_FORMAT, MkvBackend } from './backend.ts';
 import { MkvEncodeNotImplementedError, MkvInputTooLargeError } from './errors.ts';

@@ -1,6 +1,6 @@
 # data-text JSONL extension design
 
-> Second-pass extension note for `@webcvt/data-text`. Adds JSONL
+> Second-pass extension note for `@catlabtech/webcvt-data-text`. Adds JSONL
 > (newline-delimited JSON) to the five-format first-pass baseline
 > described in `data-text.md`.
 >

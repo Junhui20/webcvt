@@ -1,5 +1,5 @@
 /**
- * Security caps, magic bytes, and format constants for @webcvt/image-animation.
+ * Security caps, magic bytes, and format constants for @catlabtech/webcvt-image-animation.
  *
  * All values are derived from the design note security caps section.
  * Every format module references these; do NOT hardcode inline.

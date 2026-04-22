@@ -1,4 +1,4 @@
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { encodeUnsynchronisation, parseId3v2, serializeId3v2 } from './id3v2.ts';
 

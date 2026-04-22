@@ -17,8 +17,8 @@ import {
   writeUint,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   DEFAULT_TIMECODE_SCALE,
   ID_DATE_UTC,
@@ -103,7 +103,7 @@ export function decodeInfo(bytes: Uint8Array, children: EbmlElement[]): MkvInfo 
 // ---------------------------------------------------------------------------
 
 /** Canonical muxing/writing app string for files this package produces. */
-export const WEBCVT_MKV_APP_STRING = '@webcvt/container-mkv';
+export const WEBCVT_MKV_APP_STRING = '@catlabtech/webcvt-container-mkv';
 
 /**
  * Encode the Info element to bytes.

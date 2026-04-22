@@ -1,4 +1,4 @@
-import { defaultRegistry } from '@webcvt/core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
 
 interface BackendPkg {
   readonly pkg: string;
@@ -19,23 +19,23 @@ interface BackendPkg {
  *   - backend-wasm  → no Backend class (Phase 4 placeholder only)
  */
 const BACKEND_PACKAGES: readonly BackendPkg[] = [
-  { pkg: '@webcvt/container-mp3', exportName: 'Mp3Backend', id: 'mp3' },
-  { pkg: '@webcvt/container-wav', exportName: 'WavBackend', id: 'wav' },
-  { pkg: '@webcvt/container-flac', exportName: 'FlacBackend', id: 'flac' },
-  { pkg: '@webcvt/container-ogg', exportName: 'OggBackend', id: 'ogg' },
-  { pkg: '@webcvt/container-aac', exportName: 'AacBackend', id: 'aac' },
-  { pkg: '@webcvt/container-mp4', exportName: 'Mp4Backend', id: 'mp4' },
-  { pkg: '@webcvt/container-webm', exportName: 'WebmBackend', id: 'webm' },
-  { pkg: '@webcvt/container-mkv', exportName: 'MkvBackend', id: 'mkv' },
-  { pkg: '@webcvt/container-ts', exportName: 'TsBackend', id: 'ts' },
-  { pkg: '@webcvt/image-canvas', exportName: 'CanvasBackend', id: 'image-canvas' },
-  { pkg: '@webcvt/image-svg', exportName: 'SvgBackend', id: 'image-svg' },
-  { pkg: '@webcvt/image-animation', exportName: 'AnimationBackend', id: 'image-animation' },
-  { pkg: '@webcvt/image-legacy', exportName: 'ImageLegacyBackend', id: 'image-legacy' },
-  { pkg: '@webcvt/data-text', exportName: 'DataTextBackend', id: 'data-text' },
-  { pkg: '@webcvt/archive-zip', exportName: 'ArchiveBackend', id: 'archive-zip' },
-  { pkg: '@webcvt/subtitle', exportName: 'SubtitleBackend', id: 'subtitle' },
-  // @webcvt/backend-wasm has no Backend class in the current phase; re-add when it does.
+  { pkg: '@catlabtech/webcvt-container-mp3', exportName: 'Mp3Backend', id: 'mp3' },
+  { pkg: '@catlabtech/webcvt-container-wav', exportName: 'WavBackend', id: 'wav' },
+  { pkg: '@catlabtech/webcvt-container-flac', exportName: 'FlacBackend', id: 'flac' },
+  { pkg: '@catlabtech/webcvt-container-ogg', exportName: 'OggBackend', id: 'ogg' },
+  { pkg: '@catlabtech/webcvt-container-aac', exportName: 'AacBackend', id: 'aac' },
+  { pkg: '@catlabtech/webcvt-container-mp4', exportName: 'Mp4Backend', id: 'mp4' },
+  { pkg: '@catlabtech/webcvt-container-webm', exportName: 'WebmBackend', id: 'webm' },
+  { pkg: '@catlabtech/webcvt-container-mkv', exportName: 'MkvBackend', id: 'mkv' },
+  { pkg: '@catlabtech/webcvt-container-ts', exportName: 'TsBackend', id: 'ts' },
+  { pkg: '@catlabtech/webcvt-image-canvas', exportName: 'CanvasBackend', id: 'image-canvas' },
+  { pkg: '@catlabtech/webcvt-image-svg', exportName: 'SvgBackend', id: 'image-svg' },
+  { pkg: '@catlabtech/webcvt-image-animation', exportName: 'AnimationBackend', id: 'image-animation' },
+  { pkg: '@catlabtech/webcvt-image-legacy', exportName: 'ImageLegacyBackend', id: 'image-legacy' },
+  { pkg: '@catlabtech/webcvt-data-text', exportName: 'DataTextBackend', id: 'data-text' },
+  { pkg: '@catlabtech/webcvt-archive-zip', exportName: 'ArchiveBackend', id: 'archive-zip' },
+  { pkg: '@catlabtech/webcvt-subtitle', exportName: 'SubtitleBackend', id: 'subtitle' },
+  // @catlabtech/webcvt-backend-wasm has no Backend class in the current phase; re-add when it does.
 ];
 
 /**

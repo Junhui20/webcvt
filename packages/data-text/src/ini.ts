@@ -1,5 +1,5 @@
 /**
- * INI parse/serialize for @webcvt/data-text.
+ * INI parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Implements the de-facto Windows INI subset:
  * - [section] headers (literal names, no nesting — Trap §8)

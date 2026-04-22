@@ -1,5 +1,5 @@
 /**
- * XBM (X11 Bitmap) parser and serializer for @webcvt/image-legacy.
+ * XBM (X11 Bitmap) parser and serializer for @catlabtech/webcvt-image-legacy.
  *
  * XBM files are fragments of valid C source code: two `#define` lines
  * (width + height), optional `_x_hot`/`_y_hot` hotspot defines, and a

@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-mkv — Matroska container muxer and demuxer.
+ * @catlabtech/webcvt-container-mkv — Matroska container muxer and demuxer.
  *
  * Public API surface (minimal — do not re-export internal helpers).
  */
@@ -35,7 +35,7 @@ export {
 // Backend registration.
 export { MkvBackend, MKV_FORMAT } from './backend.ts';
 
-// EBML generic error classes (re-exported from @webcvt/ebml for consumer convenience).
+// EBML generic error classes (re-exported from @catlabtech/webcvt-ebml for consumer convenience).
 export {
   EbmlVintError,
   EbmlElementTooLargeError,
@@ -43,7 +43,7 @@ export {
   EbmlDepthExceededError,
   EbmlTruncatedError,
   EbmlUnknownSizeError,
-} from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
 
 // Typed error classes (exported so callers can catch by type).
 export {

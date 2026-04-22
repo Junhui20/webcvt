@@ -3,7 +3,7 @@
  *
  * Validates DocType == "matroska" (Trap §19).
  * Rejects DocType "webm" with MkvDocTypeNotSupportedError so the registry
- * routes WebM files to @webcvt/container-webm.
+ * routes WebM files to @catlabtech/webcvt-container-webm.
  * Rejects EBMLVersion != 1, EBMLReadVersion != 1, MaxIDLength > 4, MaxSizeLength > 8.
  */
 
@@ -16,8 +16,8 @@ import {
   writeUint,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   ID_DOCTYPE,
   ID_DOCTYPE_READ_VERSION,

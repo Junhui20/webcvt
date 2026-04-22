@@ -10,7 +10,7 @@
  * - Security caps: 200 MiB input guard, 1 MiB scan cap, truncated frame, corrupt stream
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import {

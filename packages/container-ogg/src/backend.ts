@@ -15,7 +15,7 @@
  * - Do NOT import backend-wasm directly; let the BackendRegistry fallback chain handle it.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import { OggEncodeNotImplementedError, OggInputTooLargeError } from './errors.ts';
 import { parseOgg } from './parser.ts';

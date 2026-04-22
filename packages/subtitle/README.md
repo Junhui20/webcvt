@@ -1,4 +1,4 @@
-# @webcvt/subtitle
+# @catlabtech/webcvt-subtitle
 
 Browser-first subtitle conversion for the webcvt ecosystem. Converts between SRT, WebVTT, ASS/SSA, MicroDVD (.sub), and MPL2 formats — pure TypeScript, no WASM, no third-party parsers.
 
@@ -18,8 +18,8 @@ VobSub binary `.sub` files are **out of scope** — the parser throws a clear er
 ## Usage
 
 ```ts
-import { SubtitleBackend } from '@webcvt/subtitle';
-import { defaultRegistry } from '@webcvt/core';
+import { SubtitleBackend } from '@catlabtech/webcvt-subtitle';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
 
 const backend = new SubtitleBackend();
 defaultRegistry.register(backend);
@@ -28,7 +28,7 @@ defaultRegistry.register(backend);
 Or use the parsers directly:
 
 ```ts
-import { parseSrt, serializeVtt } from '@webcvt/subtitle';
+import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
 
 const track = parseSrt(srtText);
 const vttText = serializeVtt(track);

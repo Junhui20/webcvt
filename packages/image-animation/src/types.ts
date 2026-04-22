@@ -1,5 +1,5 @@
 /**
- * Core types for @webcvt/image-animation.
+ * Core types for @catlabtech/webcvt-image-animation.
  *
  * Discriminated union over the three animated image formats: GIF, APNG, animated WebP.
  * Shared AnimationFrame type normalises per-frame metadata across formats.

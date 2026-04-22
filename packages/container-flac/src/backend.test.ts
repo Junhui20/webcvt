@@ -2,7 +2,7 @@
  * Tests for FlacBackend.
  */
 
-import { loadFixtureBlob } from '@webcvt/test-utils';
+import { loadFixtureBlob } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { FLAC_FORMAT, FlacBackend } from './backend.ts';
 import { FlacEncodeNotImplementedError, FlacInputTooLargeError } from './errors.ts';

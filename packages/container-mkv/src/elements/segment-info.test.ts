@@ -2,7 +2,7 @@
  * Tests for Segment Info element decode/encode (segment-info.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   concatBytes,
   writeFloat64,
@@ -10,7 +10,7 @@ import {
   writeUtf8,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TIMECODE_SCALE,
@@ -219,7 +219,7 @@ describe('encodeInfo', () => {
     const encoded = encodeInfo(info);
     // Encoded bytes should contain the app string
     const text = new TextDecoder().decode(encoded);
-    expect(text).toContain('@webcvt/container-mkv');
+    expect(text).toContain('@catlabtech/webcvt-container-mkv');
   });
 
   it('encodes duration as float64 when present', () => {

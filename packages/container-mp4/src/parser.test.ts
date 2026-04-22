@@ -16,7 +16,7 @@
  * fixture bytes. We use structural validation only.
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import {
   buildAvcCPayload,

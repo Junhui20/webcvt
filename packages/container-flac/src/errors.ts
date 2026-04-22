@@ -4,7 +4,7 @@
  * All error codes are uppercase snake_case strings for programmatic matching.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /** Thrown when the input is larger than the 200 MiB cap. */
 export class FlacInputTooLargeError extends WebcvtError {
@@ -99,7 +99,7 @@ export class FlacEncodeNotImplementedError extends WebcvtError {
       'FLAC_ENCODE_NOT_IMPLEMENTED',
       'FLAC encoding is not implemented in container-flac. ' +
         'WebCodecs AudioEncoder does not support FLAC output. ' +
-        'Install @webcvt/backend-wasm to enable FLAC encoding via libFLAC.',
+        'Install @catlabtech/webcvt-backend-wasm to enable FLAC encoding via libFLAC.',
     );
     this.name = 'FlacEncodeNotImplementedError';
   }

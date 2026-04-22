@@ -29,7 +29,7 @@
   <p>A minimal example: no build tool, no bundler. One HTML file, ~15 lines of JavaScript.</p>
 
   <pre><code>&lt;script type="module"&gt;
-  import { parseSrt, serializeVtt } from 'https://esm.sh/@webcvt/subtitle@0.1.0';
+  import { parseSrt, serializeVtt } from 'https://esm.sh/@catlabtech/webcvt-subtitle@0.1.0';
   const srt = await file.text();
   const vtt = serializeVtt(parseSrt(srt));
 &lt;/script&gt;</code></pre>
@@ -42,10 +42,10 @@
   <p><a href="https://github.com/Junhui20/webcvt">Source on GitHub</a> · <a href="https://webcvt.pages.dev">Full playground</a></p>
 
   <script type="module">
-    // This will work after @webcvt/subtitle v0.1.0 is published to npm.
+    // This will work after @catlabtech/webcvt-subtitle v0.1.0 is published to npm.
     // Until then, this page shows the intended API — see apps/playground
     // for the workspace-integrated version.
-    import { parseSrt, serializeVtt } from 'https://esm.sh/@webcvt/subtitle@0.1.0';
+    import { parseSrt, serializeVtt } from 'https://esm.sh/@catlabtech/webcvt-subtitle@0.1.0';
 
     const fileInput = document.getElementById('file');
     const convertBtn = document.getElementById('convert');

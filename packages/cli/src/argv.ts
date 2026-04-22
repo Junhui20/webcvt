@@ -1,5 +1,5 @@
 /**
- * Pure argv parser for @webcvt/cli.
+ * Pure argv parser for @catlabtech/webcvt-cli.
  *
  * No I/O, no process.exit, no console writes.
  * Input: raw tokens from process.argv.slice(2).

@@ -1,6 +1,6 @@
 # data-text design
 
-> Implementation reference for `@webcvt/data-text`. Write the code from
+> Implementation reference for `@catlabtech/webcvt-data-text`. Write the code from
 > this note plus the linked official specs. Do not consult competing
 > implementations (yaml, @iarna/toml, fast-csv, papaparse, dotenv,
 > ini, fast-xml-parser) except for debugging spec-ambiguous edge cases.
@@ -14,8 +14,8 @@ allocation, and a parse-only / serialize-only contract with no
 schema-coercion or cross-format conversion. Every format here is
 text-in / typed-AST-out and typed-AST-in / text-out — there is no
 streaming binary record walking, no compression, no on-disk seeking.
-The package complements `@webcvt/archive-zip` (binary archives) and
-`@webcvt/image-svg` (text but XML-shaped) by handling the simple
+The package complements `@catlabtech/webcvt-archive-zip` (binary archives) and
+`@catlabtech/webcvt-image-svg` (text but XML-shaped) by handling the simple
 line-oriented and key-value text formats that ride alongside binary
 media in real-world pipelines (manifest sidecars, metadata exports,
 config / env files).
@@ -76,7 +76,7 @@ list.
 - **TOML** (v1.0.0) — datetime parsing, table arrays, dotted keys,
   inline tables. Deferred.
 - **XML** (general-purpose, beyond the SVG-specific subset already
-  in `@webcvt/image-svg`). Deferred.
+  in `@catlabtech/webcvt-image-svg`). Deferred.
 - **JSONL** (newline-delimited JSON / NDJSON) — trivial extension
   over `JSON.parse` per line, but cut from first pass for scope.
 - **FWF** (fixed-width fields) — schema-driven; needs a column-spec
@@ -85,7 +85,7 @@ list.
   not a widely-deployed standard; deferred pending demand.
 - **Cross-format conversion** (CSV → JSON, INI → ENV, etc.) — each
   format is parse/serialize-only within its own type. Conversion
-  helpers belong in a higher-level `@webcvt/convert` package, not
+  helpers belong in a higher-level `@catlabtech/webcvt-convert` package, not
   here.
 - **Schema-aware coercion** (numbers, booleans, dates inferred from
   string fields). CSV / INI / ENV values are returned as raw
@@ -469,7 +469,7 @@ guess-wrong dispatch causes silent data corruption.
 ## Backend integration
 
 `DataTextBackend` (in `backend.ts`) implements the
-`@webcvt/core` backend interface. `canHandle(input, hint)` returns
+`@catlabtech/webcvt-core` backend interface. `canHandle(input, hint)` returns
 `true` only when `hint.format` is one of the five formats above —
 no magic-byte sniffing. The backend is identity-within-format:
 `decode` returns the parsed `DataTextFile`; `encode` returns the
@@ -693,7 +693,7 @@ Round-trip tests use `serializeXxx` output as input to
 | `utf8.ts` (TextDecoder fatal wrapper, BOM strip / preserve, char-cap enforcement) | 60 |
 | `parser.ts` (top-level dispatch by format; returns `DataTextFile` discriminated union) | 80 |
 | `serializer.ts` (top-level dispatch by `file.kind`) | 60 |
-| `backend.ts` (`DataTextBackend` implementing `@webcvt/core` backend; identity-within-format) | 100 |
+| `backend.ts` (`DataTextBackend` implementing `@catlabtech/webcvt-core` backend; identity-within-format) | 100 |
 | `errors.ts` (typed errors per format: `JsonParseError`, `CsvUnterminatedQuoteError`, etc.) | 60 |
 | `constants.ts` (size/depth/row/col caps) | 30 |
 | `index.ts` (public re-exports) | 40 |

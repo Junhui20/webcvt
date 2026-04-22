@@ -1,6 +1,6 @@
 # container-webm design
 
-> Implementation reference for `@webcvt/container-webm`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-webm`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -47,7 +47,7 @@ Generic Matroska (`DocType = matroska`) is the separate
 - Round-trip parse → serialize for the supported subset
 - WebCodecs decode for VP8 / VP9 / Vorbis / Opus; encode for VP9
   + Opus (the WebCodecs-encodable subset). Vorbis encode and any
-  other path falls back to `@webcvt/backend-wasm`.
+  other path falls back to `@catlabtech/webcvt-backend-wasm`.
 
 **Out of scope (Phase 3.5+ or container-mkv, DEFERRED):**
 
@@ -550,7 +550,7 @@ two-pass layout above.
   samples at 48 kHz, RFC 7845 recommendation).
 - **Vorbis encode / VP8 encode**: not supported by WebCodecs in 2026.
   `WebmBackend.canHandle` returns `false` for those encode requests
-  so the BackendRegistry falls through to `@webcvt/backend-wasm`
+  so the BackendRegistry falls through to `@catlabtech/webcvt-backend-wasm`
   (libvpx + libvorbis) for synthesis.
 - **Probe**: `probeVideoCodec({ codec, width, height, framerate })`
   and `probeAudioCodec({ codec, sampleRate, numberOfChannels })`
@@ -779,7 +779,7 @@ xiph.org. VP8 and VP9 bitstream identification follows RFC 6386 and
 the WebM Project's VP9 documentation. No code was copied from
 libavformat, libwebm, libmkvtoolnix, mkvtoolnix, Bento4, FFmpeg, or
 any other implementation. Generic Matroska (`DocType = matroska`)
-support lives in the separate `@webcvt/container-mkv` package. Test
+support lives in the separate `@catlabtech/webcvt-container-mkv` package. Test
 fixtures derived from FFmpeg samples (LGPL-2.1) live under
 `tests/fixtures/video/` and `tests/fixtures/audio/` and are not
 redistributed in npm.

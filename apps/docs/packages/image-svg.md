@@ -1,11 +1,11 @@
-# @webcvt/image-svg
+# @catlabtech/webcvt-image-svg
 
 > SVG parsing, safety-checking, and rasterization for webcvt.
 
 ## Installation
 
 ```bash
-npm i @webcvt/image-svg
+npm i @catlabtech/webcvt-image-svg
 ```
 
 ## API
@@ -21,8 +21,8 @@ Detailed API reference coming in v0.2. See the [source code](https://github.com/
 ## Usage
 
 ```ts
-import { SvgBackend } from '@webcvt/image-svg';
-import { defaultRegistry, convert } from '@webcvt/core';
+import { SvgBackend } from '@catlabtech/webcvt-image-svg';
+import { defaultRegistry, convert } from '@catlabtech/webcvt-core';
 
 defaultRegistry.register(new SvgBackend());
 

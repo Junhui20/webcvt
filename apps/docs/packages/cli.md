@@ -1,4 +1,4 @@
-# @webcvt/cli
+# @catlabtech/webcvt-cli
 
 > Command-line interface for webcvt. Convert files from the terminal without writing code.
 
@@ -6,10 +6,10 @@
 
 ```bash
 # Use directly (no install)
-npx @webcvt/cli <input> <output>
+npx @catlabtech/webcvt-cli <input> <output>
 
 # Or install globally
-npm i -g @webcvt/cli
+npm i -g @catlabtech/webcvt-cli
 ```
 
 ## API

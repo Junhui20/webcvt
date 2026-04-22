@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-flac
+ * @catlabtech/webcvt-container-flac
  *
  * FLAC (Free Lossless Audio Codec) container parser and serializer for webcvt.
  *
@@ -12,7 +12,7 @@
  * in npm.
  *
  * Phase 1: decode (FLAC → PCM via WebCodecs, FLAC → FLAC round-trip).
- * Phase 2: encode via @webcvt/backend-wasm (libFLAC). Install that package
+ * Phase 2: encode via @catlabtech/webcvt-backend-wasm (libFLAC). Install that package
  * to enable FLAC encoding; the core BackendRegistry will auto-discover it.
  */
 

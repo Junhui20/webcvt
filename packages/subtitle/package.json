@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/subtitle",
+  "name": "@catlabtech/webcvt-subtitle",
   "version": "0.1.0",
   "description": "Browser-first subtitle conversion for webcvt — SRT, VTT, ASS, SSA, MicroDVD, MPL2",
   "type": "module",
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.3.0",

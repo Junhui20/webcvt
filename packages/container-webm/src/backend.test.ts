@@ -10,8 +10,8 @@
  * - convert: throws for oversized input
  */
 
-import type { FormatDescriptor } from '@webcvt/core';
-import { loadFixture } from '@webcvt/test-utils';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { WebmBackend } from './backend.ts';
 import { WebmEncodeNotImplementedError, WebmInputTooLargeError } from './errors.ts';

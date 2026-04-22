@@ -1,6 +1,6 @@
 # data-text FWF extension design
 
-> Second-pass extension for `@webcvt/data-text`. Adds FWF (Fixed-Width
+> Second-pass extension for `@catlabtech/webcvt-data-text`. Adds FWF (Fixed-Width
 > Format / flat file / column-aligned text). Clean-room: NO porting
 > from pandas `read_fwf`, polars, SAS INPUT, awk FIELDWIDTHS, or any
 > `*-fwf-*` npm package. No published spec; implementation derived

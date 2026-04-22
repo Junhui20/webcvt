@@ -2,8 +2,8 @@
  * Tests for EBML header element decode/encode (elements/header.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
-import { readVintId, readVintSize } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
+import { readVintId, readVintSize } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   WebmDocTypeNotSupportedError,

@@ -1,5 +1,5 @@
 /**
- * Shared constants for the @webcvt/container-aac package.
+ * Shared constants for the @catlabtech/webcvt-container-aac package.
  *
  * Centralising limits here ensures backend.ts and parser.ts cannot drift.
  */

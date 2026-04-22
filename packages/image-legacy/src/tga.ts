@@ -1,5 +1,5 @@
 /**
- * TGA (Truevision Targa) parser and serializer for @webcvt/image-legacy.
+ * TGA (Truevision Targa) parser and serializer for @catlabtech/webcvt-image-legacy.
  *
  * Implements Truevision TGA File Format Specification Version 2.0 (1989).
  * Clean-room implementation per plan.md §11 — no reference implementations consulted.

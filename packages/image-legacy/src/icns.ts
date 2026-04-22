@@ -1,5 +1,5 @@
 /**
- * ICNS (Apple Icon Image) parser and serializer for @webcvt/image-legacy.
+ * ICNS (Apple Icon Image) parser and serializer for @catlabtech/webcvt-image-legacy.
  *
  * Implements the Apple Icon Composer format: IFF-style multi-resolution icon
  * container. All multi-byte integers are big-endian (Trap #13).

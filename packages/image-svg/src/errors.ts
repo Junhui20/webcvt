@@ -1,12 +1,12 @@
 /**
- * Typed error classes for @webcvt/image-svg.
+ * Typed error classes for @catlabtech/webcvt-image-svg.
  *
  * All error codes are UPPER_SNAKE_CASE strings for programmatic matching.
  * Never throw bare Error or WebcvtError from image-svg — always use
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
 // Parse errors

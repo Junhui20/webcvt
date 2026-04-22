@@ -156,7 +156,7 @@ describe('AudioSpecificConfig with different channel configurations', () => {
 
 describe('buildAudioSpecificConfig from real fixture header', () => {
   it('produces correct ASC from parsed fixture first frame', async () => {
-    const { loadFixture } = await import('@webcvt/test-utils');
+    const { loadFixture } = await import('@catlabtech/webcvt-test-utils');
     const { parseAdts } = await import('./parser.ts');
     const bytes = await loadFixture('audio/sine-1s-44100-mono.aac');
     const file = parseAdts(bytes);

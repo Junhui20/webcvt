@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/ebml",
+  "name": "@catlabtech/webcvt-ebml",
   "version": "0.1.0",
   "description": "Shared EBML primitives (VINT codec, element walker, typed readers/writers) for webcvt container packages",
   "type": "module",
@@ -24,10 +24,10 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
-    "@webcvt/test-utils": "workspace:*",
+    "@catlabtech/webcvt-test-utils": "workspace:*",
     "@vitest/coverage-v8": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",

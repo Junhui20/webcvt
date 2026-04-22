@@ -1,11 +1,11 @@
-# @webcvt/data-text
+# @catlabtech/webcvt-data-text
 
 > Structured text format conversion for webcvt: JSON, CSV/TSV, TOML, YAML, INI, ENV, JSONL, XML, FWF, and more.
 
 ## Installation
 
 ```bash
-npm i @webcvt/data-text
+npm i @catlabtech/webcvt-data-text
 ```
 
 ## Supported formats

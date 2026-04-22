@@ -18,7 +18,7 @@
  * If binary magic is detected in the first 4 bytes, a clear error is thrown.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import type { Cue, SubtitleTrack } from './cue.ts';
 import { SubtitleParseError } from './srt.ts';
 
@@ -46,7 +46,7 @@ export class VobSubError extends WebcvtError {
       'VOBSUB_NOT_SUPPORTED',
       'VobSub binary .sub files are not supported. ' +
         'VobSub is an image-based subtitle format stored as an MPEG-PS bitstream. ' +
-        'Only text-based MicroDVD .sub files are handled by @webcvt/subtitle. ' +
+        'Only text-based MicroDVD .sub files are handled by @catlabtech/webcvt-subtitle. ' +
         'If you need VobSub support, use a dedicated video processing pipeline.',
     );
     this.name = 'VobSubError';

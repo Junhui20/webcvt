@@ -1,11 +1,11 @@
-# @webcvt/core
+# @catlabtech/webcvt-core
 
 > Public API, types, format detector, capability probe, and backend registry for webcvt.
 
 ## Installation
 
 ```bash
-npm i @webcvt/core
+npm i @catlabtech/webcvt-core
 ```
 
 ## What's here
@@ -21,7 +21,7 @@ npm i @webcvt/core
 ### `convert(input, options)`
 
 ```ts
-import { convert, defaultRegistry } from '@webcvt/core';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
 
 const result = await convert(inputBlob, {
   format: 'webp',       // target format (extension string or FormatDescriptor)
@@ -39,7 +39,7 @@ console.log(result.hardwareAccelerated);
 ### `detectFormat(blob)`
 
 ```ts
-import { detectFormat } from '@webcvt/core';
+import { detectFormat } from '@catlabtech/webcvt-core';
 
 const format = await detectFormat(myBlob);
 console.log(format?.mime);  // e.g. 'image/png'
@@ -49,7 +49,7 @@ console.log(format?.ext);   // e.g. 'png'
 ### `BackendRegistry`
 
 ```ts
-import { BackendRegistry, defaultRegistry } from '@webcvt/core';
+import { BackendRegistry, defaultRegistry } from '@catlabtech/webcvt-core';
 
 // Use the shared default registry
 defaultRegistry.register(new MyBackend());
@@ -62,7 +62,7 @@ registry.register(new MyBackend());
 ### `detectCapabilities()`
 
 ```ts
-import { detectCapabilities } from '@webcvt/core';
+import { detectCapabilities } from '@catlabtech/webcvt-core';
 
 const caps = await detectCapabilities();
 console.log(caps.webcodecs);    // true | false
@@ -81,13 +81,13 @@ import type {
   ProgressEvent,
   HardwareAcceleration,
   Category,
-} from '@webcvt/core';
+} from '@catlabtech/webcvt-core';
 ```
 
 ### Error classes
 
 ```ts
-import { WebcvtError, UnsupportedFormatError, NoBackendError } from '@webcvt/core';
+import { WebcvtError, UnsupportedFormatError, NoBackendError } from '@catlabtech/webcvt-core';
 ```
 
 | Class | Code | When thrown |

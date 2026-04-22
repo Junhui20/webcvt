@@ -1,11 +1,11 @@
 /**
- * Typed error classes for @webcvt/image-legacy.
+ * Typed error classes for @catlabtech/webcvt-image-legacy.
  *
  * All error codes are UPPER_SNAKE_CASE strings for programmatic matching.
  * Never throw bare Error from image-legacy — always use a typed subclass.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
 // Universal errors

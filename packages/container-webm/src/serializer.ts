@@ -14,7 +14,7 @@
  * No byte-identical fast path is provided (see serializeWebm JSDoc for details).
  */
 
-import { concatBytes, writeVintId, writeVintSize } from '@webcvt/ebml';
+import { concatBytes, writeVintId, writeVintSize } from '@catlabtech/webcvt-ebml';
 import {
   ID_CUES,
   ID_INFO,

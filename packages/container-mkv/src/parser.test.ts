@@ -1,5 +1,5 @@
 /**
- * Parser tests for @webcvt/container-mkv.
+ * Parser tests for @catlabtech/webcvt-container-mkv.
  *
  * Covers design note test cases:
  * - parses EBML header and recognises DocType "matroska"
@@ -21,8 +21,8 @@
  * - decodes 2-byte track_number VINT in SimpleBlock for trackNumber > 127
  */
 
-import { EbmlTooManyElementsError, EbmlUnknownSizeError } from '@webcvt/ebml';
-import { loadFixture } from '@webcvt/test-utils';
+import { EbmlTooManyElementsError, EbmlUnknownSizeError } from '@catlabtech/webcvt-ebml';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import {
   MkvCorruptStreamError,

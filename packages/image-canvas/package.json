@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/image-canvas",
+  "name": "@catlabtech/webcvt-image-canvas",
   "version": "0.1.0",
   "description": "Browser-native image conversion backend for webcvt — PNG, JPG, WebP, BMP, ICO via Canvas API",
   "type": "module",
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.3.0",

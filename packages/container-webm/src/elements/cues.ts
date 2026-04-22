@@ -14,8 +14,8 @@ import {
   readUintNumber,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   ID_CUES,
   ID_CUE_CLUSTER_POSITION,

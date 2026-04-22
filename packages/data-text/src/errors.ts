@@ -1,12 +1,12 @@
 /**
- * Typed error classes for @webcvt/data-text.
+ * Typed error classes for @catlabtech/webcvt-data-text.
  *
  * All error codes are UPPER_SNAKE_CASE strings for programmatic matching.
  * Never throw bare Error or WebcvtError from data-text — always use
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
 // Universal errors

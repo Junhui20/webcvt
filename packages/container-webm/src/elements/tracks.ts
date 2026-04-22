@@ -19,8 +19,8 @@ import {
   writeUint,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   ALLOWED_CODEC_IDS,
   ID_AUDIO,
@@ -106,7 +106,7 @@ export interface WebmAudioTrack {
 
 export type WebmTrack = WebmVideoTrack | WebmAudioTrack;
 
-// Note: parseFlatChildren is imported from '@webcvt/ebml' (Q-H-2 shared helper).
+// Note: parseFlatChildren is imported from '@catlabtech/webcvt-ebml' (Q-H-2 shared helper).
 
 // ---------------------------------------------------------------------------
 // Decoder

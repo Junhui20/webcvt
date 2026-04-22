@@ -1,5 +1,5 @@
 /**
- * YAML 1.2 canonical emitter for @webcvt/data-text.
+ * YAML 1.2 canonical emitter for @catlabtech/webcvt-data-text.
  *
  * Hand-rolled canonical emitter over a YamlFile POJO.
  * No anchors/aliases emitted — always produces expanded tree.

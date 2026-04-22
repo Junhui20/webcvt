@@ -17,8 +17,8 @@ import {
   writeUtf8,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   ID_DOCTYPE,
   ID_DOCTYPE_READ_VERSION,

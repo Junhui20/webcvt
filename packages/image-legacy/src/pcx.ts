@@ -1,5 +1,5 @@
 /**
- * PCX (PC Paintbrush / ZSoft) parser and serializer for @webcvt/image-legacy.
+ * PCX (PC Paintbrush / ZSoft) parser and serializer for @catlabtech/webcvt-image-legacy.
  *
  * Implements ZSoft PCX File Format Technical Reference Manual (1991, version 5).
  * Clean-room implementation per plan.md §11 — no reference implementations consulted.

@@ -1,7 +1,7 @@
 {
-  "name": "@webcvt/cli",
+  "name": "@catlabtech/webcvt-cli",
   "version": "0.1.0",
-  "description": "Command-line interface for webcvt — thin shell around @webcvt/core",
+  "description": "Command-line interface for webcvt — thin shell around @catlabtech/webcvt-core",
   "type": "module",
   "bin": {
     "webcvt": "./dist/cli.js"
@@ -17,26 +17,26 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "optionalDependencies": {
-    "@webcvt/container-mp3": "workspace:*",
-    "@webcvt/container-wav": "workspace:*",
-    "@webcvt/container-flac": "workspace:*",
-    "@webcvt/container-ogg": "workspace:*",
-    "@webcvt/container-aac": "workspace:*",
-    "@webcvt/container-mp4": "workspace:*",
-    "@webcvt/container-webm": "workspace:*",
-    "@webcvt/container-mkv": "workspace:*",
-    "@webcvt/container-ts": "workspace:*",
-    "@webcvt/image-canvas": "workspace:*",
-    "@webcvt/image-svg": "workspace:*",
-    "@webcvt/image-animation": "workspace:*",
-    "@webcvt/image-legacy": "workspace:*",
-    "@webcvt/data-text": "workspace:*",
-    "@webcvt/archive-zip": "workspace:*",
-    "@webcvt/subtitle": "workspace:*",
-    "@webcvt/backend-wasm": "workspace:*"
+    "@catlabtech/webcvt-container-mp3": "workspace:*",
+    "@catlabtech/webcvt-container-wav": "workspace:*",
+    "@catlabtech/webcvt-container-flac": "workspace:*",
+    "@catlabtech/webcvt-container-ogg": "workspace:*",
+    "@catlabtech/webcvt-container-aac": "workspace:*",
+    "@catlabtech/webcvt-container-mp4": "workspace:*",
+    "@catlabtech/webcvt-container-webm": "workspace:*",
+    "@catlabtech/webcvt-container-mkv": "workspace:*",
+    "@catlabtech/webcvt-container-ts": "workspace:*",
+    "@catlabtech/webcvt-image-canvas": "workspace:*",
+    "@catlabtech/webcvt-image-svg": "workspace:*",
+    "@catlabtech/webcvt-image-animation": "workspace:*",
+    "@catlabtech/webcvt-image-legacy": "workspace:*",
+    "@catlabtech/webcvt-data-text": "workspace:*",
+    "@catlabtech/webcvt-archive-zip": "workspace:*",
+    "@catlabtech/webcvt-subtitle": "workspace:*",
+    "@catlabtech/webcvt-backend-wasm": "workspace:*"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.0",

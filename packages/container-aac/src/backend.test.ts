@@ -2,7 +2,7 @@
  * Tests for AacBackend.
  */
 
-import { loadFixtureBlob } from '@webcvt/test-utils';
+import { loadFixtureBlob } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { AAC_FORMAT, AacBackend } from './backend.ts';
 import { AdtsEncodeNotImplementedError, AdtsInputTooLargeError } from './errors.ts';
@@ -44,7 +44,7 @@ describe('AacBackend.canHandle', () => {
     expect(result).toBe(false);
   });
 
-  // Q-1: HE-AAC MIMEs must NOT be handled here — they route to @webcvt/backend-wasm (Trap #7).
+  // Q-1: HE-AAC MIMEs must NOT be handled here — they route to @catlabtech/webcvt-backend-wasm (Trap #7).
   it('returns false for audio/aacp input → AAC output (HE-AAC routes to backend-wasm)', async () => {
     const aacpFormat = { ext: 'aac', mime: 'audio/aacp', category: 'audio' as const };
     const result = await backend.canHandle(aacpFormat, AAC_FORMAT);

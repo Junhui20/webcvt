@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/core",
+  "name": "@catlabtech/webcvt-core",
   "version": "0.1.0",
   "description": "Public API, types, format detector, and backend registry for webcvt",
   "type": "module",

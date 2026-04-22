@@ -1,5 +1,5 @@
 /**
- * Lookup tables for codec selection in @webcvt/backend-wasm.
+ * Lookup tables for codec selection in @catlabtech/webcvt-backend-wasm.
  *
  * All codec decisions flow through these tables — no user-controlled strings
  * ever reach ffmpeg argv directly (Trap #8, #4).

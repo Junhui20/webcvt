@@ -1,5 +1,5 @@
 /**
- * WasmBackend — the top-level Backend implementation for @webcvt/backend-wasm.
+ * WasmBackend — the top-level Backend implementation for @catlabtech/webcvt-backend-wasm.
  *
  * Assembles: allowlist check, loader, serial queue, MEMFS marshalling,
  * command synthesis, progress parsing, idle reaper.
@@ -12,7 +12,7 @@
  * - Abort mid-exec nulls both instance and loading (Trap #12).
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
 import { isAllowlisted } from './allowlist.ts';
 import { buildCommand } from './command.ts';
 import { IDLE_TIMEOUT_MS, MAX_INPUT_BYTES } from './constants.ts';

@@ -2,8 +2,8 @@
  * Tests for Cues element decode/encode (cues.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
-import { concatBytes, readChildren } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
+import { concatBytes, readChildren } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_CUES,

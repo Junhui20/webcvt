@@ -6,7 +6,7 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ## [0.1.0] — 2026-04-22
 
-Initial public release. **22 packages, 3,970 tests, ~110,000 LOC.** All packages published to npm at `@webcvt/*@0.1.0`.
+Initial public release. **22 packages, 3,970 tests, ~110,000 LOC.** All packages published to npm at `@catlabtech/webcvt-*@0.1.0`.
 
 ### Design guarantees
 
@@ -18,40 +18,40 @@ Initial public release. **22 packages, 3,970 tests, ~110,000 LOC.** All packages
 
 ### Added — foundation
 
-- **`@webcvt/core`** — public API + types + format detector + backend registry + capability probe. `convert(blob, { format })` dispatches to registered backends. `detectFormat()` (magic bytes) + `detectFormatWithHint()` (filename fallback for text formats).
-- **`@webcvt/codec-webcodecs`** — hardware-accelerated encode/decode adapter for browser + Node 24+.
-- **`@webcvt/backend-wasm`** — ffmpeg.wasm fallback (lazy-loaded 30 MB core; ~203 curated MIME pairs).
-- **`@webcvt/test-utils`** — shared test fixtures + byte helpers.
+- **`@catlabtech/webcvt-core`** — public API + types + format detector + backend registry + capability probe. `convert(blob, { format })` dispatches to registered backends. `detectFormat()` (magic bytes) + `detectFormatWithHint()` (filename fallback for text formats).
+- **`@catlabtech/webcvt-codec-webcodecs`** — hardware-accelerated encode/decode adapter for browser + Node 24+.
+- **`@catlabtech/webcvt-backend-wasm`** — ffmpeg.wasm fallback (lazy-loaded 30 MB core; ~203 curated MIME pairs).
+- **`@catlabtech/webcvt-test-utils`** — shared test fixtures + byte helpers.
 
 ### Added — audio + video containers
 
-- **`@webcvt/container-wav`** — RIFF/WAV with WAVEFORMATEXTENSIBLE recognition.
-- **`@webcvt/container-mp3`** — MPEG-1/2/2.5 Layer III, ID3v2/v1, Xing/LAME/VBRI tags.
-- **`@webcvt/container-flac`** — native FLAC demux + serialize + WebCodecs decode.
-- **`@webcvt/container-ogg`** — Ogg transport (Vorbis, Opus) with chaining.
-- **`@webcvt/container-aac`** — AAC ADTS + AudioSpecificConfig.
-- **`@webcvt/container-mp4`** — Classic + fragmented MP4 (DASH/HLS-CMAF/MSE); multi-track audio+video; video codecs avc1/avc3/hev1/hvc1/vp09/av01 with WebCodecs-ready codec strings; edit lists (AAC priming trim); iTunes-style metadata (udta/meta/ilst); keyframe detection via stss + trun sample_is_non_sync_sample; byte-equivalent round-trip for any parseable input.
-- **`@webcvt/container-webm`** — WebM (VP8/VP9 + Opus/Vorbis).
-- **`@webcvt/container-mkv`** — Matroska (H.264/HEVC/VP9 + AAC/FLAC/Opus/Vorbis).
-- **`@webcvt/container-ts`** — MPEG-TS / HLS with H.264 + AAC ADTS.
-- **`@webcvt/ebml`** — shared EBML primitives (RFC 8794).
+- **`@catlabtech/webcvt-container-wav`** — RIFF/WAV with WAVEFORMATEXTENSIBLE recognition.
+- **`@catlabtech/webcvt-container-mp3`** — MPEG-1/2/2.5 Layer III, ID3v2/v1, Xing/LAME/VBRI tags.
+- **`@catlabtech/webcvt-container-flac`** — native FLAC demux + serialize + WebCodecs decode.
+- **`@catlabtech/webcvt-container-ogg`** — Ogg transport (Vorbis, Opus) with chaining.
+- **`@catlabtech/webcvt-container-aac`** — AAC ADTS + AudioSpecificConfig.
+- **`@catlabtech/webcvt-container-mp4`** — Classic + fragmented MP4 (DASH/HLS-CMAF/MSE); multi-track audio+video; video codecs avc1/avc3/hev1/hvc1/vp09/av01 with WebCodecs-ready codec strings; edit lists (AAC priming trim); iTunes-style metadata (udta/meta/ilst); keyframe detection via stss + trun sample_is_non_sync_sample; byte-equivalent round-trip for any parseable input.
+- **`@catlabtech/webcvt-container-webm`** — WebM (VP8/VP9 + Opus/Vorbis).
+- **`@catlabtech/webcvt-container-mkv`** — Matroska (H.264/HEVC/VP9 + AAC/FLAC/Opus/Vorbis).
+- **`@catlabtech/webcvt-container-ts`** — MPEG-TS / HLS with H.264 + AAC ADTS.
+- **`@catlabtech/webcvt-ebml`** — shared EBML primitives (RFC 8794).
 
 ### Added — images
 
-- **`@webcvt/image-canvas`** — PNG/JPG/WebP/BMP/ICO via Canvas API + hand-rolled BMP/ICO writers.
-- **`@webcvt/image-legacy`** — 11 formats: PBM/PGM/PPM/PFM/QOI/TIFF/TGA/XBM/PCX/XPM/ICNS. All hand-rolled parsers, byte-equivalent round-trip where the spec allows.
-- **`@webcvt/image-animation`** — GIF, APNG, animated WebP.
-- **`@webcvt/image-svg`** — SVG parse + Canvas rasterize with aggressive security gates (XXE, billion-laughs, external entity blocks).
+- **`@catlabtech/webcvt-image-canvas`** — PNG/JPG/WebP/BMP/ICO via Canvas API + hand-rolled BMP/ICO writers.
+- **`@catlabtech/webcvt-image-legacy`** — 11 formats: PBM/PGM/PPM/PFM/QOI/TIFF/TGA/XBM/PCX/XPM/ICNS. All hand-rolled parsers, byte-equivalent round-trip where the spec allows.
+- **`@catlabtech/webcvt-image-animation`** — GIF, APNG, animated WebP.
+- **`@catlabtech/webcvt-image-svg`** — SVG parse + Canvas rasterize with aggressive security gates (XXE, billion-laughs, external entity blocks).
 
 ### Added — archives + data + subtitles
 
-- **`@webcvt/archive-zip`** — ZIP + POSIX ustar TAR + gzip envelope; bz2/xz routed to backend-wasm.
-- **`@webcvt/data-text`** — 10 formats: JSON, JSONL, CSV, TSV, INI, ENV, TOML, FWF, XML, YAML. Aggressive security gates: billion-laughs + XXE (XML/YAML), prototype pollution (INI/ENV/YAML), depth bombs.
-- **`@webcvt/subtitle`** — SRT, WebVTT, ASS, SSA, MicroDVD. Any pair round-trips.
+- **`@catlabtech/webcvt-archive-zip`** — ZIP + POSIX ustar TAR + gzip envelope; bz2/xz routed to backend-wasm.
+- **`@catlabtech/webcvt-data-text`** — 10 formats: JSON, JSONL, CSV, TSV, INI, ENV, TOML, FWF, XML, YAML. Aggressive security gates: billion-laughs + XXE (XML/YAML), prototype pollution (INI/ENV/YAML), depth bombs.
+- **`@catlabtech/webcvt-subtitle`** — SRT, WebVTT, ASS, SSA, MicroDVD. Any pair round-trips.
 
 ### Added — CLI
 
-- **`@webcvt/cli`** — `npx webcvt in out` Node CLI with optional-dep backend loader (16 entries). Exit codes, stdin/stdout binary I/O, 256 MiB input cap, hand-rolled argv parser (no CLI framework dep).
+- **`@catlabtech/webcvt-cli`** — `npx webcvt in out` Node CLI with optional-dep backend loader (16 entries). Exit codes, stdin/stdout binary I/O, 256 MiB input cap, hand-rolled argv parser (no CLI framework dep).
 
 ### Added — apps
 

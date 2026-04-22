@@ -1,6 +1,6 @@
 # image-svg design
 
-> Implementation reference for `@webcvt/image-svg`. Write the code from
+> Implementation reference for `@catlabtech/webcvt-image-svg`. Write the code from
 > this note plus the linked official specs. Do not consult competing
 > implementations (svgo, fabric, d3, canvg, sharp) except for debugging
 > spec-ambiguous edge cases.
@@ -26,7 +26,7 @@ rasterization to PNG / JPEG / WebP via the browser Canvas API.
 
 **Out of scope (Phase 4.5+):** SVG editing or DOM manipulation,
 embedded `@font-face` resolution, filter / animation / SMIL evaluation,
-SVGZ (gzip-wrapped — compose with `@webcvt/archive-zip`),
+SVGZ (gzip-wrapped — compose with `@catlabtech/webcvt-archive-zip`),
 rasterization of arbitrary user CSS, and svgo-style normalization.
 
 ## Official references
@@ -174,7 +174,7 @@ detect at module load.
 | Timeout | `AbortController` | https://dom.spec.whatwg.org/#aborting-ongoing-activities |
 
 The encoder side (PNG / JPEG / WebP byte production) is delegated
-to `@webcvt/image-canvas`'s codec layer when callers want raw
+to `@catlabtech/webcvt-image-canvas`'s codec layer when callers want raw
 encoded bytes plus metadata; the simple `rasterizeSvg` returns a
 `Blob` so it remains independent and self-contained.
 

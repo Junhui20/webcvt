@@ -1,5 +1,5 @@
 /**
- * Shared constants for @webcvt/container-mp4.
+ * Shared constants for @catlabtech/webcvt-container-mp4.
  *
  * Centralising limits here ensures parser.ts, serializer.ts, and backend.ts
  * cannot drift from each other. All security caps are derived from the design

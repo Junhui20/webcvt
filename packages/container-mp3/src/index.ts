@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-mp3
+ * @catlabtech/webcvt-container-mp3
  *
  * MPEG-1/2 Layer III (MP3) container parser and serializer for webcvt.
  *

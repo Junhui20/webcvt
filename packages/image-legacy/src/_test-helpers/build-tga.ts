@@ -1,5 +1,5 @@
 /**
- * Synthetic TGA fixture builder for @webcvt/image-legacy tests.
+ * Synthetic TGA fixture builder for @catlabtech/webcvt-image-legacy tests.
  *
  * Constructs minimal but spec-valid TGA byte sequences in memory.
  * NO binary fixtures are committed to disk — all test inputs are built here.

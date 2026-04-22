@@ -5,17 +5,17 @@ webcvt works in Node.js ≥ 20. The same packages used in the browser run server
 ## Installation
 
 ```bash
-npm i @webcvt/core @webcvt/image-canvas
+npm i @catlabtech/webcvt-core @catlabtech/webcvt-image-canvas
 # Or with pnpm:
-pnpm add @webcvt/core @webcvt/image-canvas
+pnpm add @catlabtech/webcvt-core @catlabtech/webcvt-image-canvas
 ```
 
 ## Basic conversion
 
 ```ts
 import { readFile, writeFile } from 'node:fs/promises';
-import { convert, defaultRegistry } from '@webcvt/core';
-import { CanvasBackend } from '@webcvt/image-canvas';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
 
 // Register backend once
 defaultRegistry.register(new CanvasBackend());
@@ -39,9 +39,9 @@ console.log(`Done in ${result.durationMs}ms via ${result.backend}`);
 Register multiple backends in priority order. The registry picks the first one that reports `canHandle()` as `true`:
 
 ```ts
-import { convert, defaultRegistry } from '@webcvt/core';
-import { CanvasBackend } from '@webcvt/image-canvas';
-import { WasmBackend } from '@webcvt/backend-wasm';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
+import { WasmBackend } from '@catlabtech/webcvt-backend-wasm';
 
 // Canvas backend handles common image formats with no WASM overhead
 defaultRegistry.register(new CanvasBackend());
@@ -54,8 +54,8 @@ const result = await convert(input, { format: 'mp4' });
 ## Subtitle conversion
 
 ```ts
-import { SubtitleBackend } from '@webcvt/subtitle';
-import { convert, defaultRegistry } from '@webcvt/core';
+import { SubtitleBackend } from '@catlabtech/webcvt-subtitle';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
 import { readFile, writeFile } from 'node:fs/promises';
 
 defaultRegistry.register(new SubtitleBackend());
@@ -72,7 +72,7 @@ await writeFile('subtitles.vtt', Buffer.from(await result.blob.arrayBuffer()));
 For subtitle and data-text packages, you can bypass the registry and call parsers directly:
 
 ```ts
-import { parseSrt, serializeVtt } from '@webcvt/subtitle';
+import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
 import { readFileSync } from 'node:fs';
 
 const srtText = readFileSync('subtitles.srt', 'utf-8');
@@ -85,8 +85,8 @@ const vttText = serializeVtt(track);
 For simple one-off conversions in shell scripts, the CLI is more ergonomic than writing a Node.js script:
 
 ```bash
-npx @webcvt/cli photo.jpg photo.webp
-npx @webcvt/cli subtitles.srt subtitles.vtt
+npx @catlabtech/webcvt-cli photo.jpg photo.webp
+npx @catlabtech/webcvt-cli subtitles.srt subtitles.vtt
 ```
 
 See [CLI usage](/guide/cli-usage) for details.
@@ -96,7 +96,7 @@ See [CLI usage](/guide/cli-usage) for details.
 All webcvt errors extend `WebcvtError` and carry a `.code` property for programmatic handling:
 
 ```ts
-import { convert, defaultRegistry, UnsupportedFormatError, NoBackendError } from '@webcvt/core';
+import { convert, defaultRegistry, UnsupportedFormatError, NoBackendError } from '@catlabtech/webcvt-core';
 
 try {
   const result = await convert(input, { format: 'xyz' });

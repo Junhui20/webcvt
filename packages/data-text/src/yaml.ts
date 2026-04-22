@@ -1,5 +1,5 @@
 /**
- * YAML 1.2 Core Schema parse/serialize for @webcvt/data-text.
+ * YAML 1.2 Core Schema parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Sixth-pass extension. Safe, config-oriented subset of YAML 1.2.
  *

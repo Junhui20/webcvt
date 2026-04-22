@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/playground",
+  "name": "@catlabtech/webcvt-playground",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,18 +13,18 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
-    "@webcvt/archive-zip": "workspace:*",
-    "@webcvt/backend-wasm": "workspace:*",
-    "@webcvt/codec-webcodecs": "workspace:*",
-    "@webcvt/container-mp4": "workspace:*",
-    "@webcvt/container-webm": "workspace:*",
-    "@webcvt/data-text": "workspace:*",
-    "@webcvt/image-canvas": "workspace:*",
-    "@webcvt/image-legacy": "workspace:*",
-    "@webcvt/subtitle": "workspace:*",
+    "@catlabtech/webcvt-archive-zip": "workspace:*",
+    "@catlabtech/webcvt-backend-wasm": "workspace:*",
+    "@catlabtech/webcvt-codec-webcodecs": "workspace:*",
+    "@catlabtech/webcvt-container-mp4": "workspace:*",
+    "@catlabtech/webcvt-container-webm": "workspace:*",
+    "@catlabtech/webcvt-data-text": "workspace:*",
+    "@catlabtech/webcvt-image-canvas": "workspace:*",
+    "@catlabtech/webcvt-image-legacy": "workspace:*",
+    "@catlabtech/webcvt-subtitle": "workspace:*",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0",

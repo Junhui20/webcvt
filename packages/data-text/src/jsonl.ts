@@ -1,5 +1,5 @@
 /**
- * JSONL (JSON Lines / NDJSON) parse/serialize for @webcvt/data-text.
+ * JSONL (JSON Lines / NDJSON) parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Each line in a JSONL file holds one valid JSON value. Lines are separated
  * by LF (`\n`) or CRLF (`\r\n`). Bare `\r` is NOT recognised as a line

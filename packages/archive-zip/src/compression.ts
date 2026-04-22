@@ -1,5 +1,5 @@
 /**
- * Browser Compression Streams wrappers for @webcvt/archive-zip.
+ * Browser Compression Streams wrappers for @catlabtech/webcvt-archive-zip.
  *
  * Provides:
  *   - decompressBytes(): pipe a Uint8Array through DecompressionStream with

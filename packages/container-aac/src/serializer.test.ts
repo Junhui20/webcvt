@@ -5,7 +5,7 @@
  * - round-trip: parse → serialize → byte-identical output
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { parseAdts } from './parser.ts';
 import { serializeAdts } from './serializer.ts';
@@ -92,7 +92,7 @@ describe('round-trip: parse → serialize → byte-identical output', () => {
   });
 
   it('round-trips the real AAC fixture byte-identically', async () => {
-    const { loadFixture: load } = await import('@webcvt/test-utils');
+    const { loadFixture: load } = await import('@catlabtech/webcvt-test-utils');
     const bytes = await load('audio/sine-1s-44100-mono.aac');
     const file = parseAdts(bytes);
     const serialized = serializeAdts(file);

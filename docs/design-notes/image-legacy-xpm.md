@@ -1,6 +1,6 @@
 # image-legacy XPM design (sixth pass)
 
-> XPM3 (X PixMap) extension to `@webcvt/image-legacy`. Sixth-pass; read
+> XPM3 (X PixMap) extension to `@catlabtech/webcvt-image-legacy`. Sixth-pass; read
 > image-legacy.md and image-legacy-xbm.md first — XPM is the colour
 > successor to XBM and shares the "ASCII C-source fragment" shape.
 >

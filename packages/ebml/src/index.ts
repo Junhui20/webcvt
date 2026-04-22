@@ -1,5 +1,5 @@
 /**
- * @webcvt/ebml — Shared EBML primitives for webcvt container packages.
+ * @catlabtech/webcvt-ebml — Shared EBML primitives for webcvt container packages.
  *
  * Public API surface: VINT codec, element walker, typed readers/writers, error classes.
  */

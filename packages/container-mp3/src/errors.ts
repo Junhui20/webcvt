@@ -4,7 +4,7 @@
  * All error codes are uppercase snake_case strings for programmatic matching.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /**
  * Thrown when a frame header reports bitrate_index == 0 (free-format).

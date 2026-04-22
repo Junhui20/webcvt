@@ -4,10 +4,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: {
     alias: {
-      '@webcvt/core': resolve(__dirname, '../core/src/index.ts'),
-      '@webcvt/ebml': resolve(__dirname, '../ebml/src/index.ts'),
-      '@webcvt/codec-webcodecs': resolve(__dirname, '../codec-webcodecs/src/index.ts'),
-      '@webcvt/test-utils': resolve(__dirname, '../test-utils/src/index.ts'),
+      '@catlabtech/webcvt-core': resolve(__dirname, '../core/src/index.ts'),
+      '@catlabtech/webcvt-ebml': resolve(__dirname, '../ebml/src/index.ts'),
+      '@catlabtech/webcvt-codec-webcodecs': resolve(__dirname, '../codec-webcodecs/src/index.ts'),
+      '@catlabtech/webcvt-test-utils': resolve(__dirname, '../test-utils/src/index.ts'),
     },
   },
   test: {

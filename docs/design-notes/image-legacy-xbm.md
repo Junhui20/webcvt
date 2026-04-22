@@ -1,7 +1,7 @@
 # image-legacy XBM design (fourth pass)
 
 > Implementation reference for XBM (X11 Bitmap) extension to
-> `@webcvt/image-legacy`. Fourth-pass; read image-legacy.md,
+> `@catlabtech/webcvt-image-legacy`. Fourth-pass; read image-legacy.md,
 > image-legacy-tiff.md, and image-legacy-tga.md first for conventions.
 >
 > Strictly clean-room per plan.md §11: X Consortium X11 R6

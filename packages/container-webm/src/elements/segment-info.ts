@@ -16,8 +16,8 @@ import {
   writeUtf8,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   DEFAULT_TIMECODE_SCALE,
   ID_DURATION,
@@ -88,7 +88,7 @@ export function decodeInfo(bytes: Uint8Array, children: EbmlElement[]): WebmInfo
 // ---------------------------------------------------------------------------
 
 /** Canonical muxing/writing app string for files this package produces. */
-export const WEBCVT_APP_STRING = '@webcvt/container-webm';
+export const WEBCVT_APP_STRING = '@catlabtech/webcvt-container-webm';
 
 /**
  * Encode the Info element to bytes.

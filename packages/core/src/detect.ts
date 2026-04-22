@@ -247,7 +247,7 @@ export async function detectFormat(
     if (svgResult) return svgResult;
   }
 
-  // NOTE: JSON / CSV / TSV / INI / ENV (the five @webcvt/data-text formats) are NOT
+  // NOTE: JSON / CSV / TSV / INI / ENV (the five @catlabtech/webcvt-data-text formats) are NOT
   // detectable by magic bytes. They are all UTF-8 text that may share the same byte
   // patterns (all can start with a BOM or printable ASCII). Attempting to auto-detect
   // them from bytes would cause silent data corruption — e.g. a JSON array starting

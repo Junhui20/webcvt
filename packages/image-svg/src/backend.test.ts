@@ -10,7 +10,7 @@
  * the convert() tests.
  */
 
-import type { FormatDescriptor } from '@webcvt/core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { JPEG_FORMAT, PNG_FORMAT, SVG_FORMAT, SvgBackend, WEBP_FORMAT } from './backend.ts';
 import { SvgEncodeNotImplementedError } from './errors.ts';

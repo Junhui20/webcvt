@@ -1,11 +1,11 @@
 /**
  * Generic EBML error classes extending WebcvtError.
  *
- * These are shared by @webcvt/container-webm and @webcvt/container-mkv.
+ * These are shared by @catlabtech/webcvt-container-webm and @catlabtech/webcvt-container-mkv.
  * All error codes are UPPER_SNAKE_CASE strings for programmatic matching.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /** Thrown when an EBML VINT has an invalid encoding (e.g. all-zeros first byte). */
 export class EbmlVintError extends WebcvtError {

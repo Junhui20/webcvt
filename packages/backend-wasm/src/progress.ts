@@ -1,5 +1,5 @@
 /**
- * Progress parsing for @webcvt/backend-wasm.
+ * Progress parsing for @catlabtech/webcvt-backend-wasm.
  *
  * FFmpeg emits progress on stderr (NOT stdout) — Trap #3.
  * We parse `Duration:` to get total time and `time=` to compute percent.
@@ -10,7 +10,7 @@
  * - Throttle emissions to PROGRESS_THROTTLE_MS to avoid flooding callers.
  */
 
-import type { ProgressEvent } from '@webcvt/core';
+import type { ProgressEvent } from '@catlabtech/webcvt-core';
 import { PROGRESS_THROTTLE_MS, UNKNOWN_DURATION_SENTINEL } from './constants.ts';
 
 // ---------------------------------------------------------------------------

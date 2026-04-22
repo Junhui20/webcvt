@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-mp4 — MP4/M4A container muxer and demuxer.
+ * @catlabtech/webcvt-container-mp4 — MP4/M4A container muxer and demuxer.
  *
  * Public API surface (minimal per Lesson #6 — do not re-export internal helpers).
  */

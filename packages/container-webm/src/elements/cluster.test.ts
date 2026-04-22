@@ -9,7 +9,7 @@
  * - Missing timecode error
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import { MAX_BLOCKS_PER_TRACK } from '../constants.ts';
 import {

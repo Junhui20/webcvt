@@ -85,7 +85,7 @@ apps/playground/
 
 ```json
 {
-  "name": "@webcvt/playground",
+  "name": "@catlabtech/webcvt-playground",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -97,18 +97,18 @@ apps/playground/
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
-    "@webcvt/archive-zip": "workspace:*",
-    "@webcvt/backend-wasm": "workspace:*",
-    "@webcvt/codec-webcodecs": "workspace:*",
-    "@webcvt/container-mp4": "workspace:*",
-    "@webcvt/container-webm": "workspace:*",
-    "@webcvt/data-text": "workspace:*",
-    "@webcvt/image-canvas": "workspace:*",
-    "@webcvt/image-legacy": "workspace:*",
-    "@webcvt/subtitle": "workspace:*",
+    "@catlabtech/webcvt-archive-zip": "workspace:*",
+    "@catlabtech/webcvt-backend-wasm": "workspace:*",
+    "@catlabtech/webcvt-codec-webcodecs": "workspace:*",
+    "@catlabtech/webcvt-container-mp4": "workspace:*",
+    "@catlabtech/webcvt-container-webm": "workspace:*",
+    "@catlabtech/webcvt-data-text": "workspace:*",
+    "@catlabtech/webcvt-image-canvas": "workspace:*",
+    "@catlabtech/webcvt-image-legacy": "workspace:*",
+    "@catlabtech/webcvt-subtitle": "workspace:*",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
     "typescript": "^5.7.0",
@@ -117,7 +117,7 @@ apps/playground/
 }
 ```
 
-Only `@webcvt/core` is static; others lazy-loaded. Landing payload target: ~25 KB gz.
+Only `@catlabtech/webcvt-core` is static; others lazy-loaded. Landing payload target: ~25 KB gz.
 
 ## 7. Build config
 
@@ -149,12 +149,12 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['@webcvt/core'],
+    include: ['@catlabtech/webcvt-core'],
     exclude: [
-      '@webcvt/image-canvas', '@webcvt/codec-webcodecs',
-      '@webcvt/container-mp4', '@webcvt/container-webm',
-      '@webcvt/subtitle', '@webcvt/archive-zip',
-      '@webcvt/data-text', '@webcvt/backend-wasm',
+      '@catlabtech/webcvt-image-canvas', '@catlabtech/webcvt-codec-webcodecs',
+      '@catlabtech/webcvt-container-mp4', '@catlabtech/webcvt-container-webm',
+      '@catlabtech/webcvt-subtitle', '@catlabtech/webcvt-archive-zip',
+      '@catlabtech/webcvt-data-text', '@catlabtech/webcvt-backend-wasm',
     ],
   },
 });
@@ -247,13 +247,13 @@ Use `https://github.com/Junhui20/webcvt` until real domain arrives. CF Pages pre
 One-time:
 ```bash
 npx wrangler login
-pnpm --filter @webcvt/playground build
+pnpm --filter @catlabtech/webcvt-playground build
 npx wrangler pages deploy apps/playground/dist --project-name=webcvt --branch=main
 ```
 
 Subsequent:
 ```bash
-pnpm --filter @webcvt/playground build && \
+pnpm --filter @catlabtech/webcvt-playground build && \
   npx wrangler pages deploy apps/playground/dist --project-name=webcvt
 ```
 
@@ -273,7 +273,7 @@ GitHub Actions automation deferred until post-v0.1.
 
 ## Open questions
 
-1. Does `@webcvt/core` expose `supportedOutputs(input)`? If not, add to core or build allowlist locally.
+1. Does `@catlabtech/webcvt-core` expose `supportedOutputs(input)`? If not, add to core or build allowlist locally.
 2. Version badge (`VITE_WEBCVT_VERSION`)? Recommended: yes.
 3. Samples in repo or jsDelivr? Recommended: checked in (air-gapped).
 4. Telemetry: confirmed NO for v0.1.

@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-webm — WebM container muxer and demuxer.
+ * @catlabtech/webcvt-container-webm — WebM container muxer and demuxer.
  *
  * Public API surface (minimal per Lesson #6 — do not re-export internal helpers).
  */
@@ -34,7 +34,7 @@ export {
 // Backend registration.
 export { WebmBackend, WEBM_FORMAT } from './backend.ts';
 
-// EBML generic error classes (re-exported from @webcvt/ebml for consumer convenience).
+// EBML generic error classes (re-exported from @catlabtech/webcvt-ebml for consumer convenience).
 export {
   EbmlVintError,
   EbmlElementTooLargeError,
@@ -42,7 +42,7 @@ export {
   EbmlDepthExceededError,
   EbmlTruncatedError,
   EbmlUnknownSizeError,
-} from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
 
 // Typed error classes (exported so callers can catch by type).
 export {

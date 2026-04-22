@@ -1,5 +1,5 @@
 /**
- * Top-level image serializer dispatcher for @webcvt/image-legacy.
+ * Top-level image serializer dispatcher for @catlabtech/webcvt-image-legacy.
  *
  * serializeImage(file) switches on file.format and routes to the appropriate
  * per-format serializer.

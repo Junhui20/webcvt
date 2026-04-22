@@ -9,7 +9,7 @@
  *
  * WebCodecs encode note:
  * FLAC is not a WebCodecs encode target as of 2026. Encode is delegated to
- * @webcvt/backend-wasm (libFLAC via ffmpeg.wasm) through the core BackendRegistry
+ * @catlabtech/webcvt-backend-wasm (libFLAC via ffmpeg.wasm) through the core BackendRegistry
  * fallback chain. Do NOT import backend-wasm here — the wiring happens in core.
  *
  * Phase 2 TODO:
@@ -18,7 +18,7 @@
  * - Widen canHandle to output.category === 'audio' once WebCodecs decode is wired.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import { FlacEncodeNotImplementedError, FlacInputTooLargeError } from './errors.ts';
 import { parseFlac } from './parser.ts';
@@ -51,7 +51,7 @@ export class FlacBackend implements Backend {
    * Returns true when both input AND output are FLAC MIME types.
    * Decode-to-other-audio (FLAC → WAV etc.) is deferred to Phase 2 once the
    * WebCodecs decode path is wired. Encode-to-FLAC from a non-FLAC input is
-   * handled by @webcvt/backend-wasm (design note §Phase-1).
+   * handled by @catlabtech/webcvt-backend-wasm (design note §Phase-1).
    */
   async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
     if (!FLAC_MIMES.has(input.mime)) return false;

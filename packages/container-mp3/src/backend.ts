@@ -11,8 +11,8 @@
  * - Streaming frame iteration
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
-import { WebcvtError } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { Mp3EncodeNotImplementedError } from './errors.ts';
 import { parseMp3 } from './parser.ts';
 

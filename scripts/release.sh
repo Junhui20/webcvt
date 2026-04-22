@@ -2,13 +2,13 @@
 # webcvt release script
 #   1. Build playground + docs
 #   2. Deploy both to Cloudflare Pages via wrangler
-#   3. Publish all @webcvt/* packages to npm (with confirmation)
+#   3. Publish all @catlabtech/webcvt-* packages to npm (with confirmation)
 #
 # Prerequisites (run once):
 #   npm i -g wrangler
 #   wrangler login                # browser auth
 #   npm login                     # browser auth → npmjs.com (user: junhui20)
-#   Create npm org "webcvt" at https://www.npmjs.com/org/create
+#   Create npm org "catlabtech" at https://www.npmjs.com/org/create (if not already)
 #
 # Usage:
 #   bash scripts/release.sh                 # full release
@@ -67,21 +67,21 @@ if [ "$SKIP_PUBLISH" -eq 0 ]; then
   NPM_USER="$(npm whoami 2>/dev/null)" || die "npm not logged in → npm login"
   ok "npm logged in as $NPM_USER"
 
-  # check org membership (catch missing webcvt org early — most common failure)
-  if ! npm org ls webcvt >/dev/null 2>&1; then
-    die "you are not a member of npm org 'webcvt' → create it at https://www.npmjs.com/org/create"
+  # check org membership (catch missing catlabtech org early — most common failure)
+  if ! npm org ls catlabtech >/dev/null 2>&1; then
+    die "you are not a member of npm org 'catlabtech' → create it at https://www.npmjs.com/org/create"
   fi
-  ok "npm org 'webcvt' accessible"
+  ok "npm org 'catlabtech' accessible"
 fi
 
 # ─── build ─────────────────────────────────────────────────────────────────
 say "building playground"
-pnpm --filter @webcvt/playground build
+pnpm --filter @catlabtech/webcvt-playground build
 [ -d apps/playground/dist ] || die "playground build did not produce dist/"
 ok "playground built ($(du -sh apps/playground/dist | awk '{print $1}'))"
 
 say "building docs"
-pnpm --filter @webcvt/docs build
+pnpm --filter @catlabtech/webcvt-docs build
 [ -d apps/docs/.vitepress/dist ] || die "docs build did not produce .vitepress/dist/"
 ok "docs built ($(du -sh apps/docs/.vitepress/dist | awk '{print $1}'))"
 
@@ -114,7 +114,7 @@ if [ "$SKIP_PUBLISH" -eq 0 ]; then
   say "npm publish dry-run (preview)"
   pnpm publish -r --access public --dry-run --no-git-checks 2>&1 | tail -30
 
-  printf '\n%s%sIRREVERSIBLE%s: this will publish all @webcvt/* packages to npm.\n' "$BOLD" "$R" "$N"
+  printf '\n%s%sIRREVERSIBLE%s: this will publish all @catlabtech/webcvt-* packages to npm.\n' "$BOLD" "$R" "$N"
   printf 'You CANNOT unpublish a version after 24 hours, and a re-published version is forbidden.\n'
   printf 'Continue? [y/N] '
   read -r REPLY
@@ -133,4 +133,4 @@ fi
 printf '\n%s🎉 release complete%s\n' "$G" "$N"
 printf '   • playground: https://webcvt.pages.dev\n'
 printf '   • docs:       https://webcvt-docs.pages.dev\n'
-printf '   • npm:        https://www.npmjs.com/org/webcvt\n'
+printf '   • npm:        https://www.npmjs.com/org/catlabtech\n'

@@ -1,11 +1,11 @@
-# @webcvt/backend-wasm
+# @catlabtech/webcvt-backend-wasm
 
 > ffmpeg.wasm fallback backend for webcvt. Handles any format pair not covered by the native backends.
 
 ## Installation
 
 ```bash
-npm i @webcvt/backend-wasm
+npm i @catlabtech/webcvt-backend-wasm
 ```
 
 ## API
@@ -18,7 +18,7 @@ This backend ships a ~4 MB WebAssembly blob (a build of FFmpeg). Load it lazily 
 
 ```ts
 async function ensureWasm() {
-  const { WasmBackend } = await import('@webcvt/backend-wasm');
+  const { WasmBackend } = await import('@catlabtech/webcvt-backend-wasm');
   defaultRegistry.register(new WasmBackend());
 }
 ```

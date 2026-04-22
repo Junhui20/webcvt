@@ -15,8 +15,8 @@ import {
   readUintNumber,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   ID_SEEK,
   ID_SEEK_HEAD,

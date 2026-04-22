@@ -1,6 +1,6 @@
 # container-aac design
 
-> Implementation reference for `@webcvt/container-aac`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-aac`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -204,7 +204,7 @@ straight 5-byte pack.
    SBR/PS extension data and the *effective* output sample rate is
    2× the ADTS `sampleRateIndex` value. **Decision: detect HE-AAC v1/v2
    in our parser (set `Mp4aAudioObjectType` correctly) but route those
-   frames to the `@webcvt/backend-wasm` (ffmpeg.wasm) backend for
+   frames to the `@catlabtech/webcvt-backend-wasm` (ffmpeg.wasm) backend for
    decode.** The container layer is responsible for identification only;
    actual SBR/PS reconstruction belongs in the codec layer, and
    WebCodecs support is inconsistent across browsers. This keeps the

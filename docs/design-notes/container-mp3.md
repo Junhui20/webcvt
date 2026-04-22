@@ -1,6 +1,6 @@
 # container-mp3 design
 
-> Implementation reference for `@webcvt/container-mp3`. Write the code from
+> Implementation reference for `@catlabtech/webcvt-container-mp3`. Write the code from
 > this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 

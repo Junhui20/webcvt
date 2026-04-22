@@ -1,5 +1,5 @@
 /**
- * TIFF LZW codec for @webcvt/image-legacy.
+ * TIFF LZW codec for @catlabtech/webcvt-image-legacy.
  *
  * Implements post-6.0 MSB-first variable-width LZW as required by the TIFF 6.0
  * specification (Adobe, 1992). Key differences from GIF LZW:

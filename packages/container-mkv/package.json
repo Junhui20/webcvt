@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/container-mkv",
+  "name": "@catlabtech/webcvt-container-mkv",
   "version": "0.1.0",
   "description": "Matroska (MKV) container muxer and demuxer for webcvt — pure TypeScript, no native dependencies",
   "type": "module",
@@ -24,12 +24,12 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*",
-    "@webcvt/ebml": "workspace:*",
-    "@webcvt/codec-webcodecs": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*",
+    "@catlabtech/webcvt-ebml": "workspace:*",
+    "@catlabtech/webcvt-codec-webcodecs": "workspace:*"
   },
   "devDependencies": {
-    "@webcvt/test-utils": "workspace:*",
+    "@catlabtech/webcvt-test-utils": "workspace:*",
     "@vitest/coverage-v8": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",

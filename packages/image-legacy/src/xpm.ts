@@ -1,5 +1,5 @@
 /**
- * XPM3 (X PixMap) parser and serializer for @webcvt/image-legacy.
+ * XPM3 (X PixMap) parser and serializer for @catlabtech/webcvt-image-legacy.
  *
  * XPM3 is a C source fragment declaring a colour pixmap as a `static char*`
  * array. First string = header (`width height ncolors cpp`), next `ncolors`

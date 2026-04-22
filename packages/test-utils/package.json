@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/test-utils",
+  "name": "@catlabtech/webcvt-test-utils",
   "version": "0.1.0",
   "private": true,
   "description": "Internal test helpers: fixture loading, byte-exact comparison, synthetic data generators",

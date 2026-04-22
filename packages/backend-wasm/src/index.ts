@@ -1,5 +1,5 @@
 /**
- * @webcvt/backend-wasm — public barrel exports.
+ * @catlabtech/webcvt-backend-wasm — public barrel exports.
  *
  * IMPORTANT: importing this module does NOT auto-register the backend.
  * Call registerWasmBackend() explicitly to opt-in (Trap #2: no auto-register).
@@ -45,8 +45,8 @@ export {
 // registerWasmBackend — explicit opt-in (Trap #2)
 // ---------------------------------------------------------------------------
 
-import type { BackendRegistry } from '@webcvt/core';
-import { defaultRegistry } from '@webcvt/core';
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
 import { enableSubtitlePairs } from './allowlist.ts';
 import { WasmBackend } from './backend.ts';
 import type { WasmBackendOptions } from './backend.ts';
@@ -68,7 +68,7 @@ export interface RegisterWasmBackendOptions extends WasmBackendOptions {
  *
  * @example
  * ```ts
- * import { registerWasmBackend } from '@webcvt/backend-wasm';
+ * import { registerWasmBackend } from '@catlabtech/webcvt-backend-wasm';
  * registerWasmBackend();
  * ```
  *

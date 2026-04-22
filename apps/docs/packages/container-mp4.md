@@ -1,11 +1,11 @@
-# @webcvt/container-mp4
+# @catlabtech/webcvt-container-mp4
 
 > MP4/M4A container parser and muxer for webcvt.
 
 ## Installation
 
 ```bash
-npm i @webcvt/container-mp4
+npm i @catlabtech/webcvt-container-mp4
 ```
 
 ## API
@@ -18,4 +18,4 @@ Detailed API reference coming in v0.2. See the [source code](https://github.com/
 - Mux H.264 / H.265 / AV1 video + AAC audio
 - Read and write fragmented MP4 (fMP4)
 
-Works with `@webcvt/codec-webcodecs` for hardware-accelerated encode/decode, and falls back to `@webcvt/backend-wasm` for unsupported codecs.
+Works with `@catlabtech/webcvt-codec-webcodecs` for hardware-accelerated encode/decode, and falls back to `@catlabtech/webcvt-backend-wasm` for unsupported codecs.

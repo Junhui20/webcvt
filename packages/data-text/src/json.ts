@@ -1,5 +1,5 @@
 /**
- * JSON parse/serialize for @webcvt/data-text.
+ * JSON parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Wraps native JSON.parse / JSON.stringify with:
  * - UTF-8 decoding via fatal-mode TextDecoder (see utf8.ts).

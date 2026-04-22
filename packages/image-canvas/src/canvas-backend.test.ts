@@ -1,5 +1,5 @@
-import type { FormatDescriptor } from '@webcvt/core';
-import { UnsupportedFormatError } from '@webcvt/core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { UnsupportedFormatError } from '@catlabtech/webcvt-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasBackend } from './canvas-backend.ts';
 

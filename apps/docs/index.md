@@ -24,7 +24,7 @@ features:
   - title: Modular
     icon: 📦
     details: >
-      npm i @webcvt/container-mp3 if you only want MP3. No 30 MB blob.
+      npm i @catlabtech/webcvt-container-mp3 if you only want MP3. No 30 MB blob.
       22 packages — import only what you need.
   - title: TypeScript-native
     icon: 🔷

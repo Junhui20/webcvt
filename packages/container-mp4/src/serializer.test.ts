@@ -6,7 +6,7 @@
  *   - "serializer faststart re-layout: input mdat-first → output ftyp+moov+mdat with patched offsets"
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import {
   buildAvcCPayload,

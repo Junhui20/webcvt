@@ -1,4 +1,4 @@
-# @webcvt/backend-wasm design
+# @catlabtech/webcvt-backend-wasm design
 
 > Phase 5 fallback backend wrapping ffmpeg.wasm. Pay only when used:
 > lazy-loaded, idle-reaped, strict allowlist.
@@ -35,7 +35,7 @@
 - Streaming I/O (MEMFS only)
 - Multi-pass encoding
 - GPU-accelerated encoding (not available in wasm)
-- Subtitle-only conversion chains (native @webcvt/subtitle exists)
+- Subtitle-only conversion chains (native @catlabtech/webcvt-subtitle exists)
 - Raw ffmpeg argv passthrough — NEVER
 
 ## File map
@@ -253,11 +253,11 @@ Integration (nightly, gated on WEBCVT_ENABLE_WASM_INTEGRATION=1):
   "@ffmpeg/util": "^0.12.0"
 },
 "dependencies": {
-  "@webcvt/core": "workspace:*"
+  "@catlabtech/webcvt-core": "workspace:*"
 }
 ```
 
-No runtime deps other than `@webcvt/core`. Wasm path opt-in via peer.
+No runtime deps other than `@catlabtech/webcvt-core`. Wasm path opt-in via peer.
 
 ## Clean-room attestation
 

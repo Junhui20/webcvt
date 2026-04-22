@@ -1,6 +1,6 @@
 # container-wav design
 
-> Implementation reference for `@webcvt/container-wav`. Write the code from
+> Implementation reference for `@catlabtech/webcvt-container-wav`. Write the code from
 > this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -99,7 +99,7 @@ export function serializeWav(file: WavFile): Uint8Array;
 
 ## WebCodecs integration
 
-For the audio backend (`@webcvt/container-wav` exporting a `Backend`):
+For the audio backend (`@catlabtech/webcvt-container-wav` exporting a `Backend`):
 - **Decode**: parse → for each PCM sample frame, hand to `WebCodecsAudioDecoder`
   with config `{ codec: 'pcm-s16', sampleRate, numberOfChannels }` (or
   `pcm-f32`, `pcm-s24`, `pcm-u8` per `bitsPerSample`/`audioFormat`).

@@ -1,11 +1,11 @@
 /**
- * Typed error classes for @webcvt/image-animation.
+ * Typed error classes for @catlabtech/webcvt-image-animation.
  *
  * All error codes are UPPER_SNAKE_CASE strings for programmatic matching.
  * Never throw bare Error from image-animation — always use a typed subclass.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
 // Universal / shared errors
@@ -413,7 +413,7 @@ export class WebpStaticNotSupportedError extends WebcvtError {
   constructor() {
     super(
       'WEBP_STATIC_NOT_SUPPORTED',
-      'WebP-anim: VP8X animation flag (bit 1) is not set; this is a static WebP file. Use a future @webcvt/image-webp package.',
+      'WebP-anim: VP8X animation flag (bit 1) is not set; this is a static WebP file. Use a future @catlabtech/webcvt-image-webp package.',
     );
     this.name = 'WebpStaticNotSupportedError';
   }

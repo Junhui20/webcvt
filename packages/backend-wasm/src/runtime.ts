@@ -1,5 +1,5 @@
 /**
- * Runtime environment detection for @webcvt/backend-wasm.
+ * Runtime environment detection for @catlabtech/webcvt-backend-wasm.
  *
  * Determines:
  * 1. Whether we are running in a browser or Node.js context.

@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-ts — MPEG-2 Transport Stream demuxer and muxer.
+ * @catlabtech/webcvt-container-ts — MPEG-2 Transport Stream demuxer and muxer.
  *
  * Public API surface (minimal — do not re-export internal helpers).
  */

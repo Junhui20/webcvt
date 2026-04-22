@@ -1,8 +1,8 @@
 {
-  "name": "@webcvt/example-vanilla-html",
+  "name": "@catlabtech/webcvt-example-vanilla-html",
   "version": "0.0.0",
   "private": true,
-  "description": "Browser example: single HTML file, no build tool, uses @webcvt/subtitle via esm.sh CDN",
+  "description": "Browser example: single HTML file, no build tool, uses @catlabtech/webcvt-subtitle via esm.sh CDN",
   "scripts": {
     "test": "echo \"(example — open index.html in browser)\" && exit 0"
   }

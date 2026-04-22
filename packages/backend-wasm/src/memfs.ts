@@ -1,5 +1,5 @@
 /**
- * MEMFS marshalling helpers for @webcvt/backend-wasm.
+ * MEMFS marshalling helpers for @catlabtech/webcvt-backend-wasm.
  *
  * ffmpeg.wasm operates on an in-memory virtual filesystem (MEMFS).
  * Files written there must be explicitly deleted — no GC (Trap #4).

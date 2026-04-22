@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-aac — ADTS-AAC container demuxer and muxer.
+ * @catlabtech/webcvt-container-aac — ADTS-AAC container demuxer and muxer.
  *
  * Public API surface:
  * - parseAdts / serializeAdts — low-level ADTS frame I/O

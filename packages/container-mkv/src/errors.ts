@@ -6,7 +6,7 @@
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
 export class MkvInputTooLargeError extends WebcvtError {
@@ -24,7 +24,7 @@ export class MkvDocTypeNotSupportedError extends WebcvtError {
   constructor(docType: string) {
     super(
       'MKV_DOCTYPE_NOT_SUPPORTED',
-      `EBML DocType "${docType}" is not supported by container-mkv. Only DocType "matroska" is accepted. WebM support is in @webcvt/container-webm.`,
+      `EBML DocType "${docType}" is not supported by container-mkv. Only DocType "matroska" is accepted. WebM support is in @catlabtech/webcvt-container-webm.`,
     );
     this.name = 'MkvDocTypeNotSupportedError';
   }
@@ -166,7 +166,7 @@ export class MkvEncodeNotImplementedError extends WebcvtError {
   constructor(reason: string) {
     super(
       'MKV_ENCODE_NOT_IMPLEMENTED',
-      `MKV encode not implemented: ${reason}. Install @webcvt/backend-wasm for transcode support.`,
+      `MKV encode not implemented: ${reason}. Install @catlabtech/webcvt-backend-wasm for transcode support.`,
     );
     this.name = 'MkvEncodeNotImplementedError';
   }

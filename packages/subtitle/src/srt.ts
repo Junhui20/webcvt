@@ -18,7 +18,7 @@
  *   - Sequence numbers are re-generated on serialize (1-based, monotonic)
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import type { Cue, SubtitleTrack } from './cue.ts';
 
 // ---------------------------------------------------------------------------

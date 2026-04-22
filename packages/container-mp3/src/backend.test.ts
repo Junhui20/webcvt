@@ -1,6 +1,6 @@
-import type { FormatDescriptor } from '@webcvt/core';
-import { WebcvtError } from '@webcvt/core';
-import { loadFixture } from '@webcvt/test-utils';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { MP3_FORMAT, Mp3Backend } from './backend.ts';
 import { Mp3EncodeNotImplementedError } from './errors.ts';

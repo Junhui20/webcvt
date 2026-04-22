@@ -1,7 +1,7 @@
 /**
  * AudioSpecificConfig (ASC) parser — inline re-implementation for container-mkv.
  *
- * Per design note: DO NOT import from @webcvt/container-aac. This is an inline
+ * Per design note: DO NOT import from @catlabtech/webcvt-container-aac. This is an inline
  * ~30-50 LOC parser that extracts only the audio_object_type from the first 5 bits
  * of CodecPrivate, which is all we need to derive the WebCodecs codec string
  * 'mp4a.40.<aot>' for A_AAC tracks.

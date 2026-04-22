@@ -47,43 +47,43 @@ importers:
 
   apps/playground:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
+      '@catlabtech/webcvt-archive-zip':
+        specifier: workspace:*
+        version: link:../../packages/archive-zip
+      '@catlabtech/webcvt-backend-wasm':
+        specifier: workspace:*
+        version: link:../../packages/backend-wasm
+      '@catlabtech/webcvt-codec-webcodecs':
+        specifier: workspace:*
+        version: link:../../packages/codec-webcodecs
+      '@catlabtech/webcvt-container-mp4':
+        specifier: workspace:*
+        version: link:../../packages/container-mp4
+      '@catlabtech/webcvt-container-webm':
+        specifier: workspace:*
+        version: link:../../packages/container-webm
+      '@catlabtech/webcvt-data-text':
+        specifier: workspace:*
+        version: link:../../packages/data-text
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../../packages/image-canvas
+      '@catlabtech/webcvt-image-legacy':
+        specifier: workspace:*
+        version: link:../../packages/image-legacy
+      '@catlabtech/webcvt-subtitle':
+        specifier: workspace:*
+        version: link:../../packages/subtitle
       '@playwright/test':
         specifier: ^1.49.0
         version: 1.59.1
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.17
-      '@webcvt/archive-zip':
-        specifier: workspace:*
-        version: link:../../packages/archive-zip
-      '@webcvt/backend-wasm':
-        specifier: workspace:*
-        version: link:../../packages/backend-wasm
-      '@webcvt/codec-webcodecs':
-        specifier: workspace:*
-        version: link:../../packages/codec-webcodecs
-      '@webcvt/container-mp4':
-        specifier: workspace:*
-        version: link:../../packages/container-mp4
-      '@webcvt/container-webm':
-        specifier: workspace:*
-        version: link:../../packages/container-webm
-      '@webcvt/data-text':
-        specifier: workspace:*
-        version: link:../../packages/data-text
-      '@webcvt/image-canvas':
-        specifier: workspace:*
-        version: link:../../packages/image-canvas
-      '@webcvt/image-legacy':
-        specifier: workspace:*
-        version: link:../../packages/image-legacy
-      '@webcvt/subtitle':
-        specifier: workspace:*
-        version: link:../../packages/subtitle
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -93,10 +93,10 @@ importers:
 
   examples/node-subtitle:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@webcvt/subtitle':
+      '@catlabtech/webcvt-subtitle':
         specifier: workspace:*
         version: link:../../packages/subtitle
 
@@ -104,16 +104,16 @@ importers:
 
   packages/archive-zip:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -126,10 +126,13 @@ importers:
 
   packages/backend-wasm:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@ffmpeg/ffmpeg':
         specifier: ^0.12.10
         version: 0.12.15
@@ -139,9 +142,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -154,59 +154,59 @@ importers:
 
   packages/cli:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     optionalDependencies:
-      '@webcvt/archive-zip':
+      '@catlabtech/webcvt-archive-zip':
         specifier: workspace:*
         version: link:../archive-zip
-      '@webcvt/backend-wasm':
+      '@catlabtech/webcvt-backend-wasm':
         specifier: workspace:*
         version: link:../backend-wasm
-      '@webcvt/container-aac':
+      '@catlabtech/webcvt-container-aac':
         specifier: workspace:*
         version: link:../container-aac
-      '@webcvt/container-flac':
+      '@catlabtech/webcvt-container-flac':
         specifier: workspace:*
         version: link:../container-flac
-      '@webcvt/container-mkv':
+      '@catlabtech/webcvt-container-mkv':
         specifier: workspace:*
         version: link:../container-mkv
-      '@webcvt/container-mp3':
+      '@catlabtech/webcvt-container-mp3':
         specifier: workspace:*
         version: link:../container-mp3
-      '@webcvt/container-mp4':
+      '@catlabtech/webcvt-container-mp4':
         specifier: workspace:*
         version: link:../container-mp4
-      '@webcvt/container-ogg':
+      '@catlabtech/webcvt-container-ogg':
         specifier: workspace:*
         version: link:../container-ogg
-      '@webcvt/container-ts':
+      '@catlabtech/webcvt-container-ts':
         specifier: workspace:*
         version: link:../container-ts
-      '@webcvt/container-wav':
+      '@catlabtech/webcvt-container-wav':
         specifier: workspace:*
         version: link:../container-wav
-      '@webcvt/container-webm':
+      '@catlabtech/webcvt-container-webm':
         specifier: workspace:*
         version: link:../container-webm
-      '@webcvt/data-text':
+      '@catlabtech/webcvt-data-text':
         specifier: workspace:*
         version: link:../data-text
-      '@webcvt/image-animation':
+      '@catlabtech/webcvt-image-animation':
         specifier: workspace:*
         version: link:../image-animation
-      '@webcvt/image-canvas':
+      '@catlabtech/webcvt-image-canvas':
         specifier: workspace:*
         version: link:../image-canvas
-      '@webcvt/image-legacy':
+      '@catlabtech/webcvt-image-legacy':
         specifier: workspace:*
         version: link:../image-legacy
-      '@webcvt/image-svg':
+      '@catlabtech/webcvt-image-svg':
         specifier: workspace:*
         version: link:../image-svg
-      '@webcvt/subtitle':
+      '@catlabtech/webcvt-subtitle':
         specifier: workspace:*
         version: link:../subtitle
     devDependencies:
@@ -225,7 +225,7 @@ importers:
 
   packages/codec-webcodecs:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -244,19 +244,19 @@ importers:
 
   packages/container-aac:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -269,19 +269,19 @@ importers:
 
   packages/container-flac:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -294,22 +294,22 @@ importers:
 
   packages/container-mkv:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
-      '@webcvt/ebml':
+      '@catlabtech/webcvt-ebml':
         specifier: workspace:*
         version: link:../ebml
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -322,19 +322,19 @@ importers:
 
   packages/container-mp3:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -347,19 +347,19 @@ importers:
 
   packages/container-mp4:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -372,19 +372,19 @@ importers:
 
   packages/container-ogg:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -397,19 +397,19 @@ importers:
 
   packages/container-ts:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -422,16 +422,16 @@ importers:
 
   packages/container-wav:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -444,22 +444,22 @@ importers:
 
   packages/container-webm:
     dependencies:
-      '@webcvt/codec-webcodecs':
+      '@catlabtech/webcvt-codec-webcodecs':
         specifier: workspace:*
         version: link:../codec-webcodecs
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
-      '@webcvt/ebml':
+      '@catlabtech/webcvt-ebml':
         specifier: workspace:*
         version: link:../ebml
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -487,7 +487,7 @@ importers:
 
   packages/data-text:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -509,16 +509,16 @@ importers:
 
   packages/ebml:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -531,7 +531,7 @@ importers:
 
   packages/image-animation:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -550,7 +550,7 @@ importers:
 
   packages/image-canvas:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -569,7 +569,7 @@ importers:
 
   packages/image-legacy:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -588,16 +588,16 @@ importers:
 
   packages/image-svg:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
-      '@webcvt/test-utils':
-        specifier: workspace:*
-        version: link:../test-utils
       happy-dom:
         specifier: ^15.0.0
         version: 15.11.7
@@ -613,7 +613,7 @@ importers:
 
   packages/subtitle:
     dependencies:
-      '@webcvt/core':
+      '@catlabtech/webcvt-core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

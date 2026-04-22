@@ -1,7 +1,7 @@
 # node-subtitle
 
 Minimal Node.js example — convert SRT subtitles to WebVTT using
-`@webcvt/subtitle`. **~15 LOC, zero setup.**
+`@catlabtech/webcvt-subtitle`. **~15 LOC, zero setup.**
 
 ## Run
 
@@ -23,7 +23,7 @@ Converted sample.srt → sample.vtt (3 cues, 267 bytes)
 
 ```js
 import { readFile, writeFile } from 'node:fs/promises';
-import { parseSrt, serializeVtt } from '@webcvt/subtitle';
+import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
 
 const srt = await readFile('input.srt', 'utf8');
 const track = parseSrt(srt);
@@ -45,26 +45,26 @@ That's it. No registry, no backend wiring, no format detection.
 
   ```js
   // SRT → ASS
-  import { parseSrt, serializeAss } from '@webcvt/subtitle';
+  import { parseSrt, serializeAss } from '@catlabtech/webcvt-subtitle';
   const ass = serializeAss(parseSrt(srt));
 
   // VTT → SRT
-  import { parseVtt, serializeSrt } from '@webcvt/subtitle';
+  import { parseVtt, serializeSrt } from '@catlabtech/webcvt-subtitle';
   const srt = serializeSrt(parseVtt(vtt));
   ```
 
 ## Supported formats
 
-`@webcvt/subtitle` handles: **SRT, WebVTT, ASS, SSA, MicroDVD** — any pair.
+`@catlabtech/webcvt-subtitle` handles: **SRT, WebVTT, ASS, SSA, MicroDVD** — any pair.
 
 ## High-level convert() API
 
 For binary formats (images, audio, video), the `convert()` API from
-`@webcvt/core` is the recommended entry point:
+`@catlabtech/webcvt-core` is the recommended entry point:
 
 ```js
-import { convert, defaultRegistry } from '@webcvt/core';
-import { CanvasBackend } from '@webcvt/image-canvas';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
 
 defaultRegistry.register(new CanvasBackend());
 const result = await convert(pngBlob, { format: 'webp' });

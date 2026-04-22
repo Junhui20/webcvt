@@ -1,12 +1,12 @@
 /**
- * Command synthesis for @webcvt/backend-wasm.
+ * Command synthesis for @catlabtech/webcvt-backend-wasm.
  *
  * buildCommand() constructs the ffmpeg argv array from lookup tables ONLY.
  * No user-controlled strings ever reach ffmpeg directly (Trap #4).
  * The result is passed to ffmpeg.exec(argv) — never joined to a shell string.
  */
 
-import type { ConvertOptions, FormatDescriptor } from '@webcvt/core';
+import type { ConvertOptions, FormatDescriptor } from '@catlabtech/webcvt-core';
 import {
   CONTAINER_DEFAULT_AUDIO_CODEC,
   CONTAINER_DEFAULT_VIDEO_CODEC,

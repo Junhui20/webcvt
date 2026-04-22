@@ -11,12 +11,12 @@ The fastest way to see webcvt in action is the [live playground](https://webcvt.
 ### Node.js (3 lines)
 
 ```bash
-npm i @webcvt/core @webcvt/image-canvas
+npm i @catlabtech/webcvt-core @catlabtech/webcvt-image-canvas
 ```
 
 ```ts
-import { convert, defaultRegistry } from '@webcvt/core';
-import { CanvasBackend } from '@webcvt/image-canvas';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
 
 defaultRegistry.register(new CanvasBackend());
 const result = await convert(inputBlob, { format: 'webp' });
@@ -26,8 +26,8 @@ const result = await convert(inputBlob, { format: 'webp' });
 
 ```html
 <script type="module">
-  import { convert, defaultRegistry } from 'https://esm.sh/@webcvt/core';
-  import { CanvasBackend } from 'https://esm.sh/@webcvt/image-canvas';
+  import { convert, defaultRegistry } from 'https://esm.sh/@catlabtech/webcvt-core';
+  import { CanvasBackend } from 'https://esm.sh/@catlabtech/webcvt-image-canvas';
 
   defaultRegistry.register(new CanvasBackend());
   const result = await convert(file, { format: 'webp' });
@@ -53,5 +53,5 @@ All packages are ESM-only and require Node.js ≥ 20 for server-side use.
 
 - **[Browser usage](/guide/browser-usage)** — COEP/COOP headers, bundler setup, bundle size tips
 - **[Node.js usage](/guide/nodejs-usage)** — full convert() flow, backend registration
-- **[CLI usage](/guide/cli-usage)** — `npx @webcvt/cli` for shell pipelines
+- **[CLI usage](/guide/cli-usage)** — `npx @catlabtech/webcvt-cli` for shell pipelines
 - **[Packages](/packages/core)** — per-package API references

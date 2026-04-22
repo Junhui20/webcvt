@@ -2,7 +2,7 @@
  * WAV-specific error classes extending WebcvtError.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /**
  * Thrown when the input begins with RF64 rather than RIFF.

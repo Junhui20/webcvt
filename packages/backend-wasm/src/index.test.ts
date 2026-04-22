@@ -45,20 +45,20 @@ describe('barrel exports', () => {
 
 describe('registerWasmBackend', () => {
   it('registers without throwing when given a fresh registry', () => {
-    const { BackendRegistry } = require('@webcvt/core') as typeof import('@webcvt/core');
+    const { BackendRegistry } = require('@catlabtech/webcvt-core') as typeof import('@catlabtech/webcvt-core');
     const registry = new BackendRegistry();
     expect(() => registerWasmBackend(registry)).not.toThrow();
   });
 
   it('throws if called twice on same registry', () => {
-    const { BackendRegistry } = require('@webcvt/core') as typeof import('@webcvt/core');
+    const { BackendRegistry } = require('@catlabtech/webcvt-core') as typeof import('@catlabtech/webcvt-core');
     const registry = new BackendRegistry();
     registerWasmBackend(registry);
     expect(() => registerWasmBackend(registry)).toThrow();
   });
 
   it('enables subtitle pairs when enableSubtitleFallback is true', () => {
-    const { BackendRegistry } = require('@webcvt/core') as typeof import('@webcvt/core');
+    const { BackendRegistry } = require('@catlabtech/webcvt-core') as typeof import('@catlabtech/webcvt-core');
     const registry = new BackendRegistry();
     // Should not throw
     expect(() => registerWasmBackend(registry, { enableSubtitleFallback: true })).not.toThrow();

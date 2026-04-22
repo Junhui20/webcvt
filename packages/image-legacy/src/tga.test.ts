@@ -1,5 +1,5 @@
 /**
- * TGA parser and serializer tests for @webcvt/image-legacy.
+ * TGA parser and serializer tests for @catlabtech/webcvt-image-legacy.
  *
  * All 25+ test cases from the design note §"Test plan" are covered.
  * All fixtures are synthetic (no committed binaries).

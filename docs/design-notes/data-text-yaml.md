@@ -1,6 +1,6 @@
 # data-text YAML extension design
 
-> Sixth-pass extension for `@webcvt/data-text`. Adds a SAFE, CONFIG-ORIENTED
+> Sixth-pass extension for `@catlabtech/webcvt-data-text`. Adds a SAFE, CONFIG-ORIENTED
 > subset of YAML 1.2 alongside JSON/CSV/TSV/INI/ENV/JSONL/TOML/FWF/XML.
 >
 > Spec-only: YAML 1.2.2 (2021) Core Schema + YAML 1.2 language spec.

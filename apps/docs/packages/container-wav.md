@@ -1,11 +1,11 @@
-# @webcvt/container-wav
+# @catlabtech/webcvt-container-wav
 
 > WAV (RIFF/WAVE) container parser and writer for webcvt.
 
 ## Installation
 
 ```bash
-npm i @webcvt/container-wav
+npm i @catlabtech/webcvt-container-wav
 ```
 
 ## API

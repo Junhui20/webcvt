@@ -8,8 +8,8 @@
  *   Stub throws NotImplementedError until that package is available.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
-import { WebcvtError } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { parseWav } from './parser.ts';
 import { serializeWav } from './serializer.ts';
 
@@ -32,7 +32,7 @@ class WavEncodeNotImplementedError extends WebcvtError {
   constructor() {
     super(
       'WAV_ENCODE_NOT_IMPLEMENTED',
-      'WAV encoding requires AudioData from @webcvt/codec-webcodecs, which is not yet available. ' +
+      'WAV encoding requires AudioData from @catlabtech/webcvt-codec-webcodecs, which is not yet available. ' +
         'This will be implemented in Phase 2.',
     );
     this.name = 'WavEncodeNotImplementedError';

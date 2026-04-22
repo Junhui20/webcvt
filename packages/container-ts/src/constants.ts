@@ -1,5 +1,5 @@
 /**
- * Shared constants for @webcvt/container-ts.
+ * Shared constants for @catlabtech/webcvt-container-ts.
  *
  * All security caps are derived from the design note §"Security caps".
  * Centralised here so parser.ts, serializer.ts, and backend.ts cannot drift.

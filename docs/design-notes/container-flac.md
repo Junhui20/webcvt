@@ -1,6 +1,6 @@
 # container-flac design
 
-> Implementation reference for `@webcvt/container-flac`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-flac`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -174,12 +174,12 @@ scan-for-next-sync as a fallback.
   Chrome 124+ / Safari 17+. Use `probeAudioCodec({codec: 'flac',
   sampleRate, numberOfChannels})` to check.
 - **Encode**: FLAC is not a WebCodecs encode target anywhere in 2026.
-  **Decision: route encode requests to `@webcvt/backend-wasm` (ffmpeg.wasm)
+  **Decision: route encode requests to `@catlabtech/webcvt-backend-wasm` (ffmpeg.wasm)
   via the core BackendRegistry's fallback chain.** The `FlacBackend.canHandle`
   returns `false` for encode (output FLAC) so the registry tries the next
   backend. `backend-wasm` has FLAC encode via libFLAC compiled in. Users
   see seamless encode without our package shipping a JS encoder. Document
-  this in the README so consumers know to also install `@webcvt/backend-wasm`
+  this in the README so consumers know to also install `@catlabtech/webcvt-backend-wasm`
   if they want FLAC encode.
 
 ## Test plan

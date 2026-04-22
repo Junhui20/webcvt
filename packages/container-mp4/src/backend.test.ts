@@ -8,7 +8,7 @@
  * - convert non-M4A output throws Mp4EncodeNotImplementedError
  */
 
-import { loadFixtureBlob } from '@webcvt/test-utils';
+import { loadFixtureBlob } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { M4A_FORMAT, Mp4Backend } from './backend.ts';
 import { Mp4EncodeNotImplementedError } from './errors.ts';

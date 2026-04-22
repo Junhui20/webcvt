@@ -1,6 +1,6 @@
 # image-legacy PCX design (fifth pass)
 
-> PCX (PC Paintbrush / ZSoft) extension to `@webcvt/image-legacy`. Read
+> PCX (PC Paintbrush / ZSoft) extension to `@catlabtech/webcvt-image-legacy`. Read
 > `image-legacy.md` and `image-legacy-tga.md` first — PCX is spiritually
 > closest to TGA (fixed header + RLE + optional palette block).
 >

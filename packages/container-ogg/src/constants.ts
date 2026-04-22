@@ -1,5 +1,5 @@
 /**
- * Shared constants for the @webcvt/container-ogg package.
+ * Shared constants for the @catlabtech/webcvt-container-ogg package.
  *
  * Centralising limits here ensures parser.ts, serializer.ts, and backend.ts
  * cannot drift from each other.

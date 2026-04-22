@@ -1,5 +1,5 @@
 /**
- * @webcvt/image-animation — Public API
+ * @catlabtech/webcvt-image-animation — Public API
  *
  * Supported animated formats (first pass — Phase 4):
  *   GIF (GIF87a / GIF89a): full container walk + LZW pixel decode

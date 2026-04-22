@@ -1,13 +1,13 @@
-# @webcvt/codec-webcodecs
+# @catlabtech/webcvt-codec-webcodecs
 
-Thin adapter over the W3C [WebCodecs API](https://www.w3.org/TR/webcodecs/). Provides a uniform `encode` / `decode` surface that higher-level container packages (`@webcvt/container-mp4`, `@webcvt/container-webm`, etc.) depend on to produce and consume raw video frames and audio data.
+Thin adapter over the W3C [WebCodecs API](https://www.w3.org/TR/webcodecs/). Provides a uniform `encode` / `decode` surface that higher-level container packages (`@catlabtech/webcvt-container-mp4`, `@catlabtech/webcvt-container-webm`, etc.) depend on to produce and consume raw video frames and audio data.
 
 This package does **not** implement any codec logic — it delegates entirely to the browser's hardware-accelerated codec stack. Its job is to wrap the raw WebCodecs API with ergonomic TypeScript types, consistent error classes, and a `probeCodec()` helper for capability detection.
 
 ## Installation
 
 ```bash
-npm i @webcvt/codec-webcodecs
+npm i @catlabtech/webcvt-codec-webcodecs
 ```
 
 ## API surface
@@ -22,7 +22,7 @@ import {
   WebCodecsAudioDecoder,
   WebCodecsNotSupportedError,
   UnsupportedCodecError,
-} from '@webcvt/codec-webcodecs';
+} from '@catlabtech/webcvt-codec-webcodecs';
 
 // Probe capability
 const result = await probeVideoCodec({ codec: 'h264', width: 1920, height: 1080 });
@@ -40,7 +40,7 @@ enc.close();
 
 ## Browser support
 
-Requires the [WebCodecs API](https://caniuse.com/webcodecs) (Chrome 94+, Edge 94+). Falls back to `@webcvt/backend-wasm` automatically when unavailable if both backends are registered.
+Requires the [WebCodecs API](https://caniuse.com/webcodecs) (Chrome 94+, Edge 94+). Falls back to `@catlabtech/webcvt-backend-wasm` automatically when unavailable if both backends are registered.
 
 ## Source
 

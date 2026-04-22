@@ -1,5 +1,5 @@
 /**
- * TIFF parser and serializer for @webcvt/image-legacy.
+ * TIFF parser and serializer for @catlabtech/webcvt-image-legacy.
  *
  * Implements the TIFF 6.0 specification (Adobe, 1992) — both byte orders,
  * multi-IFD parse, Compression 1/5/32773, Photometric 0/1/2/3, BitsPerSample

@@ -1,5 +1,5 @@
 /**
- * ENV (dotenv-style) parse/serialize for @webcvt/data-text.
+ * ENV (dotenv-style) parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Implements the conservative dotenv subset:
  * - KEY=value per line, optional 'export ' prefix stripped

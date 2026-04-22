@@ -1,6 +1,6 @@
 # image-legacy TIFF design (second pass)
 
-> Implementation reference for the TIFF extension to `@webcvt/image-legacy`.
+> Implementation reference for the TIFF extension to `@catlabtech/webcvt-image-legacy`.
 > This is a SECOND-PASS extension to the package documented in
 > [image-legacy.md](./image-legacy.md); read that note first for the
 > shared package-level conventions (security caps, typed-error pattern,

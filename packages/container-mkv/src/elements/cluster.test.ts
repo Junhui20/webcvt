@@ -2,9 +2,9 @@
  * Tests for Cluster/SimpleBlock decode/encode (cluster.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
-import { concatBytes, writeUint, writeVintId, writeVintSize } from '@webcvt/ebml';
-import { EbmlElementTooLargeError, EbmlTooManyElementsError } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
+import { concatBytes, writeUint, writeVintId, writeVintSize } from '@catlabtech/webcvt-ebml';
+import { EbmlElementTooLargeError, EbmlTooManyElementsError } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_CLUSTER,

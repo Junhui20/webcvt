@@ -1,5 +1,5 @@
 /**
- * Shared constants for @webcvt/archive-zip.
+ * Shared constants for @catlabtech/webcvt-archive-zip.
  *
  * All security caps are derived from the design note §"Security caps".
  * Centralised here so parser.ts, zip-parser.ts, tar-parser.ts, and

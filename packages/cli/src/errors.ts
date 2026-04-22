@@ -1,4 +1,4 @@
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /**
  * Thrown for argv-parse failures or bad usage patterns detected at runtime.

@@ -1,8 +1,8 @@
 /**
- * Byte-array helpers for @webcvt/data-text tests.
+ * Byte-array helpers for @catlabtech/webcvt-data-text tests.
  *
  * All helpers construct Uint8Arrays inline without committed binary fixtures,
- * following the same pattern as @webcvt/archive-zip's _test-helpers.
+ * following the same pattern as @catlabtech/webcvt-archive-zip's _test-helpers.
  *
  * NOT exported from the package index — test use only.
  */

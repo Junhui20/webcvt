@@ -1,5 +1,5 @@
 /**
- * @webcvt/archive-zip — Public API
+ * @catlabtech/webcvt-archive-zip — Public API
  *
  * Archive format support:
  *   - ZIP (stored + Deflate, PKWARE APPNOTE.TXT 6.3.10)

@@ -1,5 +1,5 @@
 /**
- * Parser tests for @webcvt/container-webm.
+ * Parser tests for @catlabtech/webcvt-container-webm.
  *
  * Covers design note test cases:
  * - "parses EBML header and recognises DocType 'webm'"
@@ -21,8 +21,8 @@
  * - "enforces 200 MiB input cap, per-element 64 MiB cap, recursion depth 8"
  */
 
-import { EbmlTooManyElementsError, EbmlUnknownSizeError, EbmlVintError } from '@webcvt/ebml';
-import { loadFixture } from '@webcvt/test-utils';
+import { EbmlTooManyElementsError, EbmlUnknownSizeError, EbmlVintError } from '@catlabtech/webcvt-ebml';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import {
   WebmCorruptStreamError,

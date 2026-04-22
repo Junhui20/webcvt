@@ -1,5 +1,5 @@
 /**
- * YAML 1.2 recursive-descent parser for @webcvt/data-text.
+ * YAML 1.2 recursive-descent parser for @catlabtech/webcvt-data-text.
  *
  * Indent-aware recursive descent over the YamlNode AST from yaml-tokenizer.ts.
  * Phase 3 of the parse pipeline (decode → directives → parse → expand).

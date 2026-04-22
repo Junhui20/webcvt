@@ -24,7 +24,7 @@
  *   The DecoderSpecificInfo bytes here are the same AudioSpecificConfig
  *   structure that packages/container-aac/src/asc.ts already parses.
  *   For first-pass simplicity we re-implement minimal extraction here
- *   (~30 LOC) rather than creating a new @webcvt/codec-aac shared package.
+ *   (~30 LOC) rather than creating a new @catlabtech/webcvt-codec-aac shared package.
  *   The shared-helper refactor is planned for Phase 3.5+.
  *   See packages/container-aac/src/asc.ts for the canonical implementation.
  */

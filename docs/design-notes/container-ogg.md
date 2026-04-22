@@ -1,6 +1,6 @@
 # container-ogg design
 
-> Implementation reference for `@webcvt/container-ogg`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-ogg`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 

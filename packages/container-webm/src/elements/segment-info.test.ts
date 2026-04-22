@@ -2,7 +2,7 @@
  * Tests for segment-info decode/encode (elements/segment-info.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import { decodeInfo, encodeInfo } from './segment-info.ts';
 

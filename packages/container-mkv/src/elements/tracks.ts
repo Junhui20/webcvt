@@ -20,8 +20,8 @@ import {
   writeUint,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import { parseAacAsc } from '../codec-meta/aac-asc.ts';
 import { parseAvcDecoderConfig } from '../codec-meta/avc.ts';
 import { normaliseFlacCodecPrivate } from '../codec-meta/flac-streaminfo.ts';

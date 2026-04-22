@@ -1,5 +1,5 @@
 /**
- * UTF-8 decode helpers for @webcvt/data-text.
+ * UTF-8 decode helpers for @catlabtech/webcvt-data-text.
  *
  * Key decisions:
  * - TextDecoder is hoisted to module scope (Lesson 2 from prior packages).

@@ -1,5 +1,5 @@
-import { defaultRegistry, findByExt } from '@webcvt/core';
-import type { Backend, FormatDescriptor } from '@webcvt/core';
+import { defaultRegistry, findByExt } from '@catlabtech/webcvt-core';
+import type { Backend, FormatDescriptor } from '@catlabtech/webcvt-core';
 
 export interface TargetOption {
   readonly format: FormatDescriptor;
@@ -25,23 +25,23 @@ function tryRegister(backend: Backend): void {
 }
 
 const imageCanvasLoader = async (): Promise<void> => {
-  const mod = await import('@webcvt/image-canvas');
+  const mod = await import('@catlabtech/webcvt-image-canvas');
   tryRegister(new mod.CanvasBackend());
 };
 const imageLegacyLoader = async (): Promise<void> => {
-  const mod = await import('@webcvt/image-legacy');
+  const mod = await import('@catlabtech/webcvt-image-legacy');
   tryRegister(new mod.ImageLegacyBackend());
 };
 const subtitleLoader = async (): Promise<void> => {
-  const mod = await import('@webcvt/subtitle');
+  const mod = await import('@catlabtech/webcvt-subtitle');
   tryRegister(new mod.SubtitleBackend());
 };
 const dataTextLoader = async (): Promise<void> => {
-  const mod = await import('@webcvt/data-text');
+  const mod = await import('@catlabtech/webcvt-data-text');
   tryRegister(new mod.DataTextBackend());
 };
 const archiveZipLoader = async (): Promise<void> => {
-  const mod = await import('@webcvt/archive-zip');
+  const mod = await import('@catlabtech/webcvt-archive-zip');
   tryRegister(new mod.ArchiveBackend());
 };
 

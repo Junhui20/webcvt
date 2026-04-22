@@ -15,7 +15,7 @@
  * CRC and varint tests live in crc.test.ts and frame.test.ts respectively.
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { crc8 } from './crc.ts';
 import {

@@ -6,7 +6,7 @@
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
 export class Mp4InputTooLargeError extends WebcvtError {
@@ -292,7 +292,7 @@ export class Mp4EncodeNotImplementedError extends WebcvtError {
     super(
       'MP4_ENCODE_NOT_IMPLEMENTED',
       'Encoding to MP4/M4A from non-MP4 input is not implemented in container-mp4 Phase 3. ' +
-        'Install @webcvt/backend-wasm to enable transcode via ffmpeg.wasm.',
+        'Install @catlabtech/webcvt-backend-wasm to enable transcode via ffmpeg.wasm.',
     );
     this.name = 'Mp4EncodeNotImplementedError';
   }

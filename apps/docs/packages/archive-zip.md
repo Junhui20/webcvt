@@ -1,11 +1,11 @@
-# @webcvt/archive-zip
+# @catlabtech/webcvt-archive-zip
 
 > ZIP and TAR archive parsing and creation for webcvt. Pure TypeScript, no native addons.
 
 ## Installation
 
 ```bash
-npm i @webcvt/archive-zip
+npm i @catlabtech/webcvt-archive-zip
 ```
 
 ## Supported formats

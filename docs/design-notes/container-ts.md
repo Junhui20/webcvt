@@ -1,6 +1,6 @@
 # container-ts design
 
-> Implementation reference for `@webcvt/container-ts`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-ts`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -519,7 +519,7 @@ mandates that the demuxer can recover the same logical content.
 - **Encode**: `TsBackend.canHandle` returns `false` for encode in
   Phase 1 — TS muxing for newly-encoded content is Phase 3.5+ work;
   the BackendRegistry's fallback chain routes encode requests to
-  `@webcvt/backend-wasm` (ffmpeg.wasm).
+  `@catlabtech/webcvt-backend-wasm` (ffmpeg.wasm).
 - **Probe**: call `probeVideoCodec({ codec: 'avc1.640028', codedWidth,
   codedHeight })` and `probeAudioCodec({ codec: 'mp4a.40.2',
   sampleRate, numberOfChannels })` before submitting the first chunk
@@ -763,9 +763,9 @@ byte-stream format), ISO/IEC 14496-15 §5 (AVCDecoderConfigurationRecord,
 needed for the WebCodecs `description`), and ISO/IEC 13818-7 (ADTS
 framing). No code was copied from libavformat, mpegts.js, hls.js,
 video.js, Bento4, or any other implementation. The AAC ADTS parser is
-shared with `@webcvt/container-aac` (planned helper at
+shared with `@catlabtech/webcvt-container-aac` (planned helper at
 `packages/codec-aac/src/asc.ts`); the AVCDecoderConfigurationRecord
-synthesis helper is shared with `@webcvt/container-mp4` and
-`@webcvt/container-mkv`. Test fixtures derived from FFmpeg samples
+synthesis helper is shared with `@catlabtech/webcvt-container-mp4` and
+`@catlabtech/webcvt-container-mkv`. Test fixtures derived from FFmpeg samples
 (LGPL-2.1) live under `tests/fixtures/video/` and are not redistributed
 in npm.

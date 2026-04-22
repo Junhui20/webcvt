@@ -6,7 +6,7 @@
  * - "extracts Vorbis 3-packet init from A_VORBIS CodecPrivate via Xiph unpacking"
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { iterateAudioChunks, iterateVideoChunks } from './block-iterator.ts';
 import { parseWebm } from './parser.ts';

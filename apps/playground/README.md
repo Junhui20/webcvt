@@ -1,17 +1,17 @@
-# @webcvt/playground
+# @catlabtech/webcvt-playground
 
 Cloudflare Pages demo site for webcvt. Converts files locally in the browser — no uploads, no servers.
 
 ## Development
 
 ```bash
-pnpm --filter @webcvt/playground dev
+pnpm --filter @catlabtech/webcvt-playground dev
 ```
 
 ## Build
 
 ```bash
-pnpm --filter @webcvt/playground build
+pnpm --filter @catlabtech/webcvt-playground build
 ```
 
 Output is written to `apps/playground/dist/`.
@@ -19,7 +19,7 @@ Output is written to `apps/playground/dist/`.
 ## Typecheck
 
 ```bash
-pnpm --filter @webcvt/playground typecheck
+pnpm --filter @catlabtech/webcvt-playground typecheck
 ```
 
 ## E2E tests (Playwright, Chrome-only)
@@ -27,14 +27,14 @@ pnpm --filter @webcvt/playground typecheck
 Install browsers once:
 
 ```bash
-pnpm --filter @webcvt/playground exec playwright install chromium
+pnpm --filter @catlabtech/webcvt-playground exec playwright install chromium
 ```
 
 Run tests against the preview server:
 
 ```bash
-pnpm --filter @webcvt/playground build
-pnpm --filter @webcvt/playground test:e2e
+pnpm --filter @catlabtech/webcvt-playground build
+pnpm --filter @catlabtech/webcvt-playground test:e2e
 ```
 
 ## Deploy to Cloudflare Pages
@@ -43,14 +43,14 @@ pnpm --filter @webcvt/playground test:e2e
 
 ```bash
 npx wrangler login
-pnpm --filter @webcvt/playground build
+pnpm --filter @catlabtech/webcvt-playground build
 npx wrangler pages deploy apps/playground/dist --project-name=webcvt --branch=main
 ```
 
 ### Subsequent deploys
 
 ```bash
-pnpm --filter @webcvt/playground build && \
+pnpm --filter @catlabtech/webcvt-playground build && \
   npx wrangler pages deploy apps/playground/dist --project-name=webcvt
 ```
 

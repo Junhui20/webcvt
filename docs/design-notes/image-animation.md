@@ -1,6 +1,6 @@
 # image-animation design
 
-> Implementation reference for `@webcvt/image-animation`. Write the code from
+> Implementation reference for `@catlabtech/webcvt-image-animation`. Write the code from
 > this note plus the linked official specs. Do not consult competing
 > implementations (giflib, libpng+APNG patch, libwebp, libavcodec/libavformat,
 > ImageMagick, gif.js, omggif, upng-js, apng-js, sharp, libgd) except for
@@ -18,16 +18,16 @@ decoding the actual pixel payload of every frame in this package**. GIF is
 the exception — its LZW pixel stream is small, tightly coupled to the
 container, and trivially decodable in <300 LOC, so we own GIF pixel decode
 end-to-end. APNG and animated WebP defer their per-frame pixel decode to
-`@webcvt/backend-wasm` (libwebp / a stripped PNG decoder) — this package
+`@catlabtech/webcvt-backend-wasm` (libwebp / a stripped PNG decoder) — this package
 only parses the container, validates the chunk structure, and yields the
 frame's raw payload bytes with enough metadata that a downstream decoder
 can produce RGBA from a `fdAT` zlib stream or a VP8/VP8L bitstream. This
-split mirrors the design used in `@webcvt/container-mp4` (parse boxes here,
+split mirrors the design used in `@catlabtech/webcvt-container-mp4` (parse boxes here,
 decode samples in WebCodecs) and keeps this package tractable at ~3,000
 LOC.
 
-The package complements `@webcvt/image-legacy` (static raster formats) and
-`@webcvt/image-svg` (vector). It is the final Phase 4 image package.
+The package complements `@catlabtech/webcvt-image-legacy` (static raster formats) and
+`@catlabtech/webcvt-image-svg` (vector). It is the final Phase 4 image package.
 
 ## Scope statement
 
@@ -69,7 +69,7 @@ explicit deferred list.
   `{ x, y, width, height, durationMs, disposalMethod, blendingMethod,
   subFormat: 'VP8' | 'VP8L', payloadBytes }`. Static WebP (single VP8 or
   VP8L without the ANIM flag) is detected and rejected — handled by a
-  future `@webcvt/image-webp` package or by `backend-wasm`.
+  future `@catlabtech/webcvt-image-webp` package or by `backend-wasm`.
 - Public API surfaces: `parseGif`, `serializeGif`, `parseApng`,
   `serializeApng`, `parseWebpAnim`, `serializeWebpAnim`, plus top-level
   dispatch `parseAnimation(input, format)` over the discriminated union
@@ -84,7 +84,7 @@ explicit deferred list.
   (decoded RGBA `Uint8Array`). For APNG/WebP-anim, `payloadBytes` is set
   (raw zlib- or VP8/VP8L-encoded) plus `subFormat`. Consumers who need
   RGBA from APNG/WebP-anim wire `payloadBytes` into the appropriate
-  decoder via `@webcvt/backend-wasm`.
+  decoder via `@catlabtech/webcvt-backend-wasm`.
 - Round-trip parse → serialize **byte-equivalent** for APNG and animated
   WebP when chunks are not reordered (we preserve the original chunk
   sequence). For GIF, byte-equivalent if and only if the LZW
@@ -102,8 +102,8 @@ explicit deferred list.
   `file.frames[0]`.
 - **Animated AVIF**: AVIF stores image sequences inside the
   ISO-BMFF container as multiple `iref`-linked items + an `ImageGrid`
-  derivation. Belongs in a future `@webcvt/image-avif` package that
-  shares ISO-BMFF box-parsing primitives with `@webcvt/container-mp4`.
+  derivation. Belongs in a future `@catlabtech/webcvt-image-avif` package that
+  shares ISO-BMFF box-parsing primitives with `@catlabtech/webcvt-container-mp4`.
 - **Animated JPEG (Motion JPEG / MJPEG-as-image)**: MJPEG-in-AVI streams
   are video, not images. The `image/jpeg` MIME never carries animation —
   there is no standard "animated JPEG" format. Out of scope by definition.
@@ -119,7 +119,7 @@ explicit deferred list.
 - **WebP VP8 / VP8L per-frame pixel decode**: the VP8 lossy bitstream
   (RFC 6386) is ~600 pages of normative text and a ~30K LOC reference
   decoder. The VP8L lossless bitstream (~80 pages) is smaller but still
-  out of first-pass scope. Deferred to `@webcvt/backend-wasm` (libwebp
+  out of first-pass scope. Deferred to `@catlabtech/webcvt-backend-wasm` (libwebp
   via WASM). This package returns the VP8/VP8L sub-frame as raw bytes
   with the sub-format tag.
 - **APNG / WebP-anim ICC profile interpretation**: ICC chunks (PNG
@@ -135,7 +135,7 @@ explicit deferred list.
 - **Frame compositing onto a canvas**: this package yields per-frame
   metadata + pixel bytes; the actual `disposalMethod` / `blendMode`
   composite-onto-prior-canvas operation is the responsibility of a
-  future `@webcvt/image-render` package. We document the rules
+  future `@catlabtech/webcvt-image-render` package. We document the rules
   exhaustively (Trap §5, §6, §11) so that consumer can implement
   composite correctly.
 - **GIF89a Plain Text Extension** (block label `0x01`): obscure
@@ -148,7 +148,7 @@ explicit deferred list.
 - **WebP `EXIF` / `XMP` metadata**: round-tripped as opaque byte slices
   (`metadataChunks: { fourcc, payload }[]`) without parsing.
 - **Cross-format conversion** (GIF → APNG, APNG → animated WebP, etc.):
-  belongs in a higher-level `@webcvt/convert` package using the
+  belongs in a higher-level `@catlabtech/webcvt-convert` package using the
   per-frame iteration APIs here as input.
 
 ## Official references
@@ -914,7 +914,7 @@ double-scanning the input for the APNG / WebP-anim disambiguation.
 
 ## Backend integration
 
-`AnimationBackend` (in `backend.ts`) implements the `@webcvt/core`
+`AnimationBackend` (in `backend.ts`) implements the `@catlabtech/webcvt-core`
 backend interface. `canHandle(input, output)` returns `true` only when
 input MIME === output MIME AND both belong to one of the three formats
 (`image/gif`, `image/apng`, `image/webp` with the animation flag).
@@ -1257,7 +1257,7 @@ margin):
 
 ## Dependencies
 
-- **`@webcvt/core`** — `WebcvtError` base class for typed errors;
+- **`@catlabtech/webcvt-core`** — `WebcvtError` base class for typed errors;
   `Backend`, `FormatDescriptor`, `ConvertOptions`, `ConvertResult`
   types for the backend integration.
 
@@ -1279,7 +1279,7 @@ margin):
 
 - **VP8 / VP8L pixel decoding is OUT OF SCOPE.** Per the Scope
   statement: animated WebP frame pixel decoding is delegated to
-  `@webcvt/backend-wasm` (which wraps libwebp). This package only
+  `@catlabtech/webcvt-backend-wasm` (which wraps libwebp). This package only
   parses the RIFF container, validates VP8X / ANIM / ANMF
   chunks, and yields the raw VP8 / VP8L sub-frame bytes for the
   consumer to decode. We are EXPLICIT in the README and in
@@ -1293,17 +1293,17 @@ margin):
   as `payloadBytes`; consumer pipes to `DecompressionStream
   ('deflate')`, then defilters (PNG filter types 0..4 per scan
   line), then re-interleaves channels. The defiltering step is a
-  natural fit for a future `@webcvt/image-png` package; this
+  natural fit for a future `@catlabtech/webcvt-image-png` package; this
   package's surface area is intentionally limited to APNG
   container concerns.
 
-- **`@webcvt/test-utils`** (dev-only) — provides shared test-byte
+- **`@catlabtech/webcvt-test-utils`** (dev-only) — provides shared test-byte
   helpers that overlap with our `_test-helpers/bytes.ts`. We
   prefer per-package `_test-helpers/` to keep the package
-  zero-deps, but may import `@webcvt/test-utils` for fixture
+  zero-deps, but may import `@catlabtech/webcvt-test-utils` for fixture
   generation parity in cross-package integration tests.
 
-- **`@webcvt/backend-wasm`** — NOT a hard dependency of this
+- **`@catlabtech/webcvt-backend-wasm`** — NOT a hard dependency of this
   package. Mentioned in the README as the recommended way to
   complete the APNG / WebP-anim pipeline, but the consumer wires
   it explicitly. This package compiles and ships independent of

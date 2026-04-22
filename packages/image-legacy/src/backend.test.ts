@@ -1,4 +1,4 @@
-import type { FormatDescriptor } from '@webcvt/core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
 import { describe, expect, it } from 'vitest';
 import {
   ImageLegacyBackend,

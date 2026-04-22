@@ -4,8 +4,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: {
     alias: {
-      '@webcvt/core': resolve(__dirname, '../core/src/index.ts'),
-      '@webcvt/test-utils': resolve(__dirname, '../test-utils/src/index.ts'),
+      '@catlabtech/webcvt-core': resolve(__dirname, '../core/src/index.ts'),
+      '@catlabtech/webcvt-test-utils': resolve(__dirname, '../test-utils/src/index.ts'),
     },
   },
   test: {

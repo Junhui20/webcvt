@@ -91,8 +91,8 @@ function buildMinimalMkvFile(): MkvFile {
     segmentPayloadOffset: 0,
     info: {
       timecodeScale: 1_000_000,
-      muxingApp: '@webcvt/container-mkv',
-      writingApp: '@webcvt/container-mkv',
+      muxingApp: '@catlabtech/webcvt-container-mkv',
+      writingApp: '@catlabtech/webcvt-container-mkv',
     },
     tracks: [videoTrack, audioTrack],
     clusters: [cluster],
@@ -353,6 +353,6 @@ describe('serializeMkv', () => {
     const result = serializeMkv(file);
     // Decode text content to find app string
     const text = new TextDecoder('utf-8', { fatal: false }).decode(result);
-    expect(text).toContain('@webcvt/container-mkv');
+    expect(text).toContain('@catlabtech/webcvt-container-mkv');
   });
 });

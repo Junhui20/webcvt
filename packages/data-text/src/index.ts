@@ -1,5 +1,5 @@
 /**
- * @webcvt/data-text — Public API
+ * @catlabtech/webcvt-data-text — Public API
  *
  * Supported formats:
  *   JSON (RFC 8259), CSV (RFC 4180), TSV (IANA text/tab-separated-values),
@@ -8,7 +8,7 @@
  *   XML 1.0 Fifth Edition (W3C 2008).
  *
  * No auto-detection: callers must explicitly pass the format to parseDataText.
- * No cross-format conversion: use @webcvt/convert for that.
+ * No cross-format conversion: use @catlabtech/webcvt-convert for that.
  * No schema coercion: all values returned as strings (except JSON).
  * No streaming: all operations are fully buffered.
  *

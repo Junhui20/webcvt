@@ -1,6 +1,6 @@
 # data-text TOML extension design
 
-> Second-pass extension for `@webcvt/data-text`. Adds TOML v1.0.0
+> Second-pass extension for `@catlabtech/webcvt-data-text`. Adds TOML v1.0.0
 > (Tom's Obvious Minimal Language) alongside JSON/CSV/TSV/INI/ENV/JSONL.
 >
 > Spec-only: https://toml.io/en/v1.0.0. NO porting from @iarna/toml,

@@ -1,6 +1,6 @@
 # container-mkv design
 
-> Implementation reference for `@webcvt/container-mkv`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-mkv`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -41,7 +41,7 @@ See "Out of scope (DEFERRED)" below for the explicit deferred list.
 
 - `EBML` header with `DocType == "matroska"` only — **reject `"webm"`
   with `MkvDocTypeNotSupportedError`** so the registry routes WebM
-  files to the dedicated `@webcvt/container-webm` package
+  files to the dedicated `@catlabtech/webcvt-container-webm` package
 - One video track + one audio track (typical MKV layout)
 - Codecs (wider set than WebM):
   - Video: H.264 (`V_MPEG4/ISO/AVC`), HEVC (`V_MPEGH/ISO/HEVC`),
@@ -60,7 +60,7 @@ See "Out of scope (DEFERRED)" below for the explicit deferred list.
   subset
 - WebCodecs decode for all in-scope codecs where the browser supports
   them; encode for VP9 / Opus / AAC where WebCodecs has it. All other
-  encode paths fall back to `@webcvt/backend-wasm`.
+  encode paths fall back to `@catlabtech/webcvt-backend-wasm`.
 
 **Out of scope (Phase 3.5+, DEFERRED):**
 
@@ -88,7 +88,7 @@ See "Out of scope (DEFERRED)" below for the explicit deferred list.
 
 ## Code reuse — EBML primitives are intentionally duplicated
 
-`@webcvt/container-webm` already ships working EBML primitives
+`@catlabtech/webcvt-container-webm` already ships working EBML primitives
 (`ebml-vint.ts`, `ebml-element.ts`, `ebml-types.ts`, ~370 LOC total).
 This package duplicates those files into its own `src/ebml-*.ts`
 verbatim rather than importing from `container-webm`. **The
@@ -96,16 +96,16 @@ duplication is INTENTIONAL.**
 
 Rationale: premature shared abstraction often locks in the wrong API.
 With two working implementations side by side we will be able to
-confidently extract a `@webcvt/ebml` package as a separate Phase 3
+confidently extract a `@catlabtech/webcvt-ebml` package as a separate Phase 3
 wrap-up task, with both consumers driving the API surface. Until then,
 duplication is the cheaper bet — it keeps each package's evolution
 independent and avoids cross-package version churn during the
 codec-meta build-out for MKV.
 
-A dedicated extraction task ("extract `@webcvt/ebml` package from
+A dedicated extraction task ("extract `@catlabtech/webcvt-ebml` package from
 `container-webm` and `container-mkv`") will be added to plan.md
 §"Phase 3 remaining" when this design note ships. The implementation
-agent for this package MUST NOT `import from '@webcvt/container-webm'`;
+agent for this package MUST NOT `import from '@catlabtech/webcvt-container-webm'`;
 copy the three files and adapt the namespace.
 
 ## Official references
@@ -672,7 +672,7 @@ two-pass layout above.
   video keyframe (or every ~5 seconds, whichever is sooner).
 - **All other encode paths** (H.264, HEVC, VP8, MP3, FLAC, Vorbis):
   `MkvBackend.canHandle` returns `false` for those encode requests
-  so the BackendRegistry falls through to `@webcvt/backend-wasm`
+  so the BackendRegistry falls through to `@catlabtech/webcvt-backend-wasm`
   (ffmpeg.wasm carrying x264, x265, libvpx, lame, libFLAC,
   libvorbis) for synthesis. Output is then re-muxed by this package.
 - **Probe**: `probeVideoCodec({ codec, width, height, framerate })`
@@ -855,7 +855,7 @@ two-pass layout above.
 19. **`DocType` validation is strict**: only `"matroska"` is accepted
     in this package. `"webm"` is REJECTED with
     `MkvDocTypeNotSupportedError` so the BackendRegistry can route
-    WebM-flavoured files to `@webcvt/container-webm` (which has the
+    WebM-flavoured files to `@catlabtech/webcvt-container-webm` (which has the
     inverse rejection). Reject any other DocType (e.g. `"mkv-3d"`,
     `"webmlite"`) the same way. This split-routing is what justifies
     duplicating the EBML primitives — see "Code reuse" §.
@@ -996,10 +996,10 @@ synchronisation follows ISO/IEC 11172-3 / 13818-3. No code was
 copied from libavformat, libwebm, libmkvtoolnix, mkvtoolnix, Bento4,
 FFmpeg, or any other implementation. The EBML primitives
 (`ebml-vint.ts`, `ebml-element.ts`, `ebml-types.ts`) are
-intentionally duplicated from `@webcvt/container-webm` for first
-pass; a `@webcvt/ebml` extraction is a Phase 3 wrap-up task. WebM
+intentionally duplicated from `@catlabtech/webcvt-container-webm` for first
+pass; a `@catlabtech/webcvt-ebml` extraction is a Phase 3 wrap-up task. WebM
 (`DocType = webm`) support lives in the separate
-`@webcvt/container-webm` package and is rejected here so the
+`@catlabtech/webcvt-container-webm` package and is rejected here so the
 BackendRegistry can route correctly. Test fixtures derived from
 FFmpeg samples (LGPL-2.1) live under `tests/fixtures/video/` and
 `tests/fixtures/audio/` and are not redistributed in npm.

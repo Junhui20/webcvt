@@ -6,7 +6,7 @@ no `npm install`.**
 
 ## What this demonstrates
 
-- Load `@webcvt/subtitle` straight from the [esm.sh](https://esm.sh) CDN via
+- Load `@catlabtech/webcvt-subtitle` straight from the [esm.sh](https://esm.sh) CDN via
   `<script type="module">` — no Vite, no webpack, no local node_modules.
 - Parse an `.srt` file selected by the user, convert it to WebVTT, and
   trigger a download — all client-side.
@@ -15,7 +15,7 @@ no `npm install`.**
 
 ## Usage
 
-> **Important:** This page requires `@webcvt/subtitle` to be published on npm
+> **Important:** This page requires `@catlabtech/webcvt-subtitle` to be published on npm
 > (v0.1.0 release pending). The esm.sh CDN import will 404 until the package
 > is live. For local testing today, use [`apps/playground`](../../apps/playground)
 > which runs against the workspace-linked packages.
@@ -41,7 +41,7 @@ npx serve examples/vanilla-html
 ## The code
 
 ```js
-import { parseSrt, serializeVtt } from 'https://esm.sh/@webcvt/subtitle@0.1.0';
+import { parseSrt, serializeVtt } from 'https://esm.sh/@catlabtech/webcvt-subtitle@0.1.0';
 
 const srt = await selectedFile.text();
 const track = parseSrt(srt);
@@ -49,7 +49,7 @@ const vtt = serializeVtt(track);
 ```
 
 That's it. The esm.sh CDN re-exports any published npm package as an ES
-module, so this pattern works for every `@webcvt/*` package with zero
+module, so this pattern works for every `@catlabtech/webcvt-*` package with zero
 local setup.
 
 ## How esm.sh CDN imports work
@@ -67,12 +67,12 @@ Any package published to npm is instantly available. Pin to an exact version
 
 ## Supported formats
 
-`@webcvt/subtitle` handles: **SRT, WebVTT, ASS, SSA, MicroDVD** — any pair.
+`@catlabtech/webcvt-subtitle` handles: **SRT, WebVTT, ASS, SSA, MicroDVD** — any pair.
 Swap the parse/serialize functions to convert between any two:
 
 ```js
 // SRT → ASS
-import { parseSrt, serializeAss } from 'https://esm.sh/@webcvt/subtitle@0.1.0';
+import { parseSrt, serializeAss } from 'https://esm.sh/@catlabtech/webcvt-subtitle@0.1.0';
 const ass = serializeAss(parseSrt(srt));
 ```
 

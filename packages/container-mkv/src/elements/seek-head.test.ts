@@ -2,8 +2,8 @@
  * Tests for SeekHead element decode/encode (seek-head.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
-import { concatBytes, readChildren } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
+import { concatBytes, readChildren } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_SEEK,

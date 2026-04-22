@@ -13,7 +13,7 @@
  * bz2/xz detection: canHandle returns false (routes to backend-wasm).
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
 import {
   BZ2_MIME,
   GZIP_MIME,

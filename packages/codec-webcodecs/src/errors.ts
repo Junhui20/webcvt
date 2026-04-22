@@ -1,4 +1,4 @@
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /**
  * Thrown when the current runtime does not expose the WebCodecs API at all

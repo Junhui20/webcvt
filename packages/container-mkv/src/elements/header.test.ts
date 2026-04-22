@@ -10,7 +10,7 @@ import {
   writeUint,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   ID_DOCTYPE,

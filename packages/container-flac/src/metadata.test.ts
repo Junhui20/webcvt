@@ -322,7 +322,7 @@ describe('serializeFlac error paths', () => {
   it('throws FlacInvalidMetadataError when STREAMINFO is not the first block', async () => {
     const { serializeFlac } = await import('./serializer.ts');
     const { parseFlac } = await import('./parser.ts');
-    const { loadFixture } = await import('@webcvt/test-utils');
+    const { loadFixture } = await import('@catlabtech/webcvt-test-utils');
 
     const bytes = await loadFixture('audio/sine-1s-44100-mono.flac');
     const flac = parseFlac(bytes);
@@ -339,7 +339,7 @@ describe('serializeFlac error paths', () => {
   it('recomputes totalSamples when original is 0', async () => {
     const { serializeFlac } = await import('./serializer.ts');
     const { parseFlac } = await import('./parser.ts');
-    const { loadFixture } = await import('@webcvt/test-utils');
+    const { loadFixture } = await import('@catlabtech/webcvt-test-utils');
 
     const bytes = await loadFixture('audio/sine-1s-44100-mono.flac');
     const flac = parseFlac(bytes);

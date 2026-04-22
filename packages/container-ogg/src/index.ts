@@ -1,5 +1,5 @@
 /**
- * @webcvt/container-ogg — Ogg container muxer and demuxer.
+ * @catlabtech/webcvt-container-ogg — Ogg container muxer and demuxer.
  *
  * Supports:
  * - Vorbis and Opus audio codecs

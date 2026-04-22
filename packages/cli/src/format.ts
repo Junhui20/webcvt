@@ -1,5 +1,5 @@
 import { extname } from 'node:path';
-import { type FormatDescriptor, findByExt, findByMime } from '@webcvt/core';
+import { type FormatDescriptor, findByExt, findByMime } from '@catlabtech/webcvt-core';
 
 /**
  * Resolve a format hint string (extension like "mp3" OR MIME like "audio/mpeg")

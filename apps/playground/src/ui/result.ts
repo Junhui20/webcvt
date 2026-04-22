@@ -1,4 +1,4 @@
-import type { ConvertResult } from '@webcvt/core';
+import type { ConvertResult } from '@catlabtech/webcvt-core';
 import { formatBytes } from '../utils.ts';
 
 /**

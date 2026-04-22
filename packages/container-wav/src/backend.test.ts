@@ -2,8 +2,8 @@
  * Tests for WavBackend — the webcvt Backend implementation.
  */
 
-import type { FormatDescriptor } from '@webcvt/core';
-import { loadFixtureBlob } from '@webcvt/test-utils';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { loadFixtureBlob } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { WAV_FORMAT, WavBackend } from './backend.ts';
 import { parseWav } from './parser.ts';

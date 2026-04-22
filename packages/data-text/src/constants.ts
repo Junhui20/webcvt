@@ -1,5 +1,5 @@
 /**
- * Shared security-cap constants for @webcvt/data-text.
+ * Shared security-cap constants for @catlabtech/webcvt-data-text.
  *
  * All values are derived from the design note §"Security caps".
  * Every format module references these constants; do not hardcode them inline.

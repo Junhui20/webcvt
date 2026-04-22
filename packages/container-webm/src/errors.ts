@@ -6,7 +6,7 @@
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
 export class WebmInputTooLargeError extends WebcvtError {
@@ -24,7 +24,7 @@ export class WebmDocTypeNotSupportedError extends WebcvtError {
   constructor(docType: string) {
     super(
       'WEBM_DOCTYPE_NOT_SUPPORTED',
-      `EBML DocType "${docType}" is not supported by container-webm. Only DocType "webm" is accepted. Generic Matroska support is in the separate @webcvt/container-mkv package (Phase 3).`,
+      `EBML DocType "${docType}" is not supported by container-webm. Only DocType "webm" is accepted. Generic Matroska support is in the separate @catlabtech/webcvt-container-mkv package (Phase 3).`,
     );
     this.name = 'WebmDocTypeNotSupportedError';
   }
@@ -172,7 +172,7 @@ export class WebmEncodeNotImplementedError extends WebcvtError {
   constructor(reason: string) {
     super(
       'WEBM_ENCODE_NOT_IMPLEMENTED',
-      `WebM encode not implemented: ${reason}. Install @webcvt/backend-wasm for transcode support.`,
+      `WebM encode not implemented: ${reason}. Install @catlabtech/webcvt-backend-wasm for transcode support.`,
     );
     this.name = 'WebmEncodeNotImplementedError';
   }

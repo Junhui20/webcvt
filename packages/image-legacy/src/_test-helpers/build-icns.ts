@@ -1,5 +1,5 @@
 /**
- * Synthetic ICNS builder for @webcvt/image-legacy tests.
+ * Synthetic ICNS builder for @catlabtech/webcvt-image-legacy tests.
  *
  * Constructs minimal but spec-valid ICNS byte sequences entirely in memory.
  * NO binary fixtures are committed to disk — every test fixture is built here.

@@ -1,11 +1,11 @@
-# @webcvt/container-ts
+# @catlabtech/webcvt-container-ts
 
 > MPEG-2 Transport Stream (.ts) container parser for webcvt.
 
 ## Installation
 
 ```bash
-npm i @webcvt/container-ts
+npm i @catlabtech/webcvt-container-ts
 ```
 
 ## API

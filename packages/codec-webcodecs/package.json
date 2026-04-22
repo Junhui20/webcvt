@@ -1,5 +1,5 @@
 {
-  "name": "@webcvt/codec-webcodecs",
+  "name": "@catlabtech/webcvt-codec-webcodecs",
   "version": "0.1.0",
   "description": "Thin adapter over the W3C WebCodecs API — encode/decode video and audio frames for webcvt container packages",
   "type": "module",
@@ -24,7 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.3.0",

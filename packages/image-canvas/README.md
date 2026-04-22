@@ -1,4 +1,4 @@
-# @webcvt/image-canvas
+# @catlabtech/webcvt-image-canvas
 
 Browser-native image conversion backend for [webcvt](https://github.com/webcvt/webcvt).
 
@@ -15,8 +15,8 @@ GIF can be decoded as input but cannot be produced as output (the Canvas API doe
 ## Usage
 
 ```ts
-import { CanvasBackend } from '@webcvt/image-canvas';
-import { defaultRegistry } from '@webcvt/core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
 
 // Register once
 defaultRegistry.register(new CanvasBackend());

@@ -1,5 +1,5 @@
 /**
- * Top-level image parser dispatcher for @webcvt/image-legacy.
+ * Top-level image parser dispatcher for @catlabtech/webcvt-image-legacy.
  *
  * parseImage(input, format) switches on format and routes to the appropriate
  * per-format parser. Format is an explicit caller hint — auto-detection is

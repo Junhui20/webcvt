@@ -88,7 +88,7 @@ describe('D.1: Fragmented MP4 detection', () => {
 
   it('D.1.3: classic MP4 (no mvex) is NOT fragmented', async () => {
     // Load the test fixture — a classic AAC M4A file.
-    const { loadFixture } = await import('@webcvt/test-utils');
+    const { loadFixture } = await import('@catlabtech/webcvt-test-utils');
     const bytes = await loadFixture('audio/sine-1s-44100-mono.m4a');
     const file = parseMp4(bytes);
 
@@ -409,7 +409,7 @@ describe('D.2: moof parse + trun flags', () => {
   });
 
   it('D.2.13: iterateAudioSamplesAuto dispatches to classic for non-fragmented file', async () => {
-    const { loadFixture } = await import('@webcvt/test-utils');
+    const { loadFixture } = await import('@catlabtech/webcvt-test-utils');
     const bytes = await loadFixture('audio/sine-1s-44100-mono.m4a');
     const file = parseMp4(bytes);
 
@@ -483,7 +483,7 @@ describe('D.2: moof parse + trun flags', () => {
   });
 
   it('D.2.17: iterateFragmentedAudioSamples throws when called on non-fragmented file', async () => {
-    const { loadFixture } = await import('@webcvt/test-utils');
+    const { loadFixture } = await import('@catlabtech/webcvt-test-utils');
     const bytes = await loadFixture('audio/sine-1s-44100-mono.m4a');
     const file = parseMp4(bytes);
 

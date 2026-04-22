@@ -5,7 +5,7 @@ import {
   type ConvertResult,
   type FormatDescriptor,
   defaultRegistry,
-} from '@webcvt/core';
+} from '@catlabtech/webcvt-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildHelpText, buildListFormatsText } from './help.ts';
 

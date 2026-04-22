@@ -1,5 +1,5 @@
 /**
- * @webcvt/image-legacy — Public API
+ * @catlabtech/webcvt-image-legacy — Public API
  *
  * Supported formats (seventh pass — Phase 4.7):
  *   PBM (P1/P4), PGM (P2/P5), PPM (P3/P6), PFM (Pf/PF), QOI, TIFF, TGA, XBM, PCX, XPM, ICNS.

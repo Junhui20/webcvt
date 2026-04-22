@@ -1,5 +1,5 @@
 /**
- * Shared constants for the @webcvt/container-flac package.
+ * Shared constants for the @catlabtech/webcvt-container-flac package.
  *
  * Centralising limits here ensures backend.ts and parser.ts cannot drift.
  */

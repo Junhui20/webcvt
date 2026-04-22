@@ -83,7 +83,7 @@ export class UnsupportedFormatError extends WebcvtError {
   constructor(format: string, direction: 'input' | 'output') {
     super(
       'UNSUPPORTED_FORMAT',
-      `Unsupported ${direction} format: "${format}". Install an additional @webcvt/* package or check the format name.`,
+      `Unsupported ${direction} format: "${format}". Install an additional @catlabtech/webcvt-* package or check the format name.`,
     );
     this.name = 'UnsupportedFormatError';
   }
@@ -93,7 +93,7 @@ export class NoBackendError extends WebcvtError {
   constructor(input: string, output: string) {
     super(
       'NO_BACKEND',
-      `No backend can convert ${input} → ${output}. Install a matching @webcvt/backend-* or @webcvt/codec-* package.`,
+      `No backend can convert ${input} → ${output}. Install a matching @catlabtech/webcvt-backend-* or @catlabtech/webcvt-codec-* package.`,
     );
     this.name = 'NoBackendError';
   }

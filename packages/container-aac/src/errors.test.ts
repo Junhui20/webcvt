@@ -2,7 +2,7 @@
  * Tests for AAC/ADTS error classes.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { describe, expect, it } from 'vitest';
 import {
   AdtsCorruptStreamError,

@@ -1,5 +1,5 @@
 /**
- * CSV / TSV builder for @webcvt/data-text tests.
+ * CSV / TSV builder for @catlabtech/webcvt-data-text tests.
  *
  * Builds RFC 4180-quoted CSV or TSV strings from row arrays.
  * Used as parser input in round-trip and regression tests.

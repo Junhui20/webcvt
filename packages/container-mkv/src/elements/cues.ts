@@ -6,8 +6,8 @@
  * CueRelativePosition and CueDuration are read but ignored (deferred per design note).
  */
 
-import { concatBytes, findChild, parseFlatChildren, readUint, readUintNumber } from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+import { concatBytes, findChild, parseFlatChildren, readUint, readUintNumber } from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   ID_CUES,
   ID_CUE_CLUSTER_POSITION,

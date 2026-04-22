@@ -1,4 +1,4 @@
-# @webcvt/core
+# @catlabtech/webcvt-core
 
 > Public API, types, format detector, capability probe, and backend registry for webcvt.
 

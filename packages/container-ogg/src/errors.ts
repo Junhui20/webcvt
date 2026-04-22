@@ -4,7 +4,7 @@
  * All error codes are uppercase snake_case strings for programmatic matching.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
 export class OggInputTooLargeError extends WebcvtError {
@@ -140,7 +140,7 @@ export class OggEncodeNotImplementedError extends WebcvtError {
     super(
       'OGG_ENCODE_NOT_IMPLEMENTED',
       'Encoding to Ogg from non-Ogg input is not implemented in container-ogg Phase 1. ' +
-        'Install @webcvt/backend-wasm to enable transcode via ffmpeg.wasm.',
+        'Install @catlabtech/webcvt-backend-wasm to enable transcode via ffmpeg.wasm.',
     );
     this.name = 'OggEncodeNotImplementedError';
   }

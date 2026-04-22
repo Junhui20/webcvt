@@ -10,7 +10,7 @@
  *
  * HE-AAC note (design note Trap #7):
  * HE-AAC v1 (SBR, object_type=5) and HE-AAC v2 (PS, object_type=29) are
- * identified during parsing; those frames route to @webcvt/backend-wasm via
+ * identified during parsing; those frames route to @catlabtech/webcvt-backend-wasm via
  * the core BackendRegistry fallback chain. Do NOT import backend-wasm here.
  *
  * Phase 2 TODO:
@@ -20,7 +20,7 @@
  * - Widen canHandle to output.category === 'audio' once WebCodecs decode is wired.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import { AdtsEncodeNotImplementedError, AdtsInputTooLargeError } from './errors.ts';
 import { parseAdts } from './parser.ts';
@@ -31,7 +31,7 @@ import { serializeAdts } from './serializer.ts';
 // ---------------------------------------------------------------------------
 
 const AAC_MIME = 'audio/aac';
-// HE-AAC (audio/aacp, audio/x-aac) routes to @webcvt/backend-wasm via registry — design note Trap #7.
+// HE-AAC (audio/aacp, audio/x-aac) routes to @catlabtech/webcvt-backend-wasm via registry — design note Trap #7.
 const AAC_MIMES = new Set([AAC_MIME]);
 
 // ---------------------------------------------------------------------------
@@ -56,12 +56,12 @@ export class AacBackend implements Backend {
    * pre-filter by object_type without inspecting the stream, so we accept the
    * MIME and let parseAdts surface any issues.
    *
-   * Encode-to-AAC from non-AAC input is handled by @webcvt/backend-wasm
+   * Encode-to-AAC from non-AAC input is handled by @catlabtech/webcvt-backend-wasm
    * through the BackendRegistry fallback chain (design note §Phase-1).
    */
   async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
     // Phase 1: identity only — both input and output must be ADTS-AAC.
-    // HE-AAC (audio/aacp, audio/x-aac) routes to @webcvt/backend-wasm — design note Trap #7.
+    // HE-AAC (audio/aacp, audio/x-aac) routes to @catlabtech/webcvt-backend-wasm — design note Trap #7.
     return input.mime === AAC_MIME && output.mime === AAC_MIME;
   }
 

@@ -1,5 +1,5 @@
 /**
- * CSV / TSV parse/serialize for @webcvt/data-text.
+ * CSV / TSV parse/serialize for @catlabtech/webcvt-data-text.
  *
  * A single state-machine parser handles both CSV (delimiter=',') and
  * TSV (delimiter='\t'). parseTsv / serializeTsv in tsv.ts are thin wrappers.

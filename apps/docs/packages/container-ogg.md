@@ -1,11 +1,11 @@
-# @webcvt/container-ogg
+# @catlabtech/webcvt-container-ogg
 
 > Ogg bitstream container parser for webcvt. Handles Ogg Vorbis and Ogg Opus.
 
 ## Installation
 
 ```bash
-npm i @webcvt/container-ogg
+npm i @catlabtech/webcvt-container-ogg
 ```
 
 ## API

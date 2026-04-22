@@ -1,5 +1,5 @@
 /**
- * TSV (Tab-Separated Values) parse/serialize for @webcvt/data-text.
+ * TSV (Tab-Separated Values) parse/serialize for @catlabtech/webcvt-data-text.
  *
  * TSV is identical to CSV with the delimiter set to '\t'.
  * Per IANA text/tab-separated-values, fields MUST NOT contain literal tabs

@@ -1,6 +1,6 @@
 # container-mp4 design
 
-> Implementation reference for `@webcvt/container-mp4`. Write the code
+> Implementation reference for `@catlabtech/webcvt-container-mp4`. Write the code
 > from this note plus the linked official spec. Do not consult competing
 > implementations except for debugging spec-ambiguous edge cases.
 
@@ -511,7 +511,7 @@ the canonical write order for newly authored files.
   29 = PS/HE-AACv2). Emit the codec string accordingly.
 - **Encode**: WebCodecs supports AAC encode in Chromium 116+. The
   `Mp4Backend.canHandle` returns `false` for encode in Phase 1, routing
-  encode requests to `@webcvt/backend-wasm` (ffmpeg.wasm) via the core
+  encode requests to `@catlabtech/webcvt-backend-wasm` (ffmpeg.wasm) via the core
   BackendRegistry's fallback chain. A native AAC-encode → MP4-mux path
   is Phase 3.5+ work.
 - **Probe**: `probeAudioCodec({ codec: 'mp4a.40.2', sampleRate,
@@ -706,7 +706,7 @@ Specification (for the `qt  ` brand and legacy box semantics). Codec
 four-CC mappings cross-checked against the MP4 Registration Authority
 at mp4ra.org. No code was copied from libavformat, libstagefright,
 mp4parse-rust, mp4-tools, Bento4, or any other implementation. The
-`AudioSpecificConfig` parser is shared with `@webcvt/container-aac`
+`AudioSpecificConfig` parser is shared with `@catlabtech/webcvt-container-aac`
 (see `packages/codec-aac/src/asc.ts`). Test fixtures derived from
 FFmpeg samples (LGPL-2.1) live under `tests/fixtures/audio/` and are
 not redistributed in npm.

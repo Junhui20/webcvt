@@ -1,5 +1,5 @@
 /**
- * XML 1.0 (Fifth Edition) parse/serialize for @webcvt/data-text.
+ * XML 1.0 (Fifth Edition) parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Architecture:
  *   Phase 1: Hand-rolled security pre-scan (character-walk state machine, NO regex).

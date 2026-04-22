@@ -19,7 +19,7 @@
  * SeekHead is padded to SEEK_HEAD_RESERVED_BYTES with a Void element (Trap §16).
  */
 
-import { concatBytes, writeVintId, writeVintSize } from '@webcvt/ebml';
+import { concatBytes, writeVintId, writeVintSize } from '@catlabtech/webcvt-ebml';
 import {
   ID_CUES,
   ID_INFO,

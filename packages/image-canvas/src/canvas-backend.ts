@@ -1,5 +1,5 @@
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@webcvt/core';
-import { UnsupportedFormatError } from '@webcvt/core';
+import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import { UnsupportedFormatError } from '@catlabtech/webcvt-core';
 import { writeBmp } from './bmp-writer.ts';
 import { writeIco } from './ico-writer.ts';
 

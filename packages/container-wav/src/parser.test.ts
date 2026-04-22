@@ -5,8 +5,8 @@
  * Tests marked "synthetic" build minimal WAV bytes inline.
  */
 
-import { loadFixture } from '@webcvt/test-utils';
-import { assertBytesEqual, hex } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
+import { assertBytesEqual, hex } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { UnsupportedSubFormatError, WavFormatError, WavTooLargeError } from './errors.ts';
 import { WAVE_FORMAT_EXTENSIBLE, WAVE_FORMAT_IEEE_FLOAT, WAVE_FORMAT_PCM } from './header.ts';

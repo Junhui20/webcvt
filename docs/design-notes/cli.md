@@ -1,13 +1,13 @@
 # cli design
 
-> Implementation reference for `@webcvt/cli`. Write the code from this
+> Implementation reference for `@catlabtech/webcvt-cli`. Write the code from this
 > note plus the linked Node.js documentation. Do not consult competing
 > implementations (commander, yargs, oclif, ffmpeg-cli, sharp-cli,
 > imagemagick) except for debugging spec-ambiguous edge cases.
 
 ## Package overview
 
-`@webcvt/cli` is the **first Phase 5 launch-prep package**. It exists to
+`@catlabtech/webcvt-cli` is the **first Phase 5 launch-prep package**. It exists to
 give Node.js users a frictionless `npx webcvt in.mp3 out.mp3` entry
 point that exercises the same backend registry the browser uses,
 proving the API surface composes correctly outside a browser context
@@ -15,9 +15,9 @@ and giving prospective adopters a one-line way to try the library.
 
 The CLI is **not** a feature-rich conversion swiss-army knife (that is
 what FFmpeg / ImageMagick already are). It is a thin Node-side shell
-around `@webcvt/core`'s `Backend.canHandle` + `Backend.convert` APIs,
+around `@catlabtech/webcvt-core`'s `Backend.canHandle` + `Backend.convert` APIs,
 populated with whatever optional backend packages the user has
-installed alongside it. If the user runs `npm i -g @webcvt/cli` with
+installed alongside it. If the user runs `npm i -g @catlabtech/webcvt-cli` with
 no backend packages, the CLI is reduced to `--help`, `--version`, and
 a `--list-formats` that reports an empty registry — and that is the
 intended behaviour: all real conversion capability lives in the
@@ -28,7 +28,7 @@ them.
 
 **This note covers a FIRST-PASS implementation, not a full Node CLI
 framework.** The goal is the smallest argv-grammar + I/O wiring that
-calls into `@webcvt/core` and reports typed errors with non-zero exit
+calls into `@catlabtech/webcvt-core` and reports typed errors with non-zero exit
 codes. Subcommand grammar (`webcvt convert`, `webcvt info`, etc.),
 plugin loading, and watch / batch modes are deferred.
 
@@ -46,17 +46,17 @@ plugin loading, and watch / batch modes are deferred.
   stdout write via `process.stdout.write(Uint8Array)` after switching
   the stream to binary mode (`setRawMode` is not required — Node's
   `process.stdout.write(Buffer)` is binary-safe by default).
-- Format detection delegates to `@webcvt/core`'s `detectFormat` for
+- Format detection delegates to `@catlabtech/webcvt-core`'s `detectFormat` for
   the input bytes; the output format is resolved from the output path
-  extension (or `--to` hint) via `@webcvt/core`'s `findByExt` /
+  extension (or `--to` hint) via `@catlabtech/webcvt-core`'s `findByExt` /
   `findByMime`.
 - Backend lookup delegates to `defaultRegistry.findFor(input,
   output)`; on success, calls `backend.convert(blob, outputFormat,
   options)`; on failure, throws `NoBackendError` (which is in turn
   caught by the top-level error handler).
 - Optional-dependency backend registration at startup: try-import
-  every known sibling package (`@webcvt/container-mp3`,
-  `@webcvt/image-canvas`, `@webcvt/data-text`, `@webcvt/archive-zip`,
+  every known sibling package (`@catlabtech/webcvt-container-mp3`,
+  `@catlabtech/webcvt-image-canvas`, `@catlabtech/webcvt-data-text`, `@catlabtech/webcvt-archive-zip`,
   ...). If the package resolves, register its backend; if not, skip
   silently. This gives the user "what you installed is what you get"
   semantics without a plugin-loader subsystem.
@@ -99,7 +99,7 @@ plugin loading, and watch / batch modes are deferred.
   detect TTY via `process.stderr.isTTY` and emit ANSI red `\x1b[31m`
   for error lines, green `\x1b[32m` for the final success summary;
   everything else stays uncoloured. No `chalk` / `kleur` dependency.
-- **Auto-install of `@webcvt/backend-wasm`** when the registry has no
+- **Auto-install of `@catlabtech/webcvt-backend-wasm`** when the registry has no
   matching backend. We surface a typed `NoBackendError` whose message
   already names the missing package; the user runs `npm i` themselves.
 - **Subcommand grammar** (`webcvt convert ...`, `webcvt info ...`).
@@ -250,23 +250,23 @@ named export for backend class, stable id.
 
 ```ts
 const BACKEND_PACKAGES: readonly BackendPkg[] = [
-  { pkg: '@webcvt/container-mp3', exportName: 'Mp3Backend', id: 'mp3' },
-  { pkg: '@webcvt/container-wav', exportName: 'WavBackend', id: 'wav' },
-  { pkg: '@webcvt/container-flac', exportName: 'FlacBackend', id: 'flac' },
-  { pkg: '@webcvt/container-ogg', exportName: 'OggBackend', id: 'ogg' },
-  { pkg: '@webcvt/container-aac', exportName: 'AacBackend', id: 'aac' },
-  { pkg: '@webcvt/container-mp4', exportName: 'Mp4Backend', id: 'mp4' },
-  { pkg: '@webcvt/container-webm', exportName: 'WebmBackend', id: 'webm' },
-  { pkg: '@webcvt/container-mkv', exportName: 'MkvBackend', id: 'mkv' },
-  { pkg: '@webcvt/container-ts', exportName: 'TsBackend', id: 'ts' },
-  { pkg: '@webcvt/image-canvas', exportName: 'ImageCanvasBackend', id: 'image-canvas' },
-  { pkg: '@webcvt/image-svg', exportName: 'ImageSvgBackend', id: 'image-svg' },
-  { pkg: '@webcvt/image-animation', exportName: 'ImageAnimationBackend', id: 'image-animation' },
-  { pkg: '@webcvt/image-legacy', exportName: 'ImageLegacyBackend', id: 'image-legacy' },
-  { pkg: '@webcvt/data-text', exportName: 'DataTextBackend', id: 'data-text' },
-  { pkg: '@webcvt/archive-zip', exportName: 'ArchiveZipBackend', id: 'archive-zip' },
-  { pkg: '@webcvt/subtitle', exportName: 'SubtitleBackend', id: 'subtitle' },
-  { pkg: '@webcvt/backend-wasm', exportName: 'WasmBackend', id: 'wasm' },
+  { pkg: '@catlabtech/webcvt-container-mp3', exportName: 'Mp3Backend', id: 'mp3' },
+  { pkg: '@catlabtech/webcvt-container-wav', exportName: 'WavBackend', id: 'wav' },
+  { pkg: '@catlabtech/webcvt-container-flac', exportName: 'FlacBackend', id: 'flac' },
+  { pkg: '@catlabtech/webcvt-container-ogg', exportName: 'OggBackend', id: 'ogg' },
+  { pkg: '@catlabtech/webcvt-container-aac', exportName: 'AacBackend', id: 'aac' },
+  { pkg: '@catlabtech/webcvt-container-mp4', exportName: 'Mp4Backend', id: 'mp4' },
+  { pkg: '@catlabtech/webcvt-container-webm', exportName: 'WebmBackend', id: 'webm' },
+  { pkg: '@catlabtech/webcvt-container-mkv', exportName: 'MkvBackend', id: 'mkv' },
+  { pkg: '@catlabtech/webcvt-container-ts', exportName: 'TsBackend', id: 'ts' },
+  { pkg: '@catlabtech/webcvt-image-canvas', exportName: 'ImageCanvasBackend', id: 'image-canvas' },
+  { pkg: '@catlabtech/webcvt-image-svg', exportName: 'ImageSvgBackend', id: 'image-svg' },
+  { pkg: '@catlabtech/webcvt-image-animation', exportName: 'ImageAnimationBackend', id: 'image-animation' },
+  { pkg: '@catlabtech/webcvt-image-legacy', exportName: 'ImageLegacyBackend', id: 'image-legacy' },
+  { pkg: '@catlabtech/webcvt-data-text', exportName: 'DataTextBackend', id: 'data-text' },
+  { pkg: '@catlabtech/webcvt-archive-zip', exportName: 'ArchiveZipBackend', id: 'archive-zip' },
+  { pkg: '@catlabtech/webcvt-subtitle', exportName: 'SubtitleBackend', id: 'subtitle' },
+  { pkg: '@catlabtech/webcvt-backend-wasm', exportName: 'WasmBackend', id: 'wasm' },
 ];
 
 async function registerInstalledBackends(): Promise<readonly string[]> {
@@ -289,7 +289,7 @@ async function registerInstalledBackends(): Promise<readonly string[]> {
 ```
 
 Backends MUST be in `optionalDependencies`, NOT `dependencies`. Otherwise
-`npm i -g @webcvt/cli` would pull every backend including `backend-wasm`
+`npm i -g @catlabtech/webcvt-cli` would pull every backend including `backend-wasm`
 ~30 MiB.
 
 ## Pipeline
@@ -386,7 +386,7 @@ async function dispatch(): Promise<number> {
 ## Dependencies
 
 ### Hard
-- `@webcvt/core` (workspace)
+- `@catlabtech/webcvt-core` (workspace)
 
 ### Optional (all 17 backends; package.json optionalDependencies)
 Every backend listed in BACKEND_PACKAGES.
@@ -420,7 +420,7 @@ Argv parser hand-rolled (~110 LOC) — keeps zero-dep selling point intact.
    backends. Future config-needing backend should expose
    `createDefaultBackend()` factory.
 
-6. **`@webcvt/backend-wasm` heavyweight**: ~20 MiB wasm bundle. First
+6. **`@catlabtech/webcvt-backend-wasm` heavyweight**: ~20 MiB wasm bundle. First
    pass: register at startup; trust backend-wasm itself defers
    `WebAssembly.instantiate` to first convert call.
 

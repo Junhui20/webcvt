@@ -1,4 +1,4 @@
-// Node.js example: SRT → VTT subtitle conversion using @webcvt/subtitle.
+// Node.js example: SRT → VTT subtitle conversion using @catlabtech/webcvt-subtitle.
 //
 // Usage:
 //   node index.js input.srt output.vtt
@@ -9,7 +9,7 @@
 // also available and is demoed in apps/playground for the binary-format case.
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { parseSrt, serializeVtt } from '@webcvt/subtitle';
+import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
 
 const [, , inputPath, outputPath] = process.argv;
 if (!inputPath || !outputPath) {

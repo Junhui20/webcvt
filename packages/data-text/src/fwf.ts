@@ -1,5 +1,5 @@
 /**
- * FWF (Fixed-Width Format) parse/serialize for @webcvt/data-text.
+ * FWF (Fixed-Width Format) parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Each line in a FWF file holds one record. Fields are located at
  * caller-declared character ranges using 0-based half-open [start, end)

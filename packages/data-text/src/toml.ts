@@ -1,5 +1,5 @@
 /**
- * TOML v1.0.0 parse/serialize for @webcvt/data-text.
+ * TOML v1.0.0 parse/serialize for @catlabtech/webcvt-data-text.
  *
  * Architecture:
  *   - Hand-rolled recursive-descent parser over a character-at-a-time tokenizer.

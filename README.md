@@ -9,12 +9,12 @@
 
 🚧 **Pre-alpha** — under active construction. Not ready for use.
 
-- **22 packages** shipped across Phases 1–5 (`@webcvt/core` + 4 codec/image, 9 container, 2 data, 1 CLI, 4 ancillary)
+- **22 packages** shipped across Phases 1–5 (`@catlabtech/webcvt-core` + 4 codec/image, 9 container, 2 data, 1 CLI, 4 ancillary)
 - **3,970 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
-- Phase 5 (launch prep): `@webcvt/cli` + `@webcvt/backend-wasm` + `apps/playground` shipped; `apps/docs`, examples, v0.1.0 release still open
+- Phase 5 (launch prep): `@catlabtech/webcvt-cli` + `@catlabtech/webcvt-backend-wasm` + `apps/playground` shipped; `apps/docs`, examples, v0.1.0 release still open
 
 See [`plan.md`](./plan.md) for the full project plan,
 [`CHANGELOG.md`](./CHANGELOG.md) for release notes, and
@@ -48,40 +48,40 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 
 ### Foundation
 
-- `@webcvt/core` — public API, types, format detector, backend registry, capability probe
-- `@webcvt/codec-webcodecs` — hardware-accelerated encode/decode adapter
-- `@webcvt/test-utils` — shared test fixtures + byte helpers
-- `@webcvt/backend-wasm` — ffmpeg.wasm fallback (lazy-loaded; ~203 MIME pairs)
+- `@catlabtech/webcvt-core` — public API, types, format detector, backend registry, capability probe
+- `@catlabtech/webcvt-codec-webcodecs` — hardware-accelerated encode/decode adapter
+- `@catlabtech/webcvt-test-utils` — shared test fixtures + byte helpers
+- `@catlabtech/webcvt-backend-wasm` — ffmpeg.wasm fallback (lazy-loaded; ~203 MIME pairs)
 
 ### Audio + video containers
 
-- `@webcvt/container-wav` — RIFF/WAV
-- `@webcvt/container-mp3` — MPEG-1/2/2.5 Layer III + ID3v2/v1 + Xing/LAME
-- `@webcvt/container-flac` — FLAC (native)
-- `@webcvt/container-ogg` — Ogg (Vorbis, Opus)
-- `@webcvt/container-aac` — AAC ADTS
-- `@webcvt/container-mp4` — M4A / MP4 (classic + fragmented; multi-track; avc1/avc3/hev1/hvc1/vp09/av01 video + AAC audio; edit lists + iTunes metadata)
-- `@webcvt/container-webm` — WebM (VP8/VP9 + Opus/Vorbis)
-- `@webcvt/container-mkv` — Matroska (AVC/HEVC/VP9 + AAC/FLAC/Opus/Vorbis)
-- `@webcvt/container-ts` — MPEG-TS / HLS (H.264 + AAC ADTS)
-- `@webcvt/ebml` — shared EBML primitives (RFC 8794)
+- `@catlabtech/webcvt-container-wav` — RIFF/WAV
+- `@catlabtech/webcvt-container-mp3` — MPEG-1/2/2.5 Layer III + ID3v2/v1 + Xing/LAME
+- `@catlabtech/webcvt-container-flac` — FLAC (native)
+- `@catlabtech/webcvt-container-ogg` — Ogg (Vorbis, Opus)
+- `@catlabtech/webcvt-container-aac` — AAC ADTS
+- `@catlabtech/webcvt-container-mp4` — M4A / MP4 (classic + fragmented; multi-track; avc1/avc3/hev1/hvc1/vp09/av01 video + AAC audio; edit lists + iTunes metadata)
+- `@catlabtech/webcvt-container-webm` — WebM (VP8/VP9 + Opus/Vorbis)
+- `@catlabtech/webcvt-container-mkv` — Matroska (AVC/HEVC/VP9 + AAC/FLAC/Opus/Vorbis)
+- `@catlabtech/webcvt-container-ts` — MPEG-TS / HLS (H.264 + AAC ADTS)
+- `@catlabtech/webcvt-ebml` — shared EBML primitives (RFC 8794)
 
 ### Images
 
-- `@webcvt/image-canvas` — PNG/JPG/WebP/BMP/ICO via Canvas API
-- `@webcvt/image-svg` — SVG parse + Canvas rasterize (with aggressive security gates)
-- `@webcvt/image-animation` — GIF + APNG + animated WebP
-- `@webcvt/image-legacy` — PBM/PGM/PPM/PFM/QOI + TIFF + TGA + XBM + PCX + XPM + ICNS
+- `@catlabtech/webcvt-image-canvas` — PNG/JPG/WebP/BMP/ICO via Canvas API
+- `@catlabtech/webcvt-image-svg` — SVG parse + Canvas rasterize (with aggressive security gates)
+- `@catlabtech/webcvt-image-animation` — GIF + APNG + animated WebP
+- `@catlabtech/webcvt-image-legacy` — PBM/PGM/PPM/PFM/QOI + TIFF + TGA + XBM + PCX + XPM + ICNS
 
 ### Archives + data + subtitles
 
-- `@webcvt/archive-zip` — ZIP + POSIX ustar TAR + gzip
-- `@webcvt/data-text` — JSON + JSONL + CSV + TSV + INI + ENV + TOML + FWF + XML + YAML
-- `@webcvt/subtitle` — SRT/VTT/ASS/SSA/SUB/MPL
+- `@catlabtech/webcvt-archive-zip` — ZIP + POSIX ustar TAR + gzip
+- `@catlabtech/webcvt-data-text` — JSON + JSONL + CSV + TSV + INI + ENV + TOML + FWF + XML + YAML
+- `@catlabtech/webcvt-subtitle` — SRT/VTT/ASS/SSA/SUB/MPL
 
 ### CLI
 
-- `@webcvt/cli` — `npx webcvt in out` Node CLI with optional-dep backend loader
+- `@catlabtech/webcvt-cli` — `npx webcvt in out` Node CLI with optional-dep backend loader
 
 ### Planned
 
@@ -99,14 +99,14 @@ pick a target format, download the result. Zero network requests.
 
 ```typescript
 // Low-level parse/serialize API (text formats — no setup needed)
-import { parseSrt, serializeVtt } from '@webcvt/subtitle';
+import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
 const vtt = serializeVtt(parseSrt(srtString));
 ```
 
 ```typescript
 // High-level convert() API (binary formats — browser or Node)
-import { convert, defaultRegistry } from '@webcvt/core';
-import { CanvasBackend } from '@webcvt/image-canvas';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
 defaultRegistry.register(new CanvasBackend());
 const result = await convert(pngBlob, { format: 'webp' });
 ```

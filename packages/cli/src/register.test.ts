@@ -1,4 +1,4 @@
-import { defaultRegistry } from '@webcvt/core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**

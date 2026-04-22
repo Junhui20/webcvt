@@ -1,5 +1,5 @@
 /**
- * Global constants for @webcvt/backend-wasm.
+ * Global constants for @catlabtech/webcvt-backend-wasm.
  *
  * All timing, size, and format limits live here to avoid magic numbers
  * scattered across the implementation.

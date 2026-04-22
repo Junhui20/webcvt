@@ -1,11 +1,11 @@
-# @webcvt/image-animation
+# @catlabtech/webcvt-image-animation
 
 > Animated image format support for webcvt: GIF, APNG, and animated WebP.
 
 ## Installation
 
 ```bash
-npm i @webcvt/image-animation
+npm i @catlabtech/webcvt-image-animation
 ```
 
 ## Supported formats

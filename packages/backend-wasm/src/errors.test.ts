@@ -1,4 +1,4 @@
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { describe, expect, it } from 'vitest';
 import { MAX_STDERR_BYTES } from './constants.ts';
 import { WasmExecutionError, WasmLoadError, WasmUnsupportedError } from './errors.ts';

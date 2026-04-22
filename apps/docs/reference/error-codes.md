@@ -1,9 +1,9 @@
 # Error Codes
 
-All webcvt errors extend `WebcvtError` (from `@webcvt/core`) and carry a `.code` string property for programmatic matching.
+All webcvt errors extend `WebcvtError` (from `@catlabtech/webcvt-core`) and carry a `.code` string property for programmatic matching.
 
 ```ts
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 try {
   await convert(input, { format: 'mp4' });
@@ -16,7 +16,7 @@ try {
 
 ---
 
-## @webcvt/core
+## @catlabtech/webcvt-core
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -25,7 +25,7 @@ try {
 
 ---
 
-## @webcvt/backend-wasm
+## @catlabtech/webcvt-backend-wasm
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -35,7 +35,7 @@ try {
 
 ---
 
-## @webcvt/codec-webcodecs
+## @catlabtech/webcvt-codec-webcodecs
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -45,7 +45,7 @@ try {
 
 ---
 
-## @webcvt/ebml
+## @catlabtech/webcvt-ebml
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -58,7 +58,7 @@ try {
 
 ---
 
-## @webcvt/container-wav
+## @catlabtech/webcvt-container-wav
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -68,7 +68,7 @@ try {
 
 ---
 
-## @webcvt/container-mp3
+## @catlabtech/webcvt-container-mp3
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -80,7 +80,7 @@ try {
 
 ---
 
-## @webcvt/container-flac
+## @catlabtech/webcvt-container-flac
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -95,7 +95,7 @@ try {
 
 ---
 
-## @webcvt/container-ogg
+## @catlabtech/webcvt-container-ogg
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -112,7 +112,7 @@ try {
 
 ---
 
-## @webcvt/container-aac
+## @catlabtech/webcvt-container-aac
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -129,7 +129,7 @@ try {
 
 ---
 
-## @webcvt/container-mp4
+## @catlabtech/webcvt-container-mp4
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -146,7 +146,7 @@ try {
 
 ---
 
-## @webcvt/container-webm
+## @catlabtech/webcvt-container-webm
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -165,7 +165,7 @@ try {
 
 ---
 
-## @webcvt/container-mkv
+## @catlabtech/webcvt-container-mkv
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -186,7 +186,7 @@ try {
 
 ---
 
-## @webcvt/container-ts
+## @catlabtech/webcvt-container-ts
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -205,7 +205,7 @@ try {
 
 ---
 
-## @webcvt/archive-zip
+## @catlabtech/webcvt-archive-zip
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -241,7 +241,7 @@ try {
 
 ---
 
-## @webcvt/data-text
+## @catlabtech/webcvt-data-text
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -305,7 +305,7 @@ try {
 
 ---
 
-## @webcvt/image-animation
+## @catlabtech/webcvt-image-animation
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -346,7 +346,7 @@ try {
 
 ---
 
-## @webcvt/image-legacy
+## @catlabtech/webcvt-image-legacy
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -406,7 +406,7 @@ try {
 
 ---
 
-## @webcvt/image-svg
+## @catlabtech/webcvt-image-svg
 
 | Class | Code | When thrown |
 |---|---|---|
@@ -419,7 +419,7 @@ try {
 
 ---
 
-## @webcvt/cli
+## @catlabtech/webcvt-cli
 
 | Class | Code | When thrown |
 |---|---|---|

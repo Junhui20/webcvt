@@ -1,5 +1,5 @@
 /**
- * Top-level dispatch parser for @webcvt/data-text.
+ * Top-level dispatch parser for @catlabtech/webcvt-data-text.
  *
  * parseDataText(input, format, opts?) switches on format and returns the
  * appropriate DataTextFile discriminated union variant.

@@ -1,5 +1,5 @@
 /**
- * Top-level dispatch serializer for @webcvt/data-text.
+ * Top-level dispatch serializer for @catlabtech/webcvt-data-text.
  *
  * serializeDataText(file) switches on file.kind and dispatches to the
  * format's serializer. Semantic round-trip equivalence is guaranteed;

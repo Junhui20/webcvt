@@ -17,7 +17,7 @@ or an external contributor.
 
 ```
 webcvt/
-├── packages/          # publishable npm packages (scoped @webcvt/*)
+├── packages/          # publishable npm packages (scoped @catlabtech/webcvt-*)
 │   ├── core/          # ✅ Phase 1 complete
 │   ├── codec-webcodecs/ # ✅ Phase 1 complete
 │   ├── image-canvas/  # ✅ Phase 1 complete
@@ -64,7 +64,7 @@ agent run plus 1–2 review passes.
 ## Writing a new package (template)
 
 1. **Create directory** `packages/<name>/` with:
-   - `package.json` — name `@webcvt/<name>`, workspace dep `"@webcvt/core": "workspace:*"`
+   - `package.json` — name `@catlabtech/webcvt-<name>`, workspace dep `"@catlabtech/webcvt-core": "workspace:*"`
    - `tsconfig.json` — extend `../../tsconfig.base.json`
    - `tsup.config.ts` — **IMPORTANT:** include the `dts.compilerOptions` fix:
      ```ts
@@ -90,13 +90,13 @@ agent run plus 1–2 review passes.
 3. **Write tests first**, covering:
    - Happy path (round-trip where applicable)
    - Edge cases (empty input, malformed, oversized)
-   - Error paths (clear messages, typed errors from `@webcvt/core`)
+   - Error paths (clear messages, typed errors from `@catlabtech/webcvt-core`)
 
 4. **Implement** until tests pass + coverage ≥80%.
 
 5. **Register with core** if this is a Backend:
    ```ts
-   import { defaultRegistry } from '@webcvt/core';
+   import { defaultRegistry } from '@catlabtech/webcvt-core';
    import { MyBackend } from './my-backend.ts';
    defaultRegistry.register(new MyBackend());
    ```
@@ -136,12 +136,12 @@ This invokes `scripts/generate-fixtures.mjs`, which uses a pinned
 `ffmpeg-static` binary so output is deterministic across Linux / macOS /
 Windows. CI never runs ffmpeg — it relies on the committed bytes.
 
-Use the helpers in `@webcvt/test-utils` from any package's tests:
+Use the helpers in `@catlabtech/webcvt-test-utils` from any package's tests:
 
 ```ts
-import { loadFixture } from '@webcvt/test-utils/fixtures';
-import { assertBytesEqual } from '@webcvt/test-utils/bytes';
-import { sineInt16 } from '@webcvt/test-utils/audio-synth';
+import { loadFixture } from '@catlabtech/webcvt-test-utils/fixtures';
+import { assertBytesEqual } from '@catlabtech/webcvt-test-utils/bytes';
+import { sineInt16 } from '@catlabtech/webcvt-test-utils/audio-synth';
 
 const reference = await loadFixture('audio/sine-1s-44100-mono.wav');
 assertBytesEqual(reference, await myWavMuxer(samples), 'WAV mono');

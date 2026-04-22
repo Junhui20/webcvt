@@ -2,7 +2,7 @@
  * Tests for tracks decode/encode (elements/tracks.ts).
  */
 
-import type { EbmlElement } from '@webcvt/ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   WebmCorruptStreamError,

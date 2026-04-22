@@ -1,12 +1,12 @@
 /**
- * Typed error classes for @webcvt/archive-zip.
+ * Typed error classes for @catlabtech/webcvt-archive-zip.
  *
  * All error codes are UPPER_SNAKE_CASE strings for programmatic matching.
  * Never throw bare Error or WebcvtError from archive-zip — always use
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
 // Shared archive errors
@@ -58,7 +58,7 @@ export class ArchiveBz2NotSupportedError extends WebcvtError {
   constructor() {
     super(
       'ARCHIVE_BZ2_NOT_SUPPORTED',
-      'bzip2 archives are not natively supported. Install @webcvt/backend-wasm for bzip2 support.',
+      'bzip2 archives are not natively supported. Install @catlabtech/webcvt-backend-wasm for bzip2 support.',
     );
     this.name = 'ArchiveBz2NotSupportedError';
   }
@@ -69,7 +69,7 @@ export class ArchiveXzNotSupportedError extends WebcvtError {
   constructor() {
     super(
       'ARCHIVE_XZ_NOT_SUPPORTED',
-      'xz archives are not natively supported. Install @webcvt/backend-wasm for xz support.',
+      'xz archives are not natively supported. Install @catlabtech/webcvt-backend-wasm for xz support.',
     );
     this.name = 'ArchiveXzNotSupportedError';
   }
@@ -401,7 +401,7 @@ export class ArchiveEncodeNotImplementedError extends WebcvtError {
   constructor(reason: string) {
     super(
       'ARCHIVE_ENCODE_NOT_IMPLEMENTED',
-      `Archive encode not implemented: ${reason}. Install @webcvt/backend-wasm for transcode support.`,
+      `Archive encode not implemented: ${reason}. Install @catlabtech/webcvt-backend-wasm for transcode support.`,
     );
     this.name = 'ArchiveEncodeNotImplementedError';
   }

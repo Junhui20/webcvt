@@ -1,5 +1,5 @@
 /**
- * XPM3 parser and serializer tests for @webcvt/image-legacy.
+ * XPM3 parser and serializer tests for @catlabtech/webcvt-image-legacy.
  *
  * All 24 test cases from the design note §"Test plan" are covered,
  * plus several sub-cases for full Trap coverage.

@@ -1,5 +1,5 @@
 /**
- * Security caps and magic-byte constants for @webcvt/image-legacy.
+ * Security caps and magic-byte constants for @catlabtech/webcvt-image-legacy.
  *
  * All values derived from the design note §"Security caps".
  * Every format module references these constants; do not hardcode inline.

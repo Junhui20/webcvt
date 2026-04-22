@@ -6,8 +6,8 @@ webcvt is designed to run entirely in the browser. Files never leave the device 
 
 ```html
 <script type="module">
-  import { convert, defaultRegistry } from 'https://esm.sh/@webcvt/core';
-  import { CanvasBackend } from 'https://esm.sh/@webcvt/image-canvas';
+  import { convert, defaultRegistry } from 'https://esm.sh/@catlabtech/webcvt-core';
+  import { CanvasBackend } from 'https://esm.sh/@catlabtech/webcvt-image-canvas';
 
   defaultRegistry.register(new CanvasBackend());
 
@@ -24,12 +24,12 @@ webcvt is designed to run entirely in the browser. Files never leave the device 
 ## Via Vite / bundler
 
 ```bash
-npm i @webcvt/core @webcvt/image-canvas
+npm i @catlabtech/webcvt-core @catlabtech/webcvt-image-canvas
 ```
 
 ```ts
-import { convert, defaultRegistry } from '@webcvt/core';
-import { CanvasBackend } from '@webcvt/image-canvas';
+import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
 
 // Register once, at app startup
 defaultRegistry.register(new CanvasBackend());
@@ -42,7 +42,7 @@ async function convertImage(file: File): Promise<Blob> {
 
 ## COEP / COOP headers
 
-Some backends require `SharedArrayBuffer`, which is only available in a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) with cross-origin isolation. Add these headers to your server when using `@webcvt/backend-wasm` or `@webcvt/codec-webcodecs` with multithreading:
+Some backends require `SharedArrayBuffer`, which is only available in a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) with cross-origin isolation. Add these headers to your server when using `@catlabtech/webcvt-backend-wasm` or `@catlabtech/webcvt-codec-webcodecs` with multithreading:
 
 ```
 Cross-Origin-Opener-Policy: same-origin
@@ -72,10 +72,10 @@ webcvt is modular by design. Import only the packages you need:
 
 ```ts
 // Good — only loads ~12 KB for pure image conversions
-import { CanvasBackend } from '@webcvt/image-canvas';
+import { CanvasBackend } from '@catlabtech/webcvt-image-canvas';
 
 // Avoid if you only need images — backend-wasm loads a ~4 MB WASM blob
-import { WasmBackend } from '@webcvt/backend-wasm';
+import { WasmBackend } from '@catlabtech/webcvt-backend-wasm';
 ```
 
 Check per-package sizes in the [Packages](/packages/core) section.
@@ -85,10 +85,10 @@ Check per-package sizes in the [Packages](/packages/core) section.
 Register backends lazily to defer loading the WASM blob until it's needed:
 
 ```ts
-import { defaultRegistry } from '@webcvt/core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
 
 async function ensureWasmBackend() {
-  const { WasmBackend } = await import('@webcvt/backend-wasm');
+  const { WasmBackend } = await import('@catlabtech/webcvt-backend-wasm');
   defaultRegistry.register(new WasmBackend());
 }
 ```

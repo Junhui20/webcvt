@@ -3,7 +3,7 @@
  * with correct code and name fields.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { describe, expect, it } from 'vitest';
 import {
   CsvBadQuoteError,

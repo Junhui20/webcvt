@@ -1,5 +1,5 @@
 /**
- * Synthetic TIFF builder for @webcvt/image-legacy tests.
+ * Synthetic TIFF builder for @catlabtech/webcvt-image-legacy tests.
  *
  * Constructs minimal but spec-valid TIFF byte sequences in memory.
  * NO binary fixtures are committed to disk — every test fixture is built here.

@@ -1,4 +1,4 @@
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { describe, expect, it } from 'vitest';
 import { CliBadUsageError, CliInputTooLargeError, USAGE_HINT } from './errors.ts';
 import { MAX_INPUT_BYTES } from './io.ts';

@@ -1,5 +1,5 @@
-import { detectFormatWithHint } from '@webcvt/core';
-import type { FormatDescriptor } from '@webcvt/core';
+import { detectFormatWithHint } from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
 
 /**
  * Detect the format of a File using magic-byte detection with filename hint fallback.

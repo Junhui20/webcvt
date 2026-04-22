@@ -1,5 +1,5 @@
 /**
- * Synthetic XBM fixture builder for @webcvt/image-legacy tests.
+ * Synthetic XBM fixture builder for @catlabtech/webcvt-image-legacy tests.
  *
  * Constructs minimal but spec-valid XBM ASCII byte sequences in memory.
  * NO binary fixtures are committed to disk — all test inputs are built here.

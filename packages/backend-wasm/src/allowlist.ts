@@ -1,5 +1,5 @@
 /**
- * Curated MIME-pair allowlist for @webcvt/backend-wasm.
+ * Curated MIME-pair allowlist for @catlabtech/webcvt-backend-wasm.
  *
  * Rules:
  * 1. Only pairs with smoke-tested fixtures are listed.
@@ -11,7 +11,7 @@
  * Key is `${inputMime}|${outputMime}`.
  */
 
-import type { FormatDescriptor } from '@webcvt/core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
 // Raw pair data

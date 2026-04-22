@@ -8,7 +8,7 @@
  * - deriveCodecString for OTI 0x40 (MPEG-4) and 0x67 (MPEG-2)
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import {
   buildAvcCPayload,

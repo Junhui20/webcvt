@@ -1,5 +1,5 @@
 /**
- * Magic-byte detection for @webcvt/image-legacy.
+ * Magic-byte detection for @catlabtech/webcvt-image-legacy.
  *
  * Checks first 4 bytes for most formats. The Netpbm magics (P1–P6, Pf, PF)
  * and QOI's "qoif" are fully byte-disjoint — disambiguation is unambiguous.

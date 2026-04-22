@@ -8,8 +8,8 @@
  * - Per-track block count cap
  */
 
-import { findChild } from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
+import { findChild } from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import {
   concatBytes,
   readUint,
@@ -18,7 +18,7 @@ import {
   writeUint,
   writeVintId,
   writeVintSize,
-} from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
 import {
   ID_CLUSTER,
   ID_SIMPLE_BLOCK,

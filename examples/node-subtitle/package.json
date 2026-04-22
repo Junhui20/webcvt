@@ -1,8 +1,8 @@
 {
-  "name": "@webcvt/example-node-subtitle",
+  "name": "@catlabtech/webcvt-example-node-subtitle",
   "version": "0.0.0",
   "private": true,
-  "description": "Node.js example: convert SRT subtitles to WebVTT using @webcvt/subtitle",
+  "description": "Node.js example: convert SRT subtitles to WebVTT using @catlabtech/webcvt-subtitle",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
@@ -12,7 +12,7 @@
     "test": "echo \"(example — run 'pnpm demo' to see it work)\" && exit 0"
   },
   "dependencies": {
-    "@webcvt/core": "workspace:*",
-    "@webcvt/subtitle": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*",
+    "@catlabtech/webcvt-subtitle": "workspace:*"
   }
 }

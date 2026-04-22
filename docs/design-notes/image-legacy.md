@@ -1,6 +1,6 @@
 # image-legacy design
 
-> Implementation reference for `@webcvt/image-legacy`. Write the code from
+> Implementation reference for `@catlabtech/webcvt-image-legacy`. Write the code from
 > this note plus the linked official specs. Do not consult competing
 > implementations (sharp, pngjs, @phosphoricons/qoi, jimp, netpbm,
 > imagemagick, libpng, qoiconv, tinyqoi) except for debugging
@@ -17,7 +17,7 @@ colour-space conversion, no filter chain, and no canvas rendering. Every
 format here is bytes-in / typed-pixel-buffer-out and typed-pixel-
 buffer-in / bytes-out — there is no progressive decode, no animation,
 no ICC-profile interpretation, and no resampling. The package
-complements `@webcvt/image-svg` (vector text) by handling the small,
+complements `@catlabtech/webcvt-image-svg` (vector text) by handling the small,
 spec-light raster formats that ride alongside modern PNG / JPEG /
 WebP in real-world pipelines (AI-research dumps, retro-tooling
 sidecars, hand-crafted test fixtures, screenshot tooling).
@@ -99,7 +99,7 @@ PFM, and QOI. Every other format listed in `plan.md`'s original
   per-magic parser.
 - **Cross-format conversion** (PPM → QOI, PBM → PNG, etc.) — each
   format is parse/serialize-only within its own type. Conversion to
-  PNG / JPEG / WebP belongs in a higher-level `@webcvt/convert`
+  PNG / JPEG / WebP belongs in a higher-level `@catlabtech/webcvt-convert`
   package using `OffscreenCanvas`, not here.
 - **Colour-space interpretation**. Pixel values are returned as raw
   samples in their native bit depth; sRGB vs. linear vs. PFM scale-
@@ -554,7 +554,7 @@ truncated inputs.
 
 ## Backend integration
 
-`ImageLegacyBackend` (in `backend.ts`) implements the `@webcvt/core`
+`ImageLegacyBackend` (in `backend.ts`) implements the `@catlabtech/webcvt-core`
 backend interface. `canHandle(input, hint)` returns `true` only when
 `hint.format` is one of the five formats above (or when
 `detectImageFormat(input)` matches AND no conflicting hint is
@@ -739,7 +739,7 @@ assert structural equality (and byte equality for binary variants).
 | `detect.ts` (`detectImageFormat` magic-byte sniff over first 4 bytes) | 40 |
 | `parser.ts` (top-level dispatch by format hint, returns `ImageFile`) | 60 |
 | `serializer.ts` (top-level dispatch by `file.format`) | 40 |
-| `backend.ts` (`ImageLegacyBackend` implementing `@webcvt/core` backend; identity-within-format) | 100 |
+| `backend.ts` (`ImageLegacyBackend` implementing `@catlabtech/webcvt-core` backend; identity-within-format) | 100 |
 | `errors.ts` (typed errors per format) | 80 |
 | `constants.ts` (size/pixel/dim caps, magic numbers, QOI opcode constants, QOI end marker bytes) | 40 |
 | `index.ts` (public re-exports) | 40 |

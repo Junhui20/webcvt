@@ -1,5 +1,5 @@
 /**
- * SerialQueue — single-file serial task executor for @webcvt/backend-wasm.
+ * SerialQueue — single-file serial task executor for @catlabtech/webcvt-backend-wasm.
  *
  * FFmpeg.wasm is not re-entrant: concurrent calls would corrupt internal
  * state. All convert() calls are serialised through this queue.

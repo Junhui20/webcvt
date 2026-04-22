@@ -1,5 +1,5 @@
 /**
- * Shared constants for @webcvt/image-svg.
+ * Shared constants for @catlabtech/webcvt-image-svg.
  *
  * All security caps are derived from the design note §"Security caps".
  * Centralised here so validator.ts, parser.ts, rasterizer.ts, and

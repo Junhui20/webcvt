@@ -4,7 +4,7 @@
  * Includes byte-exact round-trip checks against fixture files.
  */
 
-import { assertBytesEqual, loadFixture } from '@webcvt/test-utils';
+import { assertBytesEqual, loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { WavFormatError } from './errors.ts';
 import {

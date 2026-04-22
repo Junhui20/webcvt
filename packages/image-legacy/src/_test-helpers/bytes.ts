@@ -1,5 +1,5 @@
 /**
- * Byte-array helpers for @webcvt/image-legacy tests.
+ * Byte-array helpers for @catlabtech/webcvt-image-legacy tests.
  *
  * All helpers construct Uint8Arrays inline without committed binary fixtures.
  *

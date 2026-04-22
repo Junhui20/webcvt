@@ -1,5 +1,5 @@
 /**
- * Serializer tests for @webcvt/container-webm.
+ * Serializer tests for @catlabtech/webcvt-container-webm.
  *
  * Covers design note test cases:
  * - "round-trip: parse → serialize → byte-identical Segment for clean WebM"
@@ -7,7 +7,7 @@
  * - "serializer back-patches SeekHead positions in two passes"
  */
 
-import { loadFixture } from '@webcvt/test-utils';
+import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import { parseWebm } from './parser.ts';
 import { serializeWebm } from './serializer.ts';
@@ -147,8 +147,8 @@ describe('serializeWebm', () => {
       segmentPayloadOffset: 31,
       info: {
         timecodeScale: 1_000_000,
-        muxingApp: '@webcvt/container-webm',
-        writingApp: '@webcvt/container-webm',
+        muxingApp: '@catlabtech/webcvt-container-webm',
+        writingApp: '@catlabtech/webcvt-container-webm',
       },
       tracks: [
         {
@@ -224,8 +224,8 @@ describe('serializeWebm', () => {
       segmentPayloadOffset: 31,
       info: {
         timecodeScale: 1_000_000,
-        muxingApp: '@webcvt/container-webm',
-        writingApp: '@webcvt/container-webm',
+        muxingApp: '@catlabtech/webcvt-container-webm',
+        writingApp: '@catlabtech/webcvt-container-webm',
       },
       tracks: [
         {
@@ -276,8 +276,8 @@ describe('serializeWebm', () => {
       segmentPayloadOffset: 31,
       info: {
         timecodeScale: 0, // edge case: timecodeScale=0
-        muxingApp: '@webcvt/container-webm',
-        writingApp: '@webcvt/container-webm',
+        muxingApp: '@catlabtech/webcvt-container-webm',
+        writingApp: '@catlabtech/webcvt-container-webm',
       },
       tracks: [
         {
@@ -325,8 +325,8 @@ describe('serializeWebm', () => {
       segmentPayloadOffset: 31,
       info: {
         timecodeScale: 1_000_000,
-        muxingApp: '@webcvt/container-webm',
-        writingApp: '@webcvt/container-webm',
+        muxingApp: '@catlabtech/webcvt-container-webm',
+        writingApp: '@catlabtech/webcvt-container-webm',
       },
       tracks: [
         {

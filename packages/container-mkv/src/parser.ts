@@ -18,15 +18,15 @@
  * can try container-webm instead.
  */
 
-import { findChild, readChildren, readElementHeader } from '@webcvt/ebml';
-import type { EbmlElement } from '@webcvt/ebml';
-import { readVintId, readVintSize } from '@webcvt/ebml';
+import { findChild, readChildren, readElementHeader } from '@catlabtech/webcvt-ebml';
+import type { EbmlElement } from '@catlabtech/webcvt-ebml';
+import { readVintId, readVintSize } from '@catlabtech/webcvt-ebml';
 import {
   EbmlElementTooLargeError,
   EbmlTooManyElementsError,
   EbmlTruncatedError,
   EbmlUnknownSizeError,
-} from '@webcvt/ebml';
+} from '@catlabtech/webcvt-ebml';
 import {
   ID_CLUSTER,
   ID_CUES,

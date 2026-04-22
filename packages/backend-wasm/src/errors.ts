@@ -1,12 +1,12 @@
 /**
- * Typed error classes for @webcvt/backend-wasm.
+ * Typed error classes for @catlabtech/webcvt-backend-wasm.
  *
  * Three distinct failure modes — all extend WebcvtError so callers can
  * catch the base class and still switch on `err.code` for fine-grained
  * handling.
  */
 
-import { WebcvtError } from '@webcvt/core';
+import { WebcvtError } from '@catlabtech/webcvt-core';
 import { MAX_STDERR_BYTES } from './constants.ts';
 
 // ---------------------------------------------------------------------------
