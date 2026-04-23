@@ -7,7 +7,12 @@
  *   SRT ↔ VTT ↔ ASS ↔ SSA ↔ SUB ↔ MPL (any combination)
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { UnsupportedFormatError, WebcvtError } from '@catlabtech/webcvt-core';
 import { parseAss, serializeAss } from './ass.ts';
 import type { SubtitleTrack } from './cue.ts';

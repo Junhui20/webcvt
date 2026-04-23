@@ -20,7 +20,12 @@
  * Do NOT import backend-wasm directly; let the BackendRegistry fallback handle it.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES, MKV_MIMES } from './constants.ts';
 import { MkvEncodeNotImplementedError, MkvInputTooLargeError } from './errors.ts';
 import { parseMkv } from './parser.ts';

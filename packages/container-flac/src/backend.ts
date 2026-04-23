@@ -18,7 +18,12 @@
  * - Widen canHandle to output.category === 'audio' once WebCodecs decode is wired.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import { FlacEncodeNotImplementedError, FlacInputTooLargeError } from './errors.ts';
 import { parseFlac } from './parser.ts';

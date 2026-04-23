@@ -21,7 +21,11 @@
  * - "enforces 200 MiB input cap, per-element 64 MiB cap, recursion depth 8"
  */
 
-import { EbmlTooManyElementsError, EbmlUnknownSizeError, EbmlVintError } from '@catlabtech/webcvt-ebml';
+import {
+  EbmlTooManyElementsError,
+  EbmlUnknownSizeError,
+  EbmlVintError,
+} from '@catlabtech/webcvt-ebml';
 import { loadFixture } from '@catlabtech/webcvt-test-utils';
 import { describe, expect, it } from 'vitest';
 import {

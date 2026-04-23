@@ -9,7 +9,12 @@
  * WebpStaticNotSupportedError for static WebP inputs (per design note).
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { APNG_MIME, GIF_MIME, MAX_INPUT_BYTES, WEBP_MIME } from './constants.ts';
 import { detectAnimationFormat } from './detect.ts';
 import { AnimationUnsupportedFormatError, ImageInputTooLargeError } from './errors.ts';

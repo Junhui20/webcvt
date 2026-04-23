@@ -1,4 +1,9 @@
-import { NoBackendError, UnsupportedFormatError, WebcvtError, defaultRegistry } from '@catlabtech/webcvt-core';
+import {
+  NoBackendError,
+  UnsupportedFormatError,
+  WebcvtError,
+  defaultRegistry,
+} from '@catlabtech/webcvt-core';
 import type { ConvertResult, FormatDescriptor, ProgressEvent } from '@catlabtech/webcvt-core';
 import { loadBackend } from './backend-loader.ts';
 import type { TargetOption } from './backend-loader.ts';

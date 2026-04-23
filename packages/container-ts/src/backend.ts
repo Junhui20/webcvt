@@ -14,7 +14,12 @@
  * false from canHandle so the BackendRegistry routes to backend-wasm.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES, TS_MIME } from './constants.ts';
 import { TsEncodeNotImplementedError, TsInputTooLargeError } from './errors.ts';
 import { parseTs } from './parser.ts';

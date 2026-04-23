@@ -30,7 +30,11 @@ const BACKEND_PACKAGES: readonly BackendPkg[] = [
   { pkg: '@catlabtech/webcvt-container-ts', exportName: 'TsBackend', id: 'ts' },
   { pkg: '@catlabtech/webcvt-image-canvas', exportName: 'CanvasBackend', id: 'image-canvas' },
   { pkg: '@catlabtech/webcvt-image-svg', exportName: 'SvgBackend', id: 'image-svg' },
-  { pkg: '@catlabtech/webcvt-image-animation', exportName: 'AnimationBackend', id: 'image-animation' },
+  {
+    pkg: '@catlabtech/webcvt-image-animation',
+    exportName: 'AnimationBackend',
+    id: 'image-animation',
+  },
   { pkg: '@catlabtech/webcvt-image-legacy', exportName: 'ImageLegacyBackend', id: 'image-legacy' },
   { pkg: '@catlabtech/webcvt-data-text', exportName: 'DataTextBackend', id: 'data-text' },
   { pkg: '@catlabtech/webcvt-archive-zip', exportName: 'ArchiveBackend', id: 'archive-zip' },

@@ -8,7 +8,12 @@
  * Lesson 1 from prior packages: each format gates on its own MIME only.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import {
   ICNS_MIME,
   ICNS_MIME_ALT,

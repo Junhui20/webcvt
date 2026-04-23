@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useState } from 'react';
 import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
+import { useCallback, useState } from 'react';
 
 type Result =
   | { kind: 'idle' }
@@ -50,8 +50,8 @@ export function Converter() {
       {result.kind === 'ready' && (
         <div className="output">
           <p>
-            Parsed <strong>{result.cueCount}</strong> cues ·{' '}
-            <strong>{result.vtt.length}</strong> bytes
+            Parsed <strong>{result.cueCount}</strong> cues · <strong>{result.vtt.length}</strong>{' '}
+            bytes
           </p>
           <button type="button" onClick={onDownload}>
             Download {result.filename}

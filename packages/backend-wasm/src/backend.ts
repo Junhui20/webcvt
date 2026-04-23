@@ -12,7 +12,12 @@
  * - Abort mid-exec nulls both instance and loading (Trap #12).
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { isAllowlisted } from './allowlist.ts';
 import { buildCommand } from './command.ts';
 import { IDLE_TIMEOUT_MS, MAX_INPUT_BYTES } from './constants.ts';

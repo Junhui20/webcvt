@@ -40,6 +40,10 @@
       "**/coverage/**",
       "**/node_modules/**",
       "**/.turbo/**",
+      "**/.next/**",
+      "**/.vercel/**",
+      "**/.wrangler/**",
+      "**/out/**",
       "**/tests/fixtures/**"
     ]
   },

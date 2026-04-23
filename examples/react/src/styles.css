@@ -9,7 +9,9 @@
   --error: #f55;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -25,22 +27,31 @@ main {
   padding: 1rem;
 }
 
-h1 { font-size: 1.5rem; margin-top: 0; }
+h1 {
+  font-size: 1.5rem;
+  margin-top: 0;
+}
 
-code, pre {
+code,
+pre {
   background: var(--panel);
   border-radius: 4px;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
-code { padding: 0.15em 0.4em; }
+code {
+  padding: 0.15em 0.4em;
+}
 pre {
   padding: 1rem;
   overflow-x: auto;
   border: 1px solid var(--border);
 }
-pre code { padding: 0; background: transparent; }
+pre code {
+  padding: 0;
+  background: transparent;
+}
 
-input[type=file] {
+input[type="file"] {
   display: block;
   width: 100%;
   padding: 1rem;
@@ -62,13 +73,31 @@ button {
   font-weight: 600;
   margin-top: 0.5rem;
 }
-button:hover { filter: brightness(1.1); }
+button:hover {
+  filter: brightness(1.1);
+}
 
-.output { margin-top: 1.5rem; }
-.output details { margin-top: 1rem; }
-.output summary { cursor: pointer; color: var(--muted); }
+.output {
+  margin-top: 1.5rem;
+}
+.output details {
+  margin-top: 1rem;
+}
+.output summary {
+  cursor: pointer;
+  color: var(--muted);
+}
 
-.error { color: var(--error); margin-top: 1rem; }
+.error {
+  color: var(--error);
+  margin-top: 1rem;
+}
 
-a { color: var(--accent); }
-footer { margin-top: 2rem; color: var(--muted); font-size: 0.9rem; }
+a {
+  color: var(--accent);
+}
+footer {
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

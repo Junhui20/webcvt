@@ -10,7 +10,12 @@
  * true ONLY for the explicitly-supported paths above. No speculative returns.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import {
   JPEG_MIME,
   MAX_SVG_INPUT_BYTES,

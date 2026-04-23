@@ -8,7 +8,12 @@
  *   Stub throws NotImplementedError until that package is available.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import { WebcvtError } from '@catlabtech/webcvt-core';
 import { parseWav } from './parser.ts';
 import { serializeWav } from './serializer.ts';

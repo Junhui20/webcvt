@@ -5,9 +5,8 @@ export default function HomePage() {
     <main>
       <h1>webcvt — SRT → WebVTT (Next.js)</h1>
       <p>
-        This shell is server-rendered. The converter below is a{' '}
-        <code>&apos;use client&apos;</code> component because file APIs and{' '}
-        <code>URL.createObjectURL</code> only exist in the browser.
+        This shell is server-rendered. The converter below is a <code>&apos;use client&apos;</code>{' '}
+        component because file APIs and <code>URL.createObjectURL</code> only exist in the browser.
       </p>
 
       <pre>

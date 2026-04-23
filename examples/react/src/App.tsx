@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
 import { parseSrt, serializeVtt } from '@catlabtech/webcvt-subtitle';
+import { useCallback, useState } from 'react';
 
 type Result =
   | { kind: 'idle' }
@@ -65,8 +65,8 @@ const vtt = serializeVtt(parseSrt(srtText));`}</code>
       {result.kind === 'ready' && (
         <section className="output">
           <p>
-            Parsed <strong>{result.cueCount}</strong> cues ·{' '}
-            <strong>{result.vtt.length}</strong> bytes
+            Parsed <strong>{result.cueCount}</strong> cues · <strong>{result.vtt.length}</strong>{' '}
+            bytes
           </p>
           <button type="button" onClick={onDownload}>
             Download {result.filename}
@@ -74,15 +74,16 @@ const vtt = serializeVtt(parseSrt(srtText));`}</code>
           <details>
             <summary>Preview output</summary>
             <pre>
-              <code>{result.vtt.slice(0, 600)}{result.vtt.length > 600 ? '\n…' : ''}</code>
+              <code>
+                {result.vtt.slice(0, 600)}
+                {result.vtt.length > 600 ? '\n…' : ''}
+              </code>
             </pre>
           </details>
         </section>
       )}
 
-      {result.kind === 'error' && (
-        <p className="error">Error: {result.message}</p>
-      )}
+      {result.kind === 'error' && <p className="error">Error: {result.message}</p>}
 
       <footer>
         <a href="https://github.com/Junhui20/webcvt">Source</a> ·{' '}

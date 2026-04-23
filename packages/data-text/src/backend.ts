@@ -14,7 +14,12 @@
  * dispatcher. See parseDataText for the per-format parse API.
  */
 
-import type { Backend, ConvertOptions, ConvertResult, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type {
+  Backend,
+  ConvertOptions,
+  ConvertResult,
+  FormatDescriptor,
+} from '@catlabtech/webcvt-core';
 import {
   CSV_MIME,
   ENV_MIME,
