@@ -11,7 +11,12 @@ Thumbs.db
 .env
 .env.local
 .pnpm-store
+*.tsbuildinfo
 /apps/*/.next
 /apps/*/out
 /apps/*/.vercel
 /apps/*/.wrangler
+/examples/*/.next
+/examples/*/out
+/examples/*/.vercel
+/examples/*/.wrangler

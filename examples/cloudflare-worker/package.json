@@ -1,0 +1,22 @@
+{
+  "name": "@catlabtech/webcvt-example-cloudflare-worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cloudflare Worker example: POST SRT → receive WebVTT, using @catlabtech/webcvt-subtitle on the edge",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"(example — run 'pnpm dev' for local Worker, then POST a .srt file)\" && exit 0",
+    "clean": "rm -rf .wrangler dist .turbo"
+  },
+  "dependencies": {
+    "@catlabtech/webcvt-subtitle": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.95.0"
+  }
+}

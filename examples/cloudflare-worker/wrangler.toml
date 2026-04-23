@@ -1,0 +1,11 @@
+name = "webcvt-example-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Limits — text subtitle conversion is lightweight; default CPU is fine
+# [limits]
+# cpu_ms = 50
+
+# To deploy, you'll need: wrangler login (one-time)
+# Then: pnpm --filter @catlabtech/webcvt-example-cloudflare-worker deploy

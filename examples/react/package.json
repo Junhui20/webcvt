@@ -1,0 +1,27 @@
+{
+  "name": "@catlabtech/webcvt-example-react",
+  "version": "0.0.0",
+  "private": true,
+  "description": "React + Vite example: SRT → WebVTT in the browser using @catlabtech/webcvt-subtitle",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"(example — run 'pnpm dev' to try it)\" && exit 0",
+    "clean": "rm -rf dist .turbo"
+  },
+  "dependencies": {
+    "@catlabtech/webcvt-subtitle": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.0"
+  }
+}
