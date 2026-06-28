@@ -41,15 +41,15 @@
       <main>
         <!-- Drop zone -->
         <section aria-label="File drop zone">
-          <div id="dropzone" role="button" tabindex="0" aria-label="Drop a file or click to browse">
+          <div id="dropzone" role="button" tabindex="0" aria-label="Drop files or click to browse">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <p id="drop-message">Drop a file here or click to browse</p>
+            <p id="drop-message">Drop a file (or several) here or click to browse</p>
           </div>
-          <input type="file" id="file-input" aria-label="Choose file" />
+          <input type="file" id="file-input" aria-label="Choose files" multiple />
         </section>
 
         <!-- Sample files -->
@@ -99,6 +99,27 @@
               Download
             </a>
             <span id="result-meta" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <!-- Batch (multiple files) -->
+        <section id="batch-section" aria-label="Batch conversion" hidden>
+          <div class="batch-head">
+            <span class="batch-title">Batch — <span id="batch-count">0</span> files</span>
+            <div class="picker-row">
+              <span class="picker-label">Convert all to:</span>
+              <select id="batch-format-select" aria-label="Batch target format"></select>
+              <div class="picker-actions">
+                <button id="batch-convert-btn" class="btn btn--primary" type="button">Convert all</button>
+                <button id="batch-cancel-btn" class="btn btn--ghost" type="button" hidden>Cancel</button>
+                <button id="batch-reset-btn" class="btn btn--ghost" type="button" hidden>Reset</button>
+              </div>
+            </div>
+          </div>
+          <div id="batch-list" role="list"></div>
+          <div id="batch-footer" hidden>
+            <span id="batch-summary" aria-live="polite"></span>
+            <a id="batch-download-zip" class="btn btn--primary" href="#" download="webcvt-batch.zip" hidden>Download all (.zip)</a>
           </div>
         </section>
       </main>

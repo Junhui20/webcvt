@@ -14,6 +14,7 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`.github/workflows/deploy.yml`** — auto-deploy the playground + docs to Cloudflare Pages on push to `main` (replaces the manual `scripts/release.sh` wrangler step).
 - **`@catlabtech/webcvt-core`** — `avif`, `jxl`, and `pdf` added to the known-format registry so they are discoverable via `findByExt` / `detectFormatWithHint`.
 - **`@catlabtech/webcvt-core`** — `convertBatch(items, options, context)`: convert many files concurrently with a configurable concurrency cap, per-item error isolation (one failure never aborts the batch), index-aligned results, an overall `AbortSignal`, and per-item progress.
+- **`apps/playground`** — multi-file **batch conversion**: drop several files to enter batch mode, pick one shared target format, convert all with a bounded concurrency pool + per-file status, then **download everything as a single ZIP** (bundled via `@catlabtech/webcvt-archive-zip`). One file still uses the single-file flow.
 - **`.github/workflows/release.yml`** — tag-triggered npm publish workflow (`pnpm -r publish`) using a `NPM_TOKEN` repo secret.
 - **`apps/docs`** — VitePress documentation site (guides, per-package reference, error-code reference); added `image-jsquash-avif` and `image-jsquash-jxl` package pages.
 - **`examples/`** — runnable integrations: `react`, `nextjs`, `cloudflare-worker`, `vanilla-html` (alongside `node-subtitle`).

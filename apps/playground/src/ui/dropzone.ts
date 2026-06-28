@@ -1,20 +1,25 @@
 import { MAX_FILE_BYTES } from '../types.ts';
 
-export type DropHandler = (file: File) => void;
+export type DropHandler = (files: File[]) => void;
 
 export function createDropzone(container: HTMLElement, onDrop: DropHandler): () => void {
   const zone = container.querySelector<HTMLElement>('#dropzone');
   const fileInput = container.querySelector<HTMLInputElement>('#file-input');
   if (!zone || !fileInput) throw new Error('Dropzone elements not found');
 
-  const handleFile = (file: File): void => {
-    if (file.size > MAX_FILE_BYTES) {
+  const handleFiles = (fileList: FileList | null | undefined): void => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    const tooBig = files.filter((f) => f.size > MAX_FILE_BYTES);
+    if (tooBig.length > 0) {
       zone.classList.add('error');
       const msg = zone.querySelector('#drop-message');
-      if (msg) msg.textContent = 'File too large (max 256 MiB). Use the CLI for large files.';
-      return;
+      if (msg) {
+        msg.textContent = `Skipped ${tooBig.length} file(s) over 256 MiB. Use the CLI for large files.`;
+      }
     }
-    onDrop(file);
+    const ok = files.filter((f) => f.size <= MAX_FILE_BYTES);
+    if (ok.length > 0) onDrop(ok);
   };
 
   const onDragover = (e: DragEvent): void => {
@@ -29,13 +34,11 @@ export function createDropzone(container: HTMLElement, onDrop: DropHandler): () 
   const onDropEvent = (e: DragEvent): void => {
     e.preventDefault();
     zone.classList.remove('drag-over');
-    const file = e.dataTransfer?.files[0];
-    if (file) handleFile(file);
+    handleFiles(e.dataTransfer?.files);
   };
 
   const onFileChange = (): void => {
-    const file = fileInput.files?.[0];
-    if (file) handleFile(file);
+    handleFiles(fileInput.files);
     fileInput.value = '';
   };
 

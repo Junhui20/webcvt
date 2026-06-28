@@ -1,17 +1,26 @@
 import './styles.css';
 import { getTargetsFor } from './backend-loader.ts';
+import { type BatchInput, bundleZip, runBatch, sharedTargets } from './batch-runner.ts';
 import { runConversion } from './conversion.ts';
 import { detectFileFormat } from './format-detector.ts';
 import { createStore } from './state.ts';
 import type { AppState } from './types.ts';
 import { PlaygroundError, REPO_URL } from './types.ts';
+import {
+  getBatchSelectedExt,
+  hideBatch,
+  renderBatch,
+  setBatchConverting,
+  setBatchItemStatus,
+  showBatchFooter,
+} from './ui/batch.ts';
 import { createDropzone, resetDropzone } from './ui/dropzone.ts';
 import { getSelectedTarget, hideFormatPicker, renderFormatPicker } from './ui/format-picker.ts';
 import { hidePreview, showPreview } from './ui/preview.ts';
 import { hideProgress, showProgress } from './ui/progress-bar.ts';
 import { hideResult, showResult } from './ui/result.ts';
 import { renderSamples } from './ui/samples.ts';
-import { escHtml } from './utils.ts';
+import { escHtml, formatBytes } from './utils.ts';
 
 const VERSION = import.meta.env.VITE_WEBCVT_VERSION as string | undefined;
 
@@ -32,6 +41,8 @@ const store = createStore<AppState>({ phase: { kind: 'idle' }, targetFormat: nul
 let abortController: AbortController | null = null;
 let currentObjectUrl: string | null = null;
 let currentTargets: ReturnType<typeof getTargetsFor> = [];
+let batchAbort: AbortController | null = null;
+let batchZipUrl: string | null = null;
 
 function revokeObjectUrl(): void {
   if (currentObjectUrl) {
@@ -91,7 +102,18 @@ function resetToIdle(): void {
   hideProgress(app);
   hideResult(app);
   hideError();
+  batchAbort?.abort();
+  batchAbort = null;
+  revokeBatchZip();
+  hideBatch(app);
   syncButtons('idle');
+}
+
+function revokeBatchZip(): void {
+  if (batchZipUrl) {
+    URL.revokeObjectURL(batchZipUrl);
+    batchZipUrl = null;
+  }
 }
 
 async function handleFile(file: File): Promise<void> {
@@ -197,6 +219,87 @@ async function handleConvert(): Promise<void> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Batch (multiple files)
+// ---------------------------------------------------------------------------
+
+async function handleBatch(files: File[]): Promise<void> {
+  resetToIdle();
+
+  const inputs: BatchInput[] = [];
+  for (const file of files) {
+    let format: Awaited<ReturnType<typeof detectFileFormat>>;
+    try {
+      format = await detectFileFormat(file);
+    } catch {
+      format = undefined;
+    }
+    if (format && getTargetsFor(format.ext).length > 0) {
+      inputs.push({ file, inputFormat: format });
+    }
+  }
+
+  if (inputs.length === 0) {
+    showErrorText('None of the selected files are supported for conversion.');
+    return;
+  }
+
+  const targets = sharedTargets(inputs);
+  renderBatch(app, inputs, targets, {
+    onConvert: () => void runBatchConvert(inputs),
+    onCancel: () => batchAbort?.abort(),
+    onReset: () => resetToIdle(),
+  });
+}
+
+async function runBatchConvert(inputs: readonly BatchInput[]): Promise<void> {
+  const outputExt = getBatchSelectedExt(app);
+  if (!outputExt) return;
+
+  revokeBatchZip();
+  batchAbort = new AbortController();
+  setBatchConverting(app, true);
+
+  const outcomes = await runBatch(inputs, outputExt, {
+    signal: batchAbort.signal,
+    onItemStart: (i) => setBatchItemStatus(app, i, 'converting'),
+    onItemDone: (i, outcome) => {
+      if (outcome.result) {
+        setBatchItemStatus(
+          app,
+          i,
+          'done',
+          `${outcome.result.format.ext.toUpperCase()} · ${formatBytes(outcome.result.blob.size)}`,
+        );
+      } else {
+        const detail = outcome.error?.message ?? 'failed';
+        setBatchItemStatus(
+          app,
+          i,
+          'error',
+          detail.length > 48 ? `${detail.slice(0, 48)}…` : detail,
+        );
+      }
+    },
+  });
+
+  setBatchConverting(app, false);
+  const ok = outcomes.filter((o) => o.result !== null).length;
+  const fail = outcomes.length - ok;
+
+  let zipUrl: string | null = null;
+  if (ok > 0) {
+    try {
+      const zipBlob = await bundleZip(outcomes);
+      zipUrl = URL.createObjectURL(zipBlob);
+      batchZipUrl = zipUrl;
+    } catch {
+      zipUrl = null;
+    }
+  }
+  showBatchFooter(app, ok, fail, zipUrl);
+}
+
 // Wire version badge
 if (versionBadge && VERSION) versionBadge.textContent = `v${VERSION}`;
 
@@ -204,7 +307,14 @@ if (versionBadge && VERSION) versionBadge.textContent = `v${VERSION}`;
 syncButtons('idle');
 
 // Wire dropzone + samples
-createDropzone(app, (file) => void handleFile(file));
+createDropzone(app, (files) => {
+  if (files.length <= 1) {
+    const single = files[0];
+    if (single) void handleFile(single);
+  } else {
+    void handleBatch(files);
+  }
+});
 renderSamples(app, (file) => void handleFile(file));
 
 // Wire buttons
