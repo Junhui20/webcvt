@@ -166,6 +166,38 @@ function disambiguateRiff(buf: Uint8Array): 'webp' | 'wav' | undefined {
 }
 
 /**
+ * Disambiguate an ISOBMFF `ftyp`-boxed file (HEIC / HEIF / AVIF / MP4) by brand.
+ *
+ * All four share the `ftyp` box ('ftyp' at offset 4), so the major_brand (offset 8)
+ * and compatible_brands (offset 16 onward) decide the real format. Without this,
+ * an iPhone HEIC or an AVIF would be mis-detected as MP4.
+ *
+ * AVIF takes priority over HEIC over HEIF when multiple brands are present (an AVIF
+ * file often lists 'mif1' as a compatible brand). Falls back to 'mp4'.
+ */
+function disambiguateFtyp(buf: Uint8Array): 'heic' | 'heif' | 'avif' | 'mp4' {
+  // ftyp box size: big-endian u32 at offset 0. Clamp the scan to the box (and buffer).
+  const boxSize =
+    (((buf[0] ?? 0) << 24) | ((buf[1] ?? 0) << 16) | ((buf[2] ?? 0) << 8) | (buf[3] ?? 0)) >>> 0;
+  const end = Math.min(boxSize > 8 ? boxSize : buf.length, buf.length);
+  let sawHeif = false;
+  // Brands are 4-byte ASCII: major_brand at 8, minor_version at 12 (skip), compatibles at 16+.
+  for (let off = 8; off + 4 <= end; off += 4) {
+    if (off === 12) continue; // minor_version, not a brand
+    const brand = String.fromCharCode(
+      buf[off] ?? 0,
+      buf[off + 1] ?? 0,
+      buf[off + 2] ?? 0,
+      buf[off + 3] ?? 0,
+    );
+    if (brand === 'avif' || brand === 'avis') return 'avif';
+    if (brand === 'heic' || brand === 'heix' || brand === 'heim' || brand === 'heis') return 'heic';
+    if (brand === 'mif1' || brand === 'msf1' || brand === 'heif') sawHeif = true;
+  }
+  return sawHeif ? 'heif' : 'mp4';
+}
+
+/**
  * Disambiguate PNG vs APNG by scanning for an 'acTL' chunk type within the
  * first HEADER_BYTES_TO_READ bytes. APNG spec requires acTL before IDAT.
  * Returns 'apng' if acTL found, 'png' otherwise.
@@ -219,6 +251,8 @@ export async function detectFormat(
     if (matchesAt(head, sig.offset, sig.bytes)) {
       // PNG needs further disambiguation: APNG files contain an acTL chunk
       if (sig.ext === 'png') return findByExt(disambiguatePng(head));
+      // 'ftyp' is shared by MP4 / HEIC / HEIF / AVIF — decide by brand.
+      if (sig.ext === 'mp4') return findByExt(disambiguateFtyp(head));
       return findByExt(sig.ext);
     }
   }

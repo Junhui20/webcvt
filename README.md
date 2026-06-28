@@ -14,7 +14,7 @@
 
 🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
-- **22 packages** shipped across Phases 1–5 (`@catlabtech/webcvt-core` + 4 codec/image, 9 container, 2 data, 1 CLI, 4 ancillary)
+- **27 packages** shipped across Phases 1–6 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 CLI, 3 ancillary)
 - **3,970 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
@@ -87,6 +87,12 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 - `@catlabtech/webcvt-image-svg` — SVG parse + Canvas rasterize (with aggressive security gates)
 - `@catlabtech/webcvt-image-animation` — GIF + APNG + animated WebP
 - `@catlabtech/webcvt-image-legacy` — PBM/PGM/PPM/PFM/QOI + TIFF + TGA + XBM + PCX + XPM + ICNS
+- `@catlabtech/webcvt-image-jsquash-avif` — AVIF encode/decode via `@jsquash/avif` (libavif WASM)
+- `@catlabtech/webcvt-image-jsquash-jxl` — JPEG XL encode/decode via `@jsquash/jxl` (libjxl WASM, royalty-free)
+- `@catlabtech/webcvt-image-jsquash-mozjpeg` — smaller JPEGs via `@jsquash/jpeg` (MozJPEG WASM)
+- `@catlabtech/webcvt-image-jsquash-oxipng` — lossless PNG optimise via `@jsquash/oxipng` (OxiPNG WASM)
+- `@catlabtech/webcvt-image-heic` — HEIC/HEIF decode (iPhone photos → PNG/JPG/WebP) via `libheif-js` (libheif WASM)
+- `@catlabtech/webcvt-image-pdf` — wrap an image into a one-page PDF (clean-room writer, zero deps)
 
 ### Archives + data + subtitles
 
@@ -100,8 +106,10 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 
 ### Planned
 
-See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months. Next up:
-the **v0.1.0 npm release**, then AVIF / JPEG XL / HEIC encode (Phase 6, v0.2+).
+See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months. Phase 6 modern-codec
+work has already landed on `main`: AVIF & JPEG XL (encode + decode), HEIC/HEIF
+decode (iPhone photos), MozJPEG / OxiPNG optimisers, and image→PDF. Next up is the
+**v0.1.0 npm release**; further codecs and HEIC/AVIF tuning follow in v0.2+.
 
 ## Quickstart
 

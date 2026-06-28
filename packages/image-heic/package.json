@@ -1,0 +1,71 @@
+{
+  "name": "@catlabtech/webcvt-image-heic",
+  "version": "0.1.0",
+  "description": "HEIC/HEIF decode for webcvt via libheif (WASM) — convert iPhone photos to PNG/JPEG/WebP in the browser",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .turbo"
+  },
+  "dependencies": {
+    "@catlabtech/webcvt-core": "workspace:^"
+  },
+  "peerDependencies": {
+    "libheif-js": "^1.19.0"
+  },
+  "peerDependenciesMeta": {
+    "libheif-js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "libheif-js": "^1.19.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "happy-dom": "^15.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/image-heic"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/image-heic#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "heic",
+    "heif",
+    "libheif",
+    "iphone",
+    "image",
+    "wasm"
+  ]
+}

@@ -72,6 +72,9 @@ importers:
       '@catlabtech/webcvt-image-canvas':
         specifier: workspace:*
         version: link:../../packages/image-canvas
+      '@catlabtech/webcvt-image-heic':
+        specifier: workspace:*
+        version: link:../../packages/image-heic
       '@catlabtech/webcvt-image-jsquash-avif':
         specifier: workspace:*
         version: link:../../packages/image-jsquash-avif
@@ -93,6 +96,9 @@ importers:
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.17
+      libheif-js:
+        specifier: ^1.19.0
+        version: 1.19.8
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -617,6 +623,31 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^2.1.0
         version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
+
+  packages/image-heic:
+    dependencies:
+      '@catlabtech/webcvt-core':
+        specifier: workspace:^
+        version: link:../core
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      happy-dom:
+        specifier: ^15.0.0
+        version: 15.11.7
+      libheif-js:
+        specifier: ^1.19.0
+        version: 1.19.8
       tsup:
         specifier: ^8.3.0
         version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
@@ -2708,6 +2739,10 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
+
+  libheif-js@1.19.8:
+    resolution: {integrity: sha512-vQJWusIxO7wavpON1dusciL8Go9jsIQ+EUrckauFYAiSTjcmLAsuJh3SszLpvkwPci3JcL41ek2n+LUZGFpPIQ==}
+    engines: {node: '>=8.0.0'}
 
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
@@ -5034,6 +5069,8 @@ snapshots:
   jsesc@3.1.0: {}
 
   json5@2.2.3: {}
+
+  libheif-js@1.19.8: {}
 
   lilconfig@3.1.3: {}
 

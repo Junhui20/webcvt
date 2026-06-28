@@ -20,6 +20,19 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     description: 'AV1 Image File Format (AVIF)',
   },
   { ext: 'jxl', mime: 'image/jxl', category: 'image', description: 'JPEG XL (JXL)' },
+  // Image (HEIC/HEIF — libheif wasm backend, decode-only)
+  {
+    ext: 'heic',
+    mime: 'image/heic',
+    category: 'image',
+    description: 'High Efficiency Image Container (HEIC)',
+  },
+  {
+    ext: 'heif',
+    mime: 'image/heif',
+    category: 'image',
+    description: 'High Efficiency Image Format (HEIF)',
+  },
   // Subtitle (Phase 1)
   { ext: 'srt', mime: 'application/x-subrip', category: 'subtitle', description: 'SubRip' },
   { ext: 'vtt', mime: 'text/vtt', category: 'subtitle', description: 'WebVTT' },

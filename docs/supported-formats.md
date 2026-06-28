@@ -15,12 +15,14 @@ today (100% client-side, no upload). Drag a file in and pick a target:
 
 | Input | Convert to | Backend package |
 |-------|-----------|-----------------|
-| PNG | WebP, JPEG, BMP, ICO, **JXL** | `image-canvas`, `image-jsquash-jxl` |
-| JPG / JPEG | PNG, WebP, BMP, ICO, **JXL** | `image-canvas`, `image-jsquash-jxl` |
-| WebP | PNG, JPEG, BMP, **JXL** | `image-canvas`, `image-jsquash-jxl` |
+| PNG | WebP, JPEG, BMP, ICO, **JXL**, **AVIF** | `image-canvas`, `image-jsquash-jxl`, `image-jsquash-avif` |
+| JPG / JPEG | PNG, WebP, BMP, ICO, **JXL**, **AVIF** | `image-canvas`, `image-jsquash-jxl`, `image-jsquash-avif` |
+| WebP | PNG, JPEG, BMP, **JXL**, **AVIF** | `image-canvas`, `image-jsquash-jxl`, `image-jsquash-avif` |
 | GIF | PNG, WebP | `image-canvas` |
 | BMP | PNG, WebP, JPEG | `image-canvas` |
 | **JXL** | PNG, JPEG, WebP | `image-jsquash-jxl` |
+| **AVIF** | PNG, JPEG, WebP | `image-jsquash-avif` |
+| **HEIC / HEIF** (iPhone) | JPEG, PNG, WebP | `image-heic` |
 | **JPEG / PNG / WebP / GIF / BMP** | **PDF** | `image-pdf` |
 | TIFF | PNG, BMP | `image-legacy` |
 | TGA | PNG, BMP | `image-legacy` |
@@ -53,6 +55,7 @@ in all three; WebCodecs-backed paths require a runtime that provides WebCodecs.
 | `image-jsquash-mozjpeg` | JPEG (encode + decode) | smaller JPEGs via `@jsquash/jpeg` WASM (MozJPEG); overlaps `image-canvas` |
 | `image-jsquash-oxipng` | PNG (lossless optimise / encode) | smaller PNGs via `@jsquash/oxipng` WASM (OxiPNG); overlaps `image-canvas` |
 | `image-pdf` | image → PDF | clean-room PDF writer (no deps); JPEG via DCTDecode, others via Flate + alpha SMask |
+| `image-heic` | HEIC / HEIF → PNG, JPEG, WebP | decode-only iPhone photos; via `libheif-js` WASM (libheif); canvas pixel-bridge |
 
 ### Audio & video containers
 

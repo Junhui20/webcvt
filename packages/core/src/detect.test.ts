@@ -57,6 +57,56 @@ describe('detectFormat', () => {
     expect(result?.ext).toBe('wav');
   });
 
+  // ISOBMFF: MP4 / HEIC / HEIF / AVIF all share the 'ftyp' box; brand decides.
+  function ftyp(major: string, ...compatible: string[]): Uint8Array {
+    const ascii = (s: string) => [
+      s.charCodeAt(0),
+      s.charCodeAt(1),
+      s.charCodeAt(2),
+      s.charCodeAt(3),
+    ];
+    const body = [
+      0,
+      0,
+      0,
+      0, // box size (0 → scan to buffer end)
+      0x66,
+      0x74,
+      0x79,
+      0x70, // 'ftyp'
+      ...ascii(major),
+      0,
+      0,
+      0,
+      0, // minor_version
+      ...compatible.flatMap(ascii),
+    ];
+    return Uint8Array.from(body);
+  }
+
+  it('detects HEIC by ftyp brand (not MP4)', async () => {
+    const result = await detectFormat(ftyp('heic', 'mif1', 'heic'));
+    expect(result?.ext).toBe('heic');
+    expect(result?.mime).toBe('image/heic');
+  });
+
+  it('detects HEIF (mif1 major brand)', async () => {
+    const result = await detectFormat(ftyp('mif1', 'mif1'));
+    expect(result?.ext).toBe('heif');
+    expect(result?.mime).toBe('image/heif');
+  });
+
+  it('detects AVIF by ftyp brand (priority over mif1)', async () => {
+    const result = await detectFormat(ftyp('avif', 'mif1', 'miaf'));
+    expect(result?.ext).toBe('avif');
+    expect(result?.mime).toBe('image/avif');
+  });
+
+  it('falls back to MP4 for a non-image ftyp brand', async () => {
+    const result = await detectFormat(ftyp('isom', 'iso2', 'mp41'));
+    expect(result?.ext).toBe('mp4');
+  });
+
   it('detects GIF89a', async () => {
     const gif = bytes(0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0, 0);
     const result = await detectFormat(gif);

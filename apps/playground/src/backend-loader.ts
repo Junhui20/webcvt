@@ -56,6 +56,10 @@ const pdfLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-pdf');
   tryRegister(new mod.PdfBackend());
 };
+const heicLoader = async (): Promise<void> => {
+  const mod = await import('@catlabtech/webcvt-image-heic');
+  tryRegister(new mod.HeicBackend());
+};
 
 /**
  * Allowlist mapping input file extension to available conversion targets.
@@ -109,6 +113,17 @@ export const BACKEND_ALLOWLIST: Readonly<Record<string, readonly TargetOption[]>
     { format: fmt('png'), loader: avifLoader },
     { format: fmt('jpeg'), loader: avifLoader },
     { format: fmt('webp'), loader: avifLoader },
+  ],
+  // HEIC / HEIF (iPhone photos — libheif wasm, decode-only)
+  heic: [
+    { format: fmt('jpeg'), loader: heicLoader },
+    { format: fmt('png'), loader: heicLoader },
+    { format: fmt('webp'), loader: heicLoader },
+  ],
+  heif: [
+    { format: fmt('jpeg'), loader: heicLoader },
+    { format: fmt('png'), loader: heicLoader },
+    { format: fmt('webp'), loader: heicLoader },
   ],
   gif: [
     { format: fmt('png'), loader: imageCanvasLoader },

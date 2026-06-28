@@ -23,6 +23,7 @@
     "@catlabtech/webcvt-container-webm": "workspace:*",
     "@catlabtech/webcvt-data-text": "workspace:*",
     "@catlabtech/webcvt-image-canvas": "workspace:*",
+    "@catlabtech/webcvt-image-heic": "workspace:*",
     "@catlabtech/webcvt-image-jsquash-avif": "workspace:*",
     "@catlabtech/webcvt-image-jsquash-jxl": "workspace:*",
     "@catlabtech/webcvt-image-legacy": "workspace:*",
@@ -30,6 +31,7 @@
     "@catlabtech/webcvt-subtitle": "workspace:*",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
+    "libheif-js": "^1.19.0",
     "typescript": "^5.7.0",
     "vite": "^5.4.0"
   }

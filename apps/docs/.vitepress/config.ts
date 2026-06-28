@@ -103,6 +103,7 @@ export default defineConfig({
               link: '/packages/image-jsquash-oxipng',
             },
             { text: '@catlabtech/webcvt-image-pdf', link: '/packages/image-pdf' },
+            { text: '@catlabtech/webcvt-image-heic', link: '/packages/image-heic' },
           ],
         },
         {

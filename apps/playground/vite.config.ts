@@ -53,6 +53,7 @@ export default defineConfig({
       '@catlabtech/webcvt-image-jsquash-jxl',
       '@catlabtech/webcvt-image-jsquash-avif',
       '@catlabtech/webcvt-image-pdf',
+      '@catlabtech/webcvt-image-heic',
     ],
   },
 });
