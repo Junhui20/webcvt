@@ -44,6 +44,18 @@ const archiveZipLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-archive-zip');
   tryRegister(new mod.ArchiveBackend());
 };
+const jxlLoader = async (): Promise<void> => {
+  const mod = await import('@catlabtech/webcvt-image-jsquash-jxl');
+  tryRegister(new mod.JxlBackend());
+};
+const avifLoader = async (): Promise<void> => {
+  const mod = await import('@catlabtech/webcvt-image-jsquash-avif');
+  tryRegister(new mod.AvifBackend());
+};
+const pdfLoader = async (): Promise<void> => {
+  const mod = await import('@catlabtech/webcvt-image-pdf');
+  tryRegister(new mod.PdfBackend());
+};
 
 /**
  * Allowlist mapping input file extension to available conversion targets.
@@ -56,32 +68,58 @@ export const BACKEND_ALLOWLIST: Readonly<Record<string, readonly TargetOption[]>
     { format: fmt('jpeg'), loader: imageCanvasLoader },
     { format: fmt('bmp'), loader: imageCanvasLoader },
     { format: fmt('ico'), loader: imageCanvasLoader },
+    { format: fmt('jxl'), loader: jxlLoader },
+    { format: fmt('avif'), loader: avifLoader },
+    { format: fmt('pdf'), loader: pdfLoader },
   ],
   jpg: [
     { format: fmt('png'), loader: imageCanvasLoader },
     { format: fmt('webp'), loader: imageCanvasLoader },
     { format: fmt('bmp'), loader: imageCanvasLoader },
     { format: fmt('ico'), loader: imageCanvasLoader },
+    { format: fmt('jxl'), loader: jxlLoader },
+    { format: fmt('avif'), loader: avifLoader },
+    { format: fmt('pdf'), loader: pdfLoader },
   ],
   jpeg: [
     { format: fmt('png'), loader: imageCanvasLoader },
     { format: fmt('webp'), loader: imageCanvasLoader },
     { format: fmt('bmp'), loader: imageCanvasLoader },
     { format: fmt('ico'), loader: imageCanvasLoader },
+    { format: fmt('jxl'), loader: jxlLoader },
+    { format: fmt('avif'), loader: avifLoader },
+    { format: fmt('pdf'), loader: pdfLoader },
   ],
   webp: [
     { format: fmt('png'), loader: imageCanvasLoader },
     { format: fmt('jpeg'), loader: imageCanvasLoader },
     { format: fmt('bmp'), loader: imageCanvasLoader },
+    { format: fmt('jxl'), loader: jxlLoader },
+    { format: fmt('avif'), loader: avifLoader },
+    { format: fmt('pdf'), loader: pdfLoader },
+  ],
+  // JPEG XL (modern codec — @jsquash/jxl wasm)
+  jxl: [
+    { format: fmt('png'), loader: jxlLoader },
+    { format: fmt('jpeg'), loader: jxlLoader },
+    { format: fmt('webp'), loader: jxlLoader },
+  ],
+  // AVIF (modern codec — @jsquash/avif wasm)
+  avif: [
+    { format: fmt('png'), loader: avifLoader },
+    { format: fmt('jpeg'), loader: avifLoader },
+    { format: fmt('webp'), loader: avifLoader },
   ],
   gif: [
     { format: fmt('png'), loader: imageCanvasLoader },
     { format: fmt('webp'), loader: imageCanvasLoader },
+    { format: fmt('pdf'), loader: pdfLoader },
   ],
   bmp: [
     { format: fmt('png'), loader: imageCanvasLoader },
     { format: fmt('webp'), loader: imageCanvasLoader },
     { format: fmt('jpeg'), loader: imageCanvasLoader },
+    { format: fmt('pdf'), loader: pdfLoader },
   ],
   // Image — legacy backend (TIFF, TGA, QOI, Netpbm)
   tiff: [

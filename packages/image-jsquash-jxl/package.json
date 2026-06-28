@@ -1,0 +1,70 @@
+{
+  "name": "@catlabtech/webcvt-image-jsquash-jxl",
+  "version": "0.1.0",
+  "description": "JPEG XL (JXL) decode/encode for webcvt — lazy-loads @jsquash/jxl wasm, plugs into the image adapter pipeline",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .turbo"
+  },
+  "dependencies": {
+    "@catlabtech/webcvt-core": "workspace:^"
+  },
+  "peerDependencies": {
+    "@jsquash/jxl": "^1.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@jsquash/jxl": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@jsquash/jxl": "^1.2.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "happy-dom": "^15.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/image-jsquash-jxl"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/image-jsquash-jxl#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "jxl",
+    "jpeg-xl",
+    "jsquash",
+    "image",
+    "wasm"
+  ]
+}

@@ -12,6 +12,14 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'bmp', mime: 'image/bmp', category: 'image', description: 'Bitmap' },
   { ext: 'ico', mime: 'image/x-icon', category: 'image', description: 'Windows Icon' },
   { ext: 'gif', mime: 'image/gif', category: 'image', description: 'Graphics Interchange Format' },
+  // Image (modern codecs — jsquash wasm backends)
+  {
+    ext: 'avif',
+    mime: 'image/avif',
+    category: 'image',
+    description: 'AV1 Image File Format (AVIF)',
+  },
+  { ext: 'jxl', mime: 'image/jxl', category: 'image', description: 'JPEG XL (JXL)' },
   // Subtitle (Phase 1)
   { ext: 'srt', mime: 'application/x-subrip', category: 'subtitle', description: 'SubRip' },
   { ext: 'vtt', mime: 'text/vtt', category: 'subtitle', description: 'WebVTT' },
@@ -127,6 +135,13 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'pcx', mime: 'image/x-pcx', category: 'image', description: 'PC Paintbrush' },
   { ext: 'xpm', mime: 'image/x-xpixmap', category: 'image', description: 'X PixMap' },
   { ext: 'icns', mime: 'image/icns', category: 'image', description: 'Apple Icon Image' },
+  // Document (image-pdf package — wraps images into a PDF)
+  {
+    ext: 'pdf',
+    mime: 'application/pdf',
+    category: 'document',
+    description: 'Portable Document Format',
+  },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',

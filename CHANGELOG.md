@@ -4,9 +4,35 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ## [Unreleased]
 
-## [0.1.0] — 2026-04-22
+### Added
 
-Initial public release. **22 packages, 3,970 tests, ~110,000 LOC.** All packages published to npm at `@catlabtech/webcvt-*@0.1.0`.
+- **`@catlabtech/webcvt-image-jsquash-jxl`** — JPEG XL (JXL) decode/encode backend via `@jsquash/jxl` (libjxl WASM): lazy wasm loading, typed errors, security caps (256 MiB / 25 MP), opt-in registration. Wired into the playground (PNG/JPEG/WebP ↔ JXL) and registered in core's format table. Royalty-free modern codec.
+- **`@catlabtech/webcvt-image-jsquash-mozjpeg`** — high-quality JPEG decode/encode backend via `@jsquash/jpeg` (MozJPEG WASM): smaller JPEGs (trellis quantisation, progressive). Same lazy-load / typed-error / security-cap design as the other jsquash backends. Overlaps `image-canvas` for `image/jpeg` (register one).
+- **`@catlabtech/webcvt-image-jsquash-oxipng`** — lossless PNG optimisation / encoding backend via `@jsquash/oxipng` (OxiPNG WASM): re-compresses existing PNGs or encodes pixels to a smaller PNG than canvas. Overlaps `image-canvas` for `image/png` (register one).
+- **`@catlabtech/webcvt-image-pdf`** — wrap an image into a one-page PDF via a clean-room PDF writer (zero runtime dependencies): JPEG embedded losslessly via `DCTDecode`, other formats via Flate-compressed `DeviceRGB` + alpha soft mask. Added `pdf`/`document` to core's format table and wired JPEG/PNG/WebP/GIF/BMP → PDF into the playground.
+- **`apps/playground`** — AVIF wired in (PNG/JPEG/WebP ↔ AVIF) alongside JXL; Vite `worker.format: 'es'` so the `@jsquash` multithreaded wasm worker bundles.
+- **`.github/workflows/deploy.yml`** — auto-deploy the playground + docs to Cloudflare Pages on push to `main` (replaces the manual `scripts/release.sh` wrangler step).
+- **`@catlabtech/webcvt-core`** — `avif`, `jxl`, and `pdf` added to the known-format registry so they are discoverable via `findByExt` / `detectFormatWithHint`.
+- **`@catlabtech/webcvt-core`** — `convertBatch(items, options, context)`: convert many files concurrently with a configurable concurrency cap, per-item error isolation (one failure never aborts the batch), index-aligned results, an overall `AbortSignal`, and per-item progress.
+- **`.github/workflows/release.yml`** — tag-triggered npm publish workflow (`pnpm -r publish`) using a `NPM_TOKEN` repo secret.
+- **`apps/docs`** — VitePress documentation site (guides, per-package reference, error-code reference); added `image-jsquash-avif` and `image-jsquash-jxl` package pages.
+- **`examples/`** — runnable integrations: `react`, `nextjs`, `cloudflare-worker`, `vanilla-html` (alongside `node-subtitle`).
+- **`@catlabtech/webcvt-image-jsquash-avif`** (`0.2.0-rc.0`) — first-pass AVIF encode/decode via `@jsquash` WASM.
+- **`docs/supported-formats.md`** — consolidated supported-format / conversion matrix.
+
+### Fixed
+
+- **`@catlabtech/webcvt-codec-webcodecs`** — `VideoEncoder`/`AudioEncoder` now close the input `VideoFrame`/`AudioData` after encoding, matching the documented WebCodecs ownership contract (prevents GPU-frame leaks in transcode loops).
+- **`@catlabtech/webcvt-image-legacy`** — TIFF LZW decoder rewritten from O(n²) (per-entry `concat`) to a linear prefix/suffix + stack decoder; identical output, no per-entry allocation.
+
+### Security
+
+- **`apps/playground`** — added a Content-Security-Policy plus `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy`; **`apps/docs`** — added nosniff / frame / referrer headers.
+- **`apps/playground`** — `escHtml()` now also escapes single quotes.
+
+## [0.1.0] — Unreleased
+
+First public release, in preparation. **22 packages, 3,970 tests, ~110,000 LOC.** On release, all packages will be published to npm as `@catlabtech/webcvt-*@0.1.0`.
 
 ### Design guarantees
 
@@ -79,9 +105,7 @@ Initial public release. **22 packages, 3,970 tests, ~110,000 LOC.** All packages
 
 ### Not yet shipped
 
-- `apps/docs` (VitePress docs site) — in flight.
-- More examples (vanilla HTML, React, Next.js, Cloudflare Worker).
-- AVIF / JPEG XL / HEIC encode (Phase 6, v0.2+).
+- JPEG XL / HEIC encode (Phase 6, v0.2+). AVIF encode/decode ships as a `0.2.0-rc` preview (see Unreleased).
 - Font conversion (WOFF/WOFF2), EPUB, EML (Phase 7, v0.3+).
 - PDF (Phase 8, v0.4+).
 

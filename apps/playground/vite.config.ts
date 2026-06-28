@@ -20,6 +20,13 @@ export default defineConfig({
       },
     },
   },
+  // @jsquash/* multithreaded wasm codecs ship workers that themselves use dynamic
+  // import(); Vite must emit those workers as ES modules (the default 'iife' worker
+  // format cannot code-split). Cross-origin isolation (COEP/COOP, set below + in
+  // public/_headers) lets the threaded variants use SharedArrayBuffer.
+  worker: {
+    format: 'es',
+  },
   server: {
     headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
@@ -43,6 +50,9 @@ export default defineConfig({
       '@catlabtech/webcvt-archive-zip',
       '@catlabtech/webcvt-data-text',
       '@catlabtech/webcvt-backend-wasm',
+      '@catlabtech/webcvt-image-jsquash-jxl',
+      '@catlabtech/webcvt-image-jsquash-avif',
+      '@catlabtech/webcvt-image-pdf',
     ],
   },
 });
