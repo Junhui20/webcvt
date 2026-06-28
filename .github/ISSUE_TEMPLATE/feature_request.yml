@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a new format, conversion pair, or capability.
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: The use case, not just the proposed solution.
+    validations:
+      required: true
+  - type: input
+    id: formats
+    attributes:
+      label: Formats / conversion involved
+      description: e.g. "HEIC → JPEG", "WOFF2 → TTF"
+    validations:
+      required: false
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true
+        - label: This fits a browser-first / client-side conversion library.
+          required: false

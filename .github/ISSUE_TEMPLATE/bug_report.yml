@@ -1,0 +1,61 @@
+name: Bug report
+description: Report incorrect output, a crash, or a parsing/conversion failure.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! For **security vulnerabilities** (crafted input
+        causing DoS/OOM/etc.) please use [private reporting](../../security/advisories/new)
+        instead — see [SECURITY.md](../../blob/main/SECURITY.md).
+  - type: input
+    id: package
+    attributes:
+      label: Affected package
+      description: e.g. "@catlabtech/webcvt-container-mp4"
+      placeholder: '@catlabtech/webcvt-...'
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: '0.1.0'
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Browser
+        - Node.js
+        - Cloudflare Workers
+        - CLI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: |
+        A short code snippet or CLI command. Input formats and (if shareable) a
+        small sample file are extremely helpful.
+      render: typescript
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node/browser version, etc.
+    validations:
+      required: false

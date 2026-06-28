@@ -1,0 +1,43 @@
+name: Release (npm)
+
+# Publishes all public @catlabtech/webcvt-* packages to npm when a version tag
+# (e.g. v0.1.0) is pushed. Private packages (apps, examples, test-utils) are
+# skipped automatically by `pnpm -r publish`.
+#
+# Required repository secret (Settings → Secrets and variables → Actions):
+#   NPM_TOKEN — a granular npm token scoped to the @catlabtech scope with
+#               "Read and write" (publish) permission.
+#
+# NEVER paste a token into source, a prompt, or a commit — only into the
+# encrypted GitHub secret above.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, test & publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          # setup-node writes an .npmrc that reads NODE_AUTH_TOKEN — the token
+          # is never materialised into the repo.
+          registry-url: 'https://registry.npmjs.org'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+      # `pnpm -r publish` only publishes non-private packages whose version is
+      # not already on the registry; --no-git-checks is required in CI.
+      - run: pnpm -r publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
