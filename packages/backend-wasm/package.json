@@ -50,5 +50,24 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/backend-wasm"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/backend-wasm#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "ffmpeg",
+    "ffmpeg-wasm",
+    "wasm"
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-jsquash-avif",
-  "version": "0.2.0-rc.0",
+  "version": "0.1.0",
   "description": "AVIF decode/encode for webcvt — lazy-loads @jsquash/avif wasm, plugs into the image adapter pipeline",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -30,7 +30,9 @@
     "@jsquash/avif": "~1.3.0"
   },
   "peerDependenciesMeta": {
-    "@jsquash/avif": { "optional": true }
+    "@jsquash/avif": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@jsquash/avif": "^1.3.0",
@@ -41,5 +43,27 @@
     "vitest": "^2.1.0"
   },
   "license": "MIT",
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/image-jsquash-avif"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/image-jsquash-avif#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "avif",
+    "jsquash",
+    "image",
+    "wasm"
+  ]
 }

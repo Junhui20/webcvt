@@ -1,4 +1,7 @@
 /*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
   Cache-Control: public, max-age=3600
 
 /assets/*

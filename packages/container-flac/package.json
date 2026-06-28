@@ -24,8 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:*",
-    "@catlabtech/webcvt-codec-webcodecs": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:*"
   },
   "devDependencies": {
     "@catlabtech/webcvt-test-utils": "workspace:*",
@@ -37,5 +36,24 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/container-flac"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/container-flac#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "flac",
+    "audio",
+    "lossless"
+  ]
 }

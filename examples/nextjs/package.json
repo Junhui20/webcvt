@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@catlabtech/webcvt-subtitle": "workspace:*",
-    "next": "^14.2.18",
+    "next": "^15.5.16",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

@@ -36,5 +36,24 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/container-wav"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/container-wav#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "wav",
+    "riff",
+    "audio"
+  ]
 }

@@ -2,19 +2,24 @@
 
 > Browser-first, hardware-accelerated file conversion library. Convert anything in the browser, no upload required.
 
+[![CI](https://github.com/Junhui20/webcvt/actions/workflows/ci.yml/badge.svg)](https://github.com/Junhui20/webcvt/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@catlabtech/webcvt-core?label=npm)](https://www.npmjs.com/package/@catlabtech/webcvt-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen)
 ![Status](https://img.shields.io/badge/status-v0.1.0--prep-orange)
+
+![webcvt — convert files in your browser. No upload. Hardware-accelerated.](apps/playground/public/og-image.png)
 
 ## Status
 
-🚧 **Pre-alpha** — under active construction. Not ready for use.
+🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
 - **22 packages** shipped across Phases 1–5 (`@catlabtech/webcvt-core` + 4 codec/image, 9 container, 2 data, 1 CLI, 4 ancillary)
 - **3,970 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
-- Phase 5 (launch prep): `@catlabtech/webcvt-cli` + `@catlabtech/webcvt-backend-wasm` + `apps/playground` shipped; `apps/docs`, examples, v0.1.0 release still open
+- Phase 5 (launch prep): `@catlabtech/webcvt-cli`, `@catlabtech/webcvt-backend-wasm`, `apps/playground`, `apps/docs`, and the `examples/` are all shipped — **the v0.1.0 npm publish is the only remaining step**
 
 See [`plan.md`](./plan.md) for the full project plan,
 [`CHANGELOG.md`](./CHANGELOG.md) for release notes, and
@@ -30,6 +35,16 @@ fallback. Same code runs in Node.js and Cloudflare Workers.
 
 Target: match Transmute.sh's 200+ formats and 2,000+ conversion pairs, but
 as a tree-shakable browser library instead of a Docker server.
+
+### Browser requirements
+
+- Pure-JS/Canvas conversions (most images, subtitles, data-text, archives) work
+  in any modern browser with no special setup.
+- Hardware-accelerated audio/video paths use **WebCodecs** where available.
+- WASM backends that use threads / `SharedArrayBuffer` require the page to be
+  **cross-origin isolated** — serve it with `Cross-Origin-Opener-Policy: same-origin`
+  and `Cross-Origin-Embedder-Policy: require-corp` (see the playground's
+  [`_headers`](./apps/playground/public/_headers)).
 
 ## Competitive positioning
 
@@ -86,14 +101,31 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 ### Planned
 
 See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months. Next up:
-`apps/playground` (browser demo), `apps/docs` (VitePress), examples, v0.1.0
-npm release.
+the **v0.1.0 npm release**, then AVIF / JPEG XL / HEIC encode (Phase 6, v0.2+).
 
 ## Quickstart
 
+### Install
+
+Install only the packages you need — the browser bundle stays in the 5–500 KB
+range instead of ffmpeg.wasm's ~30 MB.
+
+```bash
+# Images in the browser:
+npm install @catlabtech/webcvt-core @catlabtech/webcvt-image-canvas
+# …or just MP3:
+npm install @catlabtech/webcvt-core @catlabtech/webcvt-container-mp3
+```
+
+> Pre-release: packages publish to npm with the v0.1.0 release. Until then, use
+> the workspace from a clone (see [Development](#development)) or the live demo.
+
+See the full [supported-formats matrix](./docs/supported-formats.md).
+
 ### Try it in the browser
 [`apps/playground`](./apps/playground) — drag-drop any supported file,
-pick a target format, download the result. Zero network requests.
+pick a target format, download the result. Zero network requests. Or use the
+hosted demo at **[webcvt.pages.dev](https://webcvt.pages.dev)**.
 
 ### Use it in Node.js
 

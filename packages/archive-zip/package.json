@@ -36,5 +36,25 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/archive-zip"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/archive-zip#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "zip",
+    "tar",
+    "gzip",
+    "archive"
+  ]
 }

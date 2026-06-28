@@ -492,7 +492,6 @@ function isBareKeyChar(c: string): boolean {
  */
 function parseScalarToken(s: ParserState): TomlValue {
   // Collect raw token (until whitespace, comma, }, ], newline, #, EOF)
-  const startPos = s.pos;
   const startLine = s.line;
   const startCol = s.col;
 
@@ -512,7 +511,6 @@ function parseScalarToken(s: ParserState): TomlValue {
       break;
     raw += advance(s);
   }
-  _ = startPos; // suppress unused warning
 
   // Trap #11: Date-time with space separator YYYY-MM-DD HH:MM:SS...
   // After collecting YYYY-MM-DD (10 chars), check if next is a space followed by a time part.
@@ -610,8 +608,8 @@ function parseIntegerBase(
   raw: string,
   base: 2 | 8 | 16,
   name: string,
-  line: number,
-  col: number,
+  _line: number,
+  _col: number,
 ): bigint {
   let sign = 1n;
   let rest = raw;
@@ -643,9 +641,6 @@ function parseIntegerBase(
       throw new TomlBadNumberError(`Invalid ${name} digit '${ch}'`, raw);
     }
   }
-
-  _ = line;
-  _ = col;
 
   let val = 0n;
   const bigBase = BigInt(base);
@@ -706,10 +701,7 @@ function checkInt64Range(val: bigint, raw: string): void {
   }
 }
 
-function parseFloat_(raw: string, line: number, col: number): number {
-  _ = line;
-  _ = col;
-
+function parseFloat_(raw: string, _line: number, _col: number): number {
   let rest = raw;
   let sign = '';
 
@@ -1399,9 +1391,6 @@ function parseDocument(s: ParserState): { [key: string]: TomlValue } {
 
   return root;
 }
-
-// Dummy variable to suppress "unused" lint errors for line/col params used only for error paths
-let _ = 0 as unknown;
 
 // ---------------------------------------------------------------------------
 // Public parse API

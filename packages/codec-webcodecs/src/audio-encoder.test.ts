@@ -6,8 +6,8 @@ import { CodecOperationError, WebCodecsNotSupportedError } from './errors.ts';
 // Mock AudioEncoder global
 // ---------------------------------------------------------------------------
 
-function makeAudioData(): AudioData {
-  return {} as AudioData;
+function makeAudioData(): AudioData & { close: ReturnType<typeof vi.fn> } {
+  return { close: vi.fn() } as unknown as AudioData & { close: ReturnType<typeof vi.fn> };
 }
 
 function makeMockAudioEncoder() {
@@ -79,6 +79,17 @@ describe('WebCodecsAudioEncoder', () => {
       expect(instance.encode).toHaveBeenCalledWith(data);
     });
 
+    it('takes ownership and closes the AudioData after encoding', () => {
+      const { AudioEncoderMock } = makeMockAudioEncoder();
+      vi.stubGlobal('AudioEncoder', AudioEncoderMock);
+
+      const enc = new WebCodecsAudioEncoder({ config: baseConfig }, vi.fn());
+      const data = makeAudioData();
+      enc.encode(data);
+
+      expect(data.close).toHaveBeenCalledOnce();
+    });
+
     it('throws after close', () => {
       const { AudioEncoderMock } = makeMockAudioEncoder();
       vi.stubGlobal('AudioEncoder', AudioEncoderMock);
@@ -86,7 +97,10 @@ describe('WebCodecsAudioEncoder', () => {
       const enc = new WebCodecsAudioEncoder({ config: baseConfig }, vi.fn());
       enc.close();
 
-      expect(() => enc.encode(makeAudioData())).toThrow(CodecOperationError);
+      const data = makeAudioData();
+      expect(() => enc.encode(data)).toThrow(CodecOperationError);
+      // Ownership transferred even on the closed path — data must not leak.
+      expect(data.close).toHaveBeenCalledOnce();
     });
   });
 

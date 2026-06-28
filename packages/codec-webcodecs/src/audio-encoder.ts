@@ -58,14 +58,22 @@ export class WebCodecsAudioEncoder {
   }
 
   /**
-   * Encodes a single AudioData object.
+   * Encodes a single AudioData object. The wrapper takes ownership of `data`
+   * and closes it after encoding regardless of whether encoding succeeds,
+   * matching WebCodecs ownership semantics — callers must not reuse it.
    *
    * @throws {CodecOperationError} if a previous encoding error was recorded.
    */
   encode(data: AudioData): void {
-    this.#assertOpen();
-    this.#throwIfError();
-    this.#encoder.encode(data);
+    // See WebCodecsVideoEncoder.encode: encode() clones the media resource
+    // synchronously, so the AudioData is always closed once handed off.
+    try {
+      this.#assertOpen();
+      this.#throwIfError();
+      this.#encoder.encode(data);
+    } finally {
+      data.close();
+    }
   }
 
   /**

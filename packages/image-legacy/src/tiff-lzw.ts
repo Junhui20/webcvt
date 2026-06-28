@@ -10,6 +10,13 @@
  *   - EOIcode (257) terminates the stream.
  *   - KwKwK case: code equals the next-to-be-allocated entry → emit prev + prev[0].
  *
+ * The dictionary is stored as parallel `prefix`/`suffix`/`entryLen` arrays with a
+ * reusable decode stack (the same technique as gif-lzw.ts), so each code expands
+ * in O(code-length) with no per-entry allocation or buffer copy. The previous
+ * implementation stored every dictionary entry as a fully-expanded byte string
+ * rebuilt with `concat`, which is quadratic in time and allocations on large
+ * LZW-compressed strips (TIFF Compression=5).
+ *
  * lzwEncode is not implemented in second pass (stub throws).
  *
  * Width transitions (post-6.0 correction):
@@ -76,30 +83,6 @@ class MsbBitReader {
 }
 
 // ---------------------------------------------------------------------------
-// Dictionary helpers
-// ---------------------------------------------------------------------------
-
-function makeInitialDict(): Uint8Array[] {
-  const dict = new Array<Uint8Array>(MAX_DICT_SIZE);
-  // Codes 0..255: single-byte literals
-  for (let i = 0; i < 256; i++) {
-    dict[i] = new Uint8Array([i]);
-  }
-  // Codes 256 (ClearCode) and 257 (EOICode): placeholders, never looked up as data
-  dict[CLEAR_CODE] = new Uint8Array(0);
-  dict[EOI_CODE] = new Uint8Array(0);
-  return dict;
-}
-
-/** Concatenate two Uint8Arrays efficiently (avoid spread for large arrays). */
-function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
-  const out = new Uint8Array(a.length + b.length);
-  out.set(a, 0);
-  out.set(b, a.length);
-  return out;
-}
-
-// ---------------------------------------------------------------------------
 // Public decoder
 // ---------------------------------------------------------------------------
 
@@ -119,14 +102,28 @@ export function lzwDecode(input: Uint8Array, expectedBytes?: number): Uint8Array
   );
 
   const reader = new MsbBitReader(input);
-  const chunks: Uint8Array[] = [];
-  let totalOut = 0;
 
-  // Build dictionary fresh; will be reset on ClearCode
-  let dict: Uint8Array[] = makeInitialDict();
+  // Dictionary as parallel arrays:
+  //   prefix[c]   = parent code (-1 for the 0..255 single-byte roots)
+  //   suffix[c]   = the appended (last) byte of entry c
+  //   entryLen[c] = decoded length of entry c (used for the pre-write cap check)
+  // Codes 256 (Clear) and 257 (EOI) are reserved sentinels, never data.
+  const prefix = new Int32Array(MAX_DICT_SIZE);
+  const suffix = new Uint8Array(MAX_DICT_SIZE);
+  const entryLen = new Int32Array(MAX_DICT_SIZE);
+  // Reusable stack for reversing a dictionary chain during expansion. The
+  // longest possible entry is bounded by the dictionary size.
+  const stack = new Uint8Array(MAX_DICT_SIZE + 1);
+
+  for (let i = 0; i < 256; i++) {
+    prefix[i] = -1;
+    suffix[i] = i;
+    entryLen[i] = 1;
+  }
+
   let nextCode = FIRST_DICT_CODE;
   let codeWidth = 9;
-  let prevEntry: Uint8Array | null = null;
+  let prevCode = -1; // analogous to "no previous entry yet"
   let seenClear = false;
 
   // M-3 (security): guard against ClearCode storm (repeated resets burn CPU/GC).
@@ -135,11 +132,20 @@ export function lzwDecode(input: Uint8Array, expectedBytes?: number): Uint8Array
   let clearCount = 0;
   const MAX_CLEAR_CODES = input.length;
 
-  const resetDict = (): void => {
-    dict = makeInitialDict();
-    nextCode = FIRST_DICT_CODE;
-    codeWidth = 9;
-    prevEntry = null;
+  // Growable output buffer: doubles on demand, hard-capped at maxOut. Avoids
+  // both the per-entry allocations of the old chunk list and pre-allocating the
+  // full (up to 256 MiB) cap up front.
+  let out = new Uint8Array(Math.min(maxOut, Math.max(64, input.length * 4)));
+  let off = 0;
+
+  const ensureCapacity = (extra: number): void => {
+    if (off + extra <= out.length) return;
+    let newLen = out.length === 0 ? 64 : out.length;
+    while (newLen < off + extra) newLen *= 2;
+    if (newLen > maxOut) newLen = maxOut;
+    const bigger = new Uint8Array(newLen);
+    bigger.set(out.subarray(0, off));
+    out = bigger;
   };
 
   for (;;) {
@@ -153,7 +159,9 @@ export function lzwDecode(input: Uint8Array, expectedBytes?: number): Uint8Array
       if (clearCount > MAX_CLEAR_CODES) {
         throw new TiffLzwDecodeError('excessive ClearCodes — possible decompression bomb');
       }
-      resetDict();
+      nextCode = FIRST_DICT_CODE;
+      codeWidth = 9;
+      prevCode = -1;
       seenClear = true;
       continue;
     }
@@ -162,44 +170,60 @@ export function lzwDecode(input: Uint8Array, expectedBytes?: number): Uint8Array
       throw new TiffLzwDecodeError('pixel data begins before ClearCode');
     }
 
-    // Determine the entry for this code
-    let entry: Uint8Array;
+    // Determine the entry length for this code (two valid cases + range error).
+    let entryLength: number;
+    let isKwKwK = false;
 
     if (code < nextCode) {
-      // Known code — look up in dict.
-      // dict[code] is always defined for code < nextCode (every entry is set before nextCode
-      // is incremented), so the undefined branch is structurally unreachable but kept for safety.
-      const dictEntry = dict[code];
-      /* v8 ignore next 3 */
-      if (dictEntry === undefined) {
-        throw new TiffLzwDecodeError(`code ${code} not in dictionary`);
-      }
-      entry = dictEntry;
+      entryLength = entryLen[code] ?? 0;
     } else if (code === nextCode) {
-      // KwKwK case: code equals next-to-be-allocated
-      if (prevEntry === null) {
+      // KwKwK case: code equals the not-yet-allocated entry → prev + prev[0].
+      if (prevCode === -1) {
         throw new TiffLzwDecodeError('KwKwK case encountered without previous entry');
       }
-      const firstByte = prevEntry[0] ?? 0;
-      entry = concat(prevEntry, new Uint8Array([firstByte]));
+      isKwKwK = true;
+      entryLength = (entryLen[prevCode] ?? 0) + 1;
     } else {
       throw new TiffLzwDecodeError(`code ${code} is out of range (next expected ${nextCode})`);
     }
 
     // Output — hostile-input expansion cap; reachable only via a crafted LZW bomb
     /* v8 ignore next 4 */
-    if (totalOut + entry.length > maxOut) {
+    if (off + entryLength > maxOut) {
       throw new TiffLzwDecodeError(
         `LZW expansion exceeds cap (${maxOut} bytes). Possible corrupt data or hostile input.`,
       );
     }
-    chunks.push(entry);
-    totalOut += entry.length;
 
-    // Add new dictionary entry (prev + entry[0]) when we have a previous entry
-    if (prevEntry !== null && nextCode < MAX_DICT_SIZE) {
-      const firstByte = entry[0] ?? 0;
-      dict[nextCode] = concat(prevEntry, new Uint8Array([firstByte]));
+    // Walk the prefix chain of the source code (the current code, or prevCode for
+    // KwKwK) into the stack, yielding bytes leaf-first. Well-formed chains strictly
+    // decrease, so the loop always terminates; the bound is purely defensive.
+    let top = 0;
+    let c = isKwKwK ? prevCode : code;
+    while (c >= FIRST_DICT_CODE) {
+      stack[top++] = suffix[c] ?? 0;
+      c = prefix[c] ?? -1;
+      /* v8 ignore next */
+      if (c < 0 || top > MAX_DICT_SIZE) break;
+    }
+    stack[top++] = c & 0xff; // terminal root byte
+    const firstByte = stack[top - 1] ?? 0; // root = first byte of the string
+
+    ensureCapacity(entryLength);
+    // Emit the chain in order (root → leaf) by reversing the stack...
+    for (let i = top - 1; i >= 0; i--) {
+      out[off++] = stack[i] ?? 0;
+    }
+    // ...and for KwKwK append the first byte of the previous string at the end.
+    if (isKwKwK) {
+      out[off++] = firstByte;
+    }
+
+    // Add the new dictionary entry (prev + firstByte of the current entry).
+    if (prevCode !== -1 && nextCode < MAX_DICT_SIZE) {
+      prefix[nextCode] = prevCode;
+      suffix[nextCode] = firstByte;
+      entryLen[nextCode] = (entryLen[prevCode] ?? 0) + 1;
       nextCode++;
 
       // Widen code after the threshold (Trap #10: boundary is 510, not 511)
@@ -209,17 +233,10 @@ export function lzwDecode(input: Uint8Array, expectedBytes?: number): Uint8Array
       // At 12-bit, stay at 12 until ClearCode (Trap #10)
     }
 
-    prevEntry = entry;
+    prevCode = code;
   }
 
-  // Assemble output
-  const out = new Uint8Array(totalOut);
-  let off = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, off);
-    off += chunk.length;
-  }
-  return out;
+  return off === out.length ? out : out.slice(0, off);
 }
 
 // ---------------------------------------------------------------------------

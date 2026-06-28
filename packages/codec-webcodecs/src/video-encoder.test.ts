@@ -6,8 +6,8 @@ import { WebCodecsVideoEncoder } from './video-encoder.ts';
 // Mock VideoEncoder global
 // ---------------------------------------------------------------------------
 
-function makeFrame(): VideoFrame {
-  return {} as VideoFrame;
+function makeFrame(): VideoFrame & { close: ReturnType<typeof vi.fn> } {
+  return { close: vi.fn() } as unknown as VideoFrame & { close: ReturnType<typeof vi.fn> };
 }
 
 function makeMockEncoder() {
@@ -86,6 +86,29 @@ describe('WebCodecsVideoEncoder', () => {
       expect(instance.encode).toHaveBeenCalledWith(frame, undefined);
     });
 
+    it('takes ownership and closes the frame after a successful encode', () => {
+      const { VideoEncoderMock } = makeMockEncoder();
+      vi.stubGlobal('VideoEncoder', VideoEncoderMock);
+
+      const enc = new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn());
+      const frame = makeFrame();
+      enc.encode(frame);
+
+      expect(frame.close).toHaveBeenCalledOnce();
+    });
+
+    it('still closes the frame when a prior encoder error is surfaced', () => {
+      const { VideoEncoderMock, instance } = makeMockEncoder();
+      vi.stubGlobal('VideoEncoder', VideoEncoderMock);
+
+      const enc = new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn());
+      instance._errorCb?.(new Error('GPU hang'));
+
+      const frame = makeFrame();
+      expect(() => enc.encode(frame)).toThrow(CodecOperationError);
+      expect(frame.close).toHaveBeenCalledOnce();
+    });
+
     it('passes encode options through', () => {
       const { VideoEncoderMock, instance } = makeMockEncoder();
       vi.stubGlobal('VideoEncoder', VideoEncoderMock);
@@ -103,7 +126,10 @@ describe('WebCodecsVideoEncoder', () => {
       const enc = new WebCodecsVideoEncoder({ config: baseConfig }, vi.fn());
       enc.close();
 
-      expect(() => enc.encode(makeFrame())).toThrow(CodecOperationError);
+      const frame = makeFrame();
+      expect(() => enc.encode(frame)).toThrow(CodecOperationError);
+      // Ownership transferred even on the closed path — frame must not leak.
+      expect(frame.close).toHaveBeenCalledOnce();
     });
   });
 

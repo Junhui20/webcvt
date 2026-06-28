@@ -66,9 +66,18 @@ export class WebCodecsVideoEncoder {
    * @throws {CodecOperationError} if a previous encoding error was recorded.
    */
   encode(frame: VideoFrame, options?: VideoEncoderEncodeOptions): void {
-    this.#assertOpen();
-    this.#throwIfError();
-    this.#encoder.encode(frame, options);
+    // The wrapper takes ownership of the frame: it is always closed once handed
+    // off, including on the error/closed paths, so callers can never leak the
+    // backing GPU surface. The underlying encode() clones the frame's media
+    // resource synchronously, so closing immediately afterwards is safe (and is
+    // the pattern the WebCodecs spec recommends).
+    try {
+      this.#assertOpen();
+      this.#throwIfError();
+      this.#encoder.encode(frame, options);
+    } finally {
+      frame.close();
+    }
   }
 
   /**
