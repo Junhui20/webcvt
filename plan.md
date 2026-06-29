@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: first-pass containers ✅; container second-passes ✅ — `mp4` (video + fragmented + multi-track + edit-lists + iTunes-metadata + `sidx`/`mfra` + DRM/CENC signalling), `webm`/`mkv` (AV1 + multi-track; mkv also subtitles + chapters + tags), `ts` (M2TS + multi-program); only `ts` HEVC/SI tables + lacing-10/11 + FFmpeg-interop tests still pending · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending) · Phase 7 (Wave C): in progress — `email` (EML) + `doc-ebook-epub` (EPUB) + `font` (sfnt↔WOFF) + `comic` (CBZ→PDF) shipped; Phase 8 (Wave D): in progress — `doc-pdf` (clean-room multi-page image→PDF + structural read) shipped; Phase 9 (optional server tier): in progress — `backend-native` (spawn ffmpeg/pandoc/libreoffice/ghostscript) shipped** · CI green · 4,958 tests passing · 33 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-30
+- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: first-pass containers ✅; container second-passes ✅ — `mp4` (video + fragmented + multi-track + edit-lists + iTunes-metadata + `sidx`/`mfra` + DRM/CENC signalling), `webm`/`mkv` (AV1 + multi-track; mkv also subtitles + chapters + tags), `ts` (M2TS + multi-program); only `ts` HEVC/SI tables + lacing-10/11 + FFmpeg-interop tests still pending · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending) · Phase 7 (Wave C): in progress — `email` (EML) + `doc-ebook-epub` (EPUB) + `font` (sfnt↔WOFF) + `comic` (CBZ→PDF) shipped; Phase 8 (Wave D): in progress — `doc-pdf` (clean-room multi-page image→PDF + structural read) shipped; Phase 9 (optional server tier): `backend-native` (spawn ffmpeg/pandoc/libreoffice/ghostscript) + `api-server` (Hono HTTP convert API) shipped — only third-party-wasm-dep specialty formats (mobi/sqlite/parquet/legacy-image-wasm) + deploy templates remain** · CI green · 4,986 tests passing · 34 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-30
 
 ---
 
@@ -586,20 +586,20 @@ A 3rd-party dep gets in **only if**:
 
 ### Phase 8 — Documents + specialty (Months 7–8) · Wave D — **in progress**
 - [x] `@catlabtech/webcvt-doc-pdf` — clean-room PDF (PDF 1.7 / ISO 32000-1), **self-written, no pdfjs/pdf-lib**. `imagesToPdf(images)` writes a multi-page PDF (one page/image; JPEG→DCTDecode, opaque gray/RGB PNG→Flate+PNG-predictor — synchronous; reused image-pdf's JPEG header parser) — this is what cbz→PDF composes. `parsePdfInfo(bytes)` is a bounded read-only reader → version + page count (`/Root→/Pages→/Count` with fallbacks) + `/Info` metadata; **text/content-stream extraction explicitly out of scope** (needs font parsing). `DocPdfBackend` (pdf→json, no auto-register). 74 tests, 96.82% stmts / 85.26% branch. Caps: 256 MiB input, ≤10k pages, 25 MP/page, bounded reader scans. Out of scope: PDF text extraction, palette/alpha/interlaced PNG sources (typed error), page rendering.
-- [ ] `@catlabtech/webcvt-doc-ebook-mobi` — MOBI/AZW3/FB2/PDB/LRF
-- [ ] `@catlabtech/webcvt-image-legacy-wasm` — PSD/BLP/DDS/EPS/JP2
-- [ ] `@catlabtech/webcvt-data-binary` — Parquet/ORC/Feather via apache-arrow
-- [ ] `@catlabtech/webcvt-data-sqlite` — sql.js
+- [ ] `@catlabtech/webcvt-doc-ebook-mobi` — MOBI/AZW3/FB2/PDB/LRF — **deferred** (Amazon-proprietary; needs a third-party wasm/JS decoder)
+- [ ] `@catlabtech/webcvt-image-legacy-wasm` — PSD/BLP/DDS/EPS/JP2 — **deferred** (each needs a reverse-engineered wasm decoder)
+- [ ] `@catlabtech/webcvt-data-binary` — Parquet/ORC/Feather — **deferred** (needs `apache-arrow`, ~500 KB)
+- [ ] `@catlabtech/webcvt-data-sqlite` — **deferred** (needs `sql.js`, ~1.5 MB — SQLite is an engine, not a parseable format)
+
+> **Phase 8/9 remaining = the irreducible-third-party-dep tier.** Everything self-writable or composable from in-house primitives is done. The items left all require a heavy external wasm/native dependency (MOBI decoder, libpsd/JP2 wasm, apache-arrow, sql.js, pyodide) or are deployment/hardening artifacts — they ship per the "only if there's demand" rule below, each behind a lazy-loaded optional dep.
 
 ### Phase 9 — API Server + Tier 3 (Months 9+) · Wave E, Transmute parity (optional) — **in progress**
-- [ ] `@catlabtech/webcvt-api-server` (Hono) — same API over HTTP
+- [x] `@catlabtech/webcvt-api-server` — HTTP convert API on **Hono** (runs on Node/Bun/Deno/Cloudflare Workers). `createApiServer({ registry?, maxInputBytes?, basePath? })` → a Hono app: `GET /health`, `GET /formats`, `POST /convert` (multipart `file`+`to` OR raw body + `?to=`). Streamed size-cap enforcement (413), CORS, central error→status mapping (400/413/415/500) with `{ error: { code, message } }` bodies; no backends auto-registered (caller wires them). `hono@4` is the only new external dep (zero transitive deps). 28 tests via Hono's in-process `app.request()`, 97.51% stmts / 87.5% branch.
 - [x] `@catlabtech/webcvt-backend-native` (Node-only) — server-side escape hatch that **spawns native CLI tools** (ffmpeg / pandoc / libreoffice / ghostscript) for formats the browser can't do. Declarative ext→ext routing table (pandoc md/rst/html/docx/latex; libreoffice docx/odt/xlsx/pptx→pdf; ghostscript pdf→pdf/A; ffmpeg avi/flv→mp4); `findTool` PATH probe (+ `WEBCVT_*` overrides); `NativeBackend.canHandle` true only when the tool is installed. **Security:** `spawn(bin, argvArray)` only — never `shell:true`, never a command string; `crypto.randomUUID()` temp paths sanitised to `[a-z0-9]`; `finally` cleanup on every path; SIGKILL timeout. **This consolidates the separate `server-pandoc`/`server-libreoffice`/`server-ghostscript` plan entries into one backend.** 50 tests (mocked `spawn` — no real binaries), 100% lines / 95% branch.
 - [x] ~~`@catlabtech/webcvt-server-pandoc` / `server-libreoffice` / `server-ghostscript`~~ — folded into `backend-native` above (one spawn-based backend rather than four near-identical packages).
-- [ ] Cloudflare Worker deployment template
-- [ ] Docker image for self-hosting
-- [ ] `@catlabtech/webcvt-server-pandoc`, `server-libreoffice`, `server-ghostscript`
-- [ ] Stats formats (DTA/SAV/XPT) via pyodide-pandas (optional plugin)
-- [ ] OpenAPI spec + auth + rate limiting
+- [ ] Cloudflare Worker / Docker deployment templates (deployment artifacts — wire `api-server` into a deploy target; not library code)
+- [ ] OpenAPI spec + auth + rate limiting (api-server hardening — additive on top of the shipped Hono app)
+- [ ] Stats formats (DTA/SAV/XPT) via pyodide-pandas — **deferred** (needs the ~10 MB pyodide runtime)
 
 > **Browser-first reminder:** Phases 1–7 (through Wave C) are the product. Phase 8–9 are downstream value-add for server operators — they ship *if* there's demand, not because we need them.
 
