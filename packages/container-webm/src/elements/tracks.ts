@@ -67,13 +67,17 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
-export type WebmCodecId = 'V_VP8' | 'V_VP9' | 'A_VORBIS' | 'A_OPUS';
+export type WebmCodecId = 'V_VP8' | 'V_VP9' | 'V_AV01' | 'A_VORBIS' | 'A_OPUS';
 
 export interface WebmVideoTrack {
   trackNumber: number;
   trackUid: bigint;
   trackType: 1;
-  codecId: 'V_VP8' | 'V_VP9';
+  codecId: 'V_VP8' | 'V_VP9' | 'V_AV01';
+  /**
+   * Codec init bytes. Empty/absent for VP8/VP9; for V_AV01 this carries the
+   * AV1CodecConfigurationRecord (the WebCodecs `description`).
+   */
   codecPrivate?: Uint8Array;
   pixelWidth: number;
   pixelHeight: number;
@@ -206,6 +210,23 @@ function decodeTrackEntry(
     );
   }
 
+  // V_AV01 conversely REQUIRES a non-empty AV1CodecConfigurationRecord in
+  // CodecPrivate — the 4-byte-or-longer record used as the WebCodecs description.
+  // Byte 0 = marker(1)=1 | version(7); reject a missing/short record or a clear
+  // marker bit so a malformed AV1 track surfaces as a typed error, not silent corruption.
+  if (codecId === 'V_AV01') {
+    if (codecPrivate === undefined || codecPrivate.length < 4) {
+      throw new WebmCorruptStreamError(
+        `V_AV01 requires an AV1CodecConfigurationRecord in CodecPrivate (>= 4 bytes); got ${codecPrivate?.length ?? 0}.`,
+      );
+    }
+    if (((codecPrivate[0] ?? 0) & 0x80) === 0) {
+      throw new WebmCorruptStreamError(
+        'V_AV01 CodecPrivate has an invalid AV1CodecConfigurationRecord marker bit.',
+      );
+    }
+  }
+
   // Optional scalar fields.
   const defaultDurationElem = findChild(children, ID_DEFAULT_DURATION);
   const defaultDuration = defaultDurationElem
@@ -236,7 +257,7 @@ function decodeTrackEntry(
 
   if (trackType === 1) {
     // Video track.
-    if (codecId !== 'V_VP8' && codecId !== 'V_VP9') {
+    if (codecId !== 'V_VP8' && codecId !== 'V_VP9' && codecId !== 'V_AV01') {
       throw new WebmUnsupportedCodecError(codecId);
     }
     const videoElem = findChild(children, ID_VIDEO);

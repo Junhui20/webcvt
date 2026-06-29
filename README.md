@@ -15,7 +15,7 @@
 🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
 - **27 packages** shipped across Phases 1–6 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 CLI, 3 ancillary)
-- **4,473 tests** passing; CI green
+- **4,477 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML

@@ -373,3 +373,59 @@ describe('encodeTracks', () => {
     expect(bytes.length).toBeGreaterThan(20);
   });
 });
+
+// ---------------------------------------------------------------------------
+// AV1 (V_AV01) video tracks — Phase 3.5
+// ---------------------------------------------------------------------------
+
+/** Build a V_AV01 video TrackEntry with the given CodecPrivate (av1C) payload. */
+function buildAv1TrackEntry(num: number, uid: number, av1c?: Uint8Array): Uint8Array {
+  const trackNum = makeUint32Elem(0xd7, num);
+  const trackUid = makeUint32Elem(0x73c5, uid);
+  const trackType = makeUint32Elem(0x83, 1);
+  const codec = makeStringElem(0x86, 'V_AV01');
+  const videoElem = makeMasterElem(
+    0xe0,
+    concatU8([makeUint32Elem(0xb0, 1920), makeUint32Elem(0xba, 1080)]),
+  );
+  const parts = [trackNum, trackUid, trackType, codec];
+  if (av1c) parts.push(makeElemRaw(new Uint8Array([0x63, 0xa2]), av1c));
+  parts.push(videoElem);
+  return makeMasterElem(0xae, concatU8(parts));
+}
+
+// Minimal valid AV1CodecConfigurationRecord: byte 0 = marker(1)=1 | version(7)=1.
+const AV1C = new Uint8Array([0x81, 0x00, 0x00, 0x00]);
+
+describe('decodeTracks — AV1 (V_AV01)', () => {
+  it('decodes a V_AV01 video track and preserves the av1C CodecPrivate', () => {
+    const { bytes, children } = buildTracksElement([buildAv1TrackEntry(1, 1, AV1C)]);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(1);
+    expect(tracks[0]?.codecId).toBe('V_AV01');
+    expect(tracks[0]?.trackType).toBe(1);
+    const t = tracks[0];
+    if (t?.trackType === 1) {
+      expect(Array.from(t.codecPrivate ?? [])).toEqual(Array.from(AV1C));
+    }
+  });
+
+  it('throws WebmCorruptStreamError when V_AV01 has no CodecPrivate', () => {
+    const { bytes, children } = buildTracksElement([buildAv1TrackEntry(1, 1)]);
+    expect(() => decodeTracks(bytes, children)).toThrow(WebmCorruptStreamError);
+  });
+
+  it('throws WebmCorruptStreamError when the av1C record is too short (< 4 bytes)', () => {
+    const { bytes, children } = buildTracksElement([
+      buildAv1TrackEntry(1, 1, new Uint8Array([0x81, 0x00])),
+    ]);
+    expect(() => decodeTracks(bytes, children)).toThrow(WebmCorruptStreamError);
+  });
+
+  it('throws WebmCorruptStreamError when the av1C marker bit is clear', () => {
+    const { bytes, children } = buildTracksElement([
+      buildAv1TrackEntry(1, 1, new Uint8Array([0x01, 0x00, 0x00, 0x00])),
+    ]);
+    expect(() => decodeTracks(bytes, children)).toThrow(WebmCorruptStreamError);
+  });
+});

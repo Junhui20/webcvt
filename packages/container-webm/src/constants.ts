@@ -123,7 +123,7 @@ export const ID_CUE_DURATION = 0xb2;
 // Codec ID allowlist (exact string match, case-sensitive)
 // ---------------------------------------------------------------------------
 
-export const ALLOWED_CODEC_IDS = new Set(['V_VP8', 'V_VP9', 'A_VORBIS', 'A_OPUS']);
+export const ALLOWED_CODEC_IDS = new Set(['V_VP8', 'V_VP9', 'V_AV01', 'A_VORBIS', 'A_OPUS']);
 
 // ---------------------------------------------------------------------------
 // MIME types handled by this backend

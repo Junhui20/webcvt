@@ -57,12 +57,12 @@ export class WebmMissingElementError extends WebcvtError {
   }
 }
 
-/** Thrown when CodecID is not in the allowlist {V_VP8, V_VP9, A_VORBIS, A_OPUS}. */
+/** Thrown when CodecID is not in the allowlist {V_VP8, V_VP9, V_AV01, A_VORBIS, A_OPUS}. */
 export class WebmUnsupportedCodecError extends WebcvtError {
   constructor(codecId: string) {
     super(
       'WEBM_UNSUPPORTED_CODEC',
-      `Codec "${codecId}" is not supported. Allowed codecs: V_VP8, V_VP9, A_VORBIS, A_OPUS. AV1, AAC, subtitle tracks, and other codecs are deferred.`,
+      `Codec "${codecId}" is not supported. Allowed codecs: V_VP8, V_VP9, V_AV01, A_VORBIS, A_OPUS. AAC, subtitle tracks, and other codecs are deferred.`,
     );
     this.name = 'WebmUnsupportedCodecError';
   }
