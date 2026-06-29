@@ -155,6 +155,13 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'document',
     description: 'Portable Document Format',
   },
+  // Email (email package — RFC 5322 / MIME message parsing)
+  {
+    ext: 'eml',
+    mime: 'message/rfc822',
+    category: 'email',
+    description: 'Email Message (RFC 5322 / MIME)',
+  },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',

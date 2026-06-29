@@ -86,6 +86,12 @@ in all three; WebCodecs-backed paths require a runtime that provides WebCodecs.
 |---------|---------|-------|
 | `data-text` | JSON, JSONL, CSV, TSV, INI, ENV, TOML, FWF, XML, YAML | Security gates: billion-laughs + XXE (XML/YAML), prototype-pollution (INI/ENV/YAML), depth bombs |
 
+### Email
+
+| Package | Formats | Notes |
+|---------|---------|-------|
+| `email` | EML (RFC 5322 + MIME) → text / JSON | Self-written, zero deps; multipart, base64/QP, RFC 2047 encoded-words; depth/size security caps |
+
 ### Archives
 
 | Package | Formats | Notes |

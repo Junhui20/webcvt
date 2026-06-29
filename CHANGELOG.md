@@ -6,6 +6,10 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ### Added
 
+- **`@catlabtech/webcvt-email`** — self-written EML (RFC 5322 + MIME) parser with zero runtime dependencies: header folding/unfolding, RFC 2047 encoded-words, multipart (depth-capped), base64 / quoted-printable transfer encodings, address-list parsing, and HTML→text. `EmailBackend` converts `eml` → `txt` / `json` (opt-in registration). Security caps (64 MiB input, ≤1000 headers, MIME depth ≤20, ≤1000 parts) and prototype-pollution-safe header maps. `eml` (`message/rfc822`) added to the core format registry. **(Phase 7 / Wave C)**
+- **`@catlabtech/webcvt-container-mp4`** — typed `sidx` (Segment Index) and `mfra`/`tfra`/`mfro` (Movie Fragment Random Access) parsing, surfaced on `Mp4File.sidx[]` / `Mp4File.mfra`.
+- **`@catlabtech/webcvt-container-ts`** — M2TS (192-byte BDAV/AVCHD) support: the 4-byte TP_extra_header prefixes are stripped to a standard 188-byte stream; `.m2ts`/`.mts` recognised by `detectFormat`.
+- **`@catlabtech/webcvt-container-webm`** / **`@catlabtech/webcvt-container-mkv`** — AV1 (`V_AV01`) video tracks; mkv also derives the `av01.…` WebCodecs codec string from the av1C config record.
 - **`@catlabtech/webcvt-image-jsquash-jxl`** — JPEG XL (JXL) decode/encode backend via `@jsquash/jxl` (libjxl WASM): lazy wasm loading, typed errors, security caps (256 MiB / 25 MP), opt-in registration. Wired into the playground (PNG/JPEG/WebP ↔ JXL) and registered in core's format table. Royalty-free modern codec.
 - **`@catlabtech/webcvt-image-jsquash-mozjpeg`** — high-quality JPEG decode/encode backend via `@jsquash/jpeg` (MozJPEG WASM): smaller JPEGs (trellis quantisation, progressive). Same lazy-load / typed-error / security-cap design as the other jsquash backends. Overlaps `image-canvas` for `image/jpeg` (register one).
 - **`@catlabtech/webcvt-image-jsquash-oxipng`** — lossless PNG optimisation / encoding backend via `@jsquash/oxipng` (OxiPNG WASM): re-compresses existing PNGs or encodes pixels to a smaller PNG than canvas. Overlaps `image-canvas` for `image/png` (register one).

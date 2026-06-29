@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: first-pass containers ✅; `container-mp4` second-pass ✅ (video + fragmented + multi-track + edit-lists + iTunes-metadata + `sidx`/`mfra` typed-parse; only DRM still out); `webm`/`mkv` second-passes (AV1 ✅ both; multi-track/subtitles/chapters still out) + `ts` second-pass (M2TS ✅; multi-program/HEVC/SI still out) + FFmpeg-interop tests still pending · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending)** · CI green · 4,485 tests passing · 27 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-29
+- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: first-pass containers ✅; `container-mp4` second-pass ✅ (video + fragmented + multi-track + edit-lists + iTunes-metadata + `sidx`/`mfra` typed-parse; only DRM still out); `webm`/`mkv` second-passes (AV1 ✅ both; multi-track/subtitles/chapters still out) + `ts` second-pass (M2TS ✅; multi-program/HEVC/SI still out) + FFmpeg-interop tests still pending · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending) · Phase 7 (Wave C): in progress — `@catlabtech/webcvt-email` (EML) shipped** · CI green · 4,579 tests passing · 28 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-29
 
 ---
 
@@ -578,10 +578,10 @@ A 3rd-party dep gets in **only if**:
 - [x] `convertBatch()` in core + `apps/playground` multi-file batch UI with "download all as ZIP"
 - [x] CI/CD: GitHub Actions (CI + Cloudflare Pages deploy + npm release on tag) + community-health files
 
-### Phase 7 — Font + EPUB + EML + Comic archives (Weeks 23–25) · Wave C
-- [ ] `@catlabtech/webcvt-font` — TTF/OTF/WOFF/WOFF2 (using `DecompressionStream` for Brotli)
+### Phase 7 — Font + EPUB + EML + Comic archives (Weeks 23–25) · Wave C — **in progress**
+- [ ] `@catlabtech/webcvt-font` — TTF/OTF/WOFF (WOFF2 needs Brotli, which `DecompressionStream` does not provide → wasm dep or deferred)
 - [ ] `@catlabtech/webcvt-doc-ebook-epub` — self-written EPUB (ZIP + XHTML)
-- [ ] `@catlabtech/webcvt-email` — EML parser (RFC 5322)
+- [x] `@catlabtech/webcvt-email` — EML parser (RFC 5322 + MIME RFC 2045/2046 + encoded-words RFC 2047). Clean-room, zero runtime deps; folding/unfolding, multipart (depth-capped), base64/quoted-printable, encoded-word headers, address-list parsing, HTML→text; `EmailBackend` (eml→txt/json, no auto-register). 94 tests, 97.24% stmts / 88.75% branch. Security caps: 64 MiB input, ≤1000 headers, MIME depth ≤20, ≤1000 parts; `Object.create(null)` header maps; ReDoS-hedged scanners. `eml` (message/rfc822) added to core formats. Out of scope: RFC 2231 param continuations, recursive message/rfc822, group-address labels.
 - [ ] `@catlabtech/webcvt-archive-7z`, `@catlabtech/webcvt-archive-rar` (wasm, lazy)
 
 ### Phase 8 — Documents + specialty (Months 7–8) · Wave D
