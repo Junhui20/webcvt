@@ -14,8 +14,8 @@
 
 🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
-- **30 packages** shipped across Phases 1–7 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 CLI, 3 ancillary)
-- **4,796 tests** passing; CI green
+- **31 packages** shipped across Phases 1–8 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 pdf, 1 CLI, 3 ancillary)
+- **4,870 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
@@ -105,6 +105,7 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 - `@catlabtech/webcvt-email` — EML (RFC 5322 + MIME) parser → text / JSON (self-written, zero deps; multipart, base64/QP, RFC 2047 encoded-words)
 - `@catlabtech/webcvt-doc-ebook-epub` — read-only EPUB (OCF + OPF) → text / HTML / JSON; composes `archive-zip` + `data-text` (no new parsing surface)
 - `@catlabtech/webcvt-font` — sfnt (TTF/OTF) ↔ WOFF 1.0 container repackaging (self-written, zero deps; recomputes checksums; WOFF2 deferred)
+- `@catlabtech/webcvt-doc-pdf` — clean-room multi-page image→PDF writer (`imagesToPdf`) + structural PDF read (page count + metadata); self-written, no pdfjs/pdf-lib
 
 ### CLI
 
