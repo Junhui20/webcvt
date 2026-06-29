@@ -14,8 +14,8 @@
 
 🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
-- **32 packages** shipped across Phases 1–8 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 pdf, 1 comic, 1 CLI, 3 ancillary)
-- **4,908 tests** passing; CI green
+- **33 packages** shipped across Phases 1–9 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 pdf, 1 comic, 1 CLI, 4 ancillary)
+- **4,958 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
@@ -67,6 +67,7 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 - `@catlabtech/webcvt-codec-webcodecs` — hardware-accelerated encode/decode adapter
 - `@catlabtech/webcvt-test-utils` — shared test fixtures + byte helpers
 - `@catlabtech/webcvt-backend-wasm` — ffmpeg.wasm fallback (lazy-loaded; ~203 MIME pairs)
+- `@catlabtech/webcvt-backend-native` — **Node-only** server escape hatch: spawns ffmpeg/pandoc/libreoffice/ghostscript when installed (no shell; safe argv)
 
 ### Audio + video containers
 

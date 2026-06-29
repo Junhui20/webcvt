@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: first-pass containers ✅; container second-passes ✅ — `mp4` (video + fragmented + multi-track + edit-lists + iTunes-metadata + `sidx`/`mfra` + DRM/CENC signalling), `webm`/`mkv` (AV1 + multi-track; mkv also subtitles + chapters + tags), `ts` (M2TS + multi-program); only `ts` HEVC/SI tables + lacing-10/11 + FFmpeg-interop tests still pending · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending) · Phase 7 (Wave C): in progress — `email` (EML) + `doc-ebook-epub` (EPUB) + `font` (sfnt↔WOFF) + `comic` (CBZ→PDF) shipped; Phase 8 (Wave D): in progress — `doc-pdf` (clean-room multi-page image→PDF + structural read) shipped** · CI green · 4,908 tests passing · 32 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-30
+- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: first-pass containers ✅; container second-passes ✅ — `mp4` (video + fragmented + multi-track + edit-lists + iTunes-metadata + `sidx`/`mfra` + DRM/CENC signalling), `webm`/`mkv` (AV1 + multi-track; mkv also subtitles + chapters + tags), `ts` (M2TS + multi-program); only `ts` HEVC/SI tables + lacing-10/11 + FFmpeg-interop tests still pending · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending) · Phase 7 (Wave C): in progress — `email` (EML) + `doc-ebook-epub` (EPUB) + `font` (sfnt↔WOFF) + `comic` (CBZ→PDF) shipped; Phase 8 (Wave D): in progress — `doc-pdf` (clean-room multi-page image→PDF + structural read) shipped; Phase 9 (optional server tier): in progress — `backend-native` (spawn ffmpeg/pandoc/libreoffice/ghostscript) shipped** · CI green · 4,958 tests passing · 33 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-30
 
 ---
 
@@ -591,9 +591,10 @@ A 3rd-party dep gets in **only if**:
 - [ ] `@catlabtech/webcvt-data-binary` — Parquet/ORC/Feather via apache-arrow
 - [ ] `@catlabtech/webcvt-data-sqlite` — sql.js
 
-### Phase 9 — API Server + Tier 3 (Months 9+) · Wave E, Transmute parity (optional)
+### Phase 9 — API Server + Tier 3 (Months 9+) · Wave E, Transmute parity (optional) — **in progress**
 - [ ] `@catlabtech/webcvt-api-server` (Hono) — same API over HTTP
-- [ ] `@catlabtech/webcvt-backend-native` (Node: spawn ffmpeg/pandoc)
+- [x] `@catlabtech/webcvt-backend-native` (Node-only) — server-side escape hatch that **spawns native CLI tools** (ffmpeg / pandoc / libreoffice / ghostscript) for formats the browser can't do. Declarative ext→ext routing table (pandoc md/rst/html/docx/latex; libreoffice docx/odt/xlsx/pptx→pdf; ghostscript pdf→pdf/A; ffmpeg avi/flv→mp4); `findTool` PATH probe (+ `WEBCVT_*` overrides); `NativeBackend.canHandle` true only when the tool is installed. **Security:** `spawn(bin, argvArray)` only — never `shell:true`, never a command string; `crypto.randomUUID()` temp paths sanitised to `[a-z0-9]`; `finally` cleanup on every path; SIGKILL timeout. **This consolidates the separate `server-pandoc`/`server-libreoffice`/`server-ghostscript` plan entries into one backend.** 50 tests (mocked `spawn` — no real binaries), 100% lines / 95% branch.
+- [x] ~~`@catlabtech/webcvt-server-pandoc` / `server-libreoffice` / `server-ghostscript`~~ — folded into `backend-native` above (one spawn-based backend rather than four near-identical packages).
 - [ ] Cloudflare Worker deployment template
 - [ ] Docker image for self-hosting
 - [ ] `@catlabtech/webcvt-server-pandoc`, `server-libreoffice`, `server-ghostscript`

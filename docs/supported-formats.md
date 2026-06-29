@@ -73,6 +73,7 @@ in all three; WebCodecs-backed paths require a runtime that provides WebCodecs.
 | `ebml` | — | Shared EBML primitives (RFC 8794) used by MKV/WebM |
 | `codec-webcodecs` | — | Hardware-accelerated encode/decode adapter |
 | `backend-wasm` | ~203 MIME pairs | ffmpeg.wasm fallback, lazy-loaded only when no native path exists |
+| `backend-native` (Node-only) | Office (docx/odt/xlsx/pptx→PDF), markup (md/rst/html/docx/latex via pandoc), PDF/A (ghostscript), legacy AV (ffmpeg) | Server escape hatch — spawns the native tool when installed; safe argv (no shell) |
 
 ### Subtitles
 
