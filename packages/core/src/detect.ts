@@ -24,6 +24,10 @@ import type { FormatDescriptor } from './types.ts';
  * - bzip2: "BZh" (0x42 0x5A 0x68) at offset 0
  * - xz: 0xFD 0x37 0x7A 0x58 0x5A 0x00 at offset 0 (XZ file format spec)
  * - TAR (ustar): "ustar\0" at offset 257 (POSIX 1003.1); requires reading 263+ bytes
+ * - WOFF: "wOFF" at offset 0 (WOFF 1.0 W3C Recommendation)
+ * - OTF (CFF sfnt): "OTTO" at offset 0 (OpenType / ISO 14496-22)
+ * - TTF (sfnt): version 0x00010000 OR "true" at offset 0. 0x00010000 differs from
+ *   ICO ("00 00 01 00") at byte 1, so the two never collide.
  */
 interface Signature {
   readonly ext: string;
@@ -53,6 +57,14 @@ const SIGNATURES: readonly Signature[] = [
   { ext: 'tar', offset: 257, bytes: [0x75, 0x73, 0x74, 0x61, 0x72, 0x00] }, // "ustar\0"
   // QOI: 4-byte magic "qoif" at offset 0 (image/qoi)
   { ext: 'qoi', offset: 0, bytes: [0x71, 0x6f, 0x69, 0x66] },
+  // WOFF 1.0: "wOFF" at offset 0.
+  { ext: 'woff', offset: 0, bytes: [0x77, 0x4f, 0x46, 0x46] },
+  // OpenType/CFF sfnt: "OTTO" at offset 0.
+  { ext: 'otf', offset: 0, bytes: [0x4f, 0x54, 0x54, 0x4f] },
+  // TrueType sfnt: version 0x00010000 at offset 0 (does NOT collide with ICO "00 00 01 00").
+  { ext: 'ttf', offset: 0, bytes: [0x00, 0x01, 0x00, 0x00] },
+  // Apple legacy TrueType sfnt: "true" at offset 0.
+  { ext: 'ttf', offset: 0, bytes: [0x74, 0x72, 0x75, 0x65] },
 ];
 
 // For MPEG-TS detection we need 189 bytes (offset 0 + offset 188).

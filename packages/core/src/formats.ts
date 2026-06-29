@@ -169,6 +169,10 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'email',
     description: 'Email Message (RFC 5322 / MIME)',
   },
+  // Font (font package — sfnt (TTF/OTF) ↔ WOFF 1.0 repackaging)
+  { ext: 'ttf', mime: 'font/ttf', category: 'font', description: 'TrueType Font (sfnt)' },
+  { ext: 'otf', mime: 'font/otf', category: 'font', description: 'OpenType Font (sfnt/CFF)' },
+  { ext: 'woff', mime: 'font/woff', category: 'font', description: 'Web Open Font Format 1.0' },
   // Archive (Phase 4: archive-zip package)
   {
     ext: 'zip',
