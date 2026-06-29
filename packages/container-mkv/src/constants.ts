@@ -151,6 +151,7 @@ export const ALLOWED_VIDEO_CODEC_IDS = new Set([
   'V_MPEGH/ISO/HEVC',
   'V_VP8',
   'V_VP9',
+  'V_AV01',
 ]);
 
 /** Audio codecs supported in first pass. */

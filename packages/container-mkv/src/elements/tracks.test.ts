@@ -32,6 +32,7 @@ import {
 import {
   MkvCorruptStreamError,
   MkvEncryptionNotSupportedError,
+  MkvInvalidCodecPrivateError,
   MkvMissingElementError,
   MkvMultiTrackNotSupportedError,
   MkvUnsupportedCodecError,
@@ -454,5 +455,39 @@ describe('encodeTracks', () => {
     expect(decoded[0]?.trackNumber).toBe(1);
     expect(decoded[0]?.codecId).toBe('V_VP9');
     expect(decoded[0]?.webcodecsCodecString).toBe('vp09.00.10.08');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// decodeTracks — AV1 (V_AV01) — Phase 3.5
+// ---------------------------------------------------------------------------
+
+describe('decodeTracks — AV1 (V_AV01)', () => {
+  // Minimal av1C: marker+version 0x81; profile 0, level 4; main tier, 8-bit.
+  const av1c = new Uint8Array([0x81, 0x04, 0x00, 0x00]);
+
+  it('decodes a V_AV01 video track and derives the av01 codec string', () => {
+    const entry = buildTrackEntry(1, 1n, 1, 'V_AV01', av1c, [buildVideoSubElem(1920, 1080)]);
+    const { bytes, children } = buildTracksElement([entry]);
+    const tracks = decodeTracks(bytes, children);
+
+    const video = tracks.find((t) => t.trackType === 1) as MkvVideoTrack | undefined;
+    expect(video?.codecId).toBe('V_AV01');
+    expect(video?.webcodecsCodecString).toBe('av01.0.04M.08');
+    expect(video?.pixelWidth).toBe(1920);
+    expect(Array.from(video?.codecPrivate ?? [])).toEqual(Array.from(av1c));
+  });
+
+  it('throws MkvMissingElementError when V_AV01 has no CodecPrivate', () => {
+    const entry = buildTrackEntry(1, 1n, 1, 'V_AV01', null, [buildVideoSubElem(1920, 1080)]);
+    const { bytes, children } = buildTracksElement([entry]);
+    expect(() => decodeTracks(bytes, children)).toThrow(MkvMissingElementError);
+  });
+
+  it('throws MkvInvalidCodecPrivateError when the av1C marker bit is clear', () => {
+    const bad = new Uint8Array([0x01, 0x04, 0x00, 0x00]);
+    const entry = buildTrackEntry(1, 1n, 1, 'V_AV01', bad, [buildVideoSubElem(1920, 1080)]);
+    const { bytes, children } = buildTracksElement([entry]);
+    expect(() => decodeTracks(bytes, children)).toThrow(MkvInvalidCodecPrivateError);
   });
 });

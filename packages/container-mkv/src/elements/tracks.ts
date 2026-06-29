@@ -23,6 +23,7 @@ import {
 } from '@catlabtech/webcvt-ebml';
 import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import { parseAacAsc } from '../codec-meta/aac-asc.ts';
+import { parseAv1CodecString } from '../codec-meta/av1c.ts';
 import { parseAvcDecoderConfig } from '../codec-meta/avc.ts';
 import { normaliseFlacCodecPrivate } from '../codec-meta/flac-streaminfo.ts';
 import { parseHevcDecoderConfig } from '../codec-meta/hevc.ts';
@@ -76,7 +77,7 @@ import {
 // Types
 // ---------------------------------------------------------------------------
 
-export type MkvVideoCodecId = 'V_MPEG4/ISO/AVC' | 'V_MPEGH/ISO/HEVC' | 'V_VP8' | 'V_VP9';
+export type MkvVideoCodecId = 'V_MPEG4/ISO/AVC' | 'V_MPEGH/ISO/HEVC' | 'V_VP8' | 'V_VP9' | 'V_AV01';
 export type MkvAudioCodecId = 'A_AAC' | 'A_MPEG/L3' | 'A_FLAC' | 'A_VORBIS' | 'A_OPUS';
 
 export interface MkvVideoTrack {
@@ -458,6 +459,12 @@ function deriveVideoCodecString(
     case 'V_VP9':
       // Default VP9 codec string for first pass; probeVideoCodec confirms.
       return 'vp09.00.10.08';
+
+    case 'V_AV01':
+      if (!codecPrivate || codecPrivate.length === 0) {
+        throw new MkvMissingElementError('CodecPrivate', 'TrackEntry (V_AV01)');
+      }
+      return parseAv1CodecString(codecPrivate);
   }
 }
 

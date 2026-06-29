@@ -59,7 +59,7 @@ export class MkvUnsupportedCodecError extends WebcvtError {
   constructor(codecId: string) {
     super(
       'MKV_UNSUPPORTED_CODEC',
-      `Codec "${codecId}" is not supported in first pass. Allowed codecs: V_MPEG4/ISO/AVC, V_MPEGH/ISO/HEVC, V_VP8, V_VP9, A_AAC, A_MPEG/L3, A_FLAC, A_VORBIS, A_OPUS.`,
+      `Codec "${codecId}" is not supported. Allowed codecs: V_MPEG4/ISO/AVC, V_MPEGH/ISO/HEVC, V_VP8, V_VP9, V_AV01, A_AAC, A_MPEG/L3, A_FLAC, A_VORBIS, A_OPUS.`,
     );
     this.name = 'MkvUnsupportedCodecError';
   }
