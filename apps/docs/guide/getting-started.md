@@ -37,13 +37,13 @@ const result = await convert(inputBlob, { format: 'webp' });
 
 ## What's in webcvt
 
-22 packages across five categories:
+27 packages across five categories:
 
 | Category | Packages |
 |---|---|
 | Foundation | `core`, `codec-webcodecs`, `backend-wasm`, `ebml` |
 | Audio/Video | `container-wav`, `container-mp3`, `container-flac`, `container-ogg`, `container-aac`, `container-mp4`, `container-webm`, `container-mkv`, `container-ts` |
-| Images | `image-canvas`, `image-legacy`, `image-animation`, `image-svg` |
+| Images | `image-canvas`, `image-legacy`, `image-animation`, `image-svg`, `image-jsquash-avif`, `image-jsquash-jxl`, `image-jsquash-mozjpeg`, `image-jsquash-oxipng`, `image-heic`, `image-pdf` |
 | Archives, data & subtitles | `archive-zip`, `data-text`, `subtitle` |
 | CLI | `cli` |
 

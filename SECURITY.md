@@ -22,11 +22,8 @@ upgrade to the latest release.
 
 **Please do not open a public issue for security vulnerabilities.**
 
-Report privately via either:
-
-1. **GitHub Security Advisories** (preferred) — open a private report at
-   <https://github.com/Junhui20/webcvt/security/advisories/new>.
-2. **Email** — <bryan@instamedia.my> with subject `webcvt security:`.
+Report privately via **GitHub Security Advisories** — open a private report at
+<https://github.com/Junhui20/webcvt/security/advisories/new>.
 
 Please include:
 

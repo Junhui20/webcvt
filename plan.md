@@ -5,7 +5,7 @@
 - **Name:** `webcvt`
 - **Owner:** [Junhui20/webcvt](https://github.com/Junhui20/webcvt)
 - **License:** MIT
-- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: 5/6 (+ second-pass A + E + D.1-4 + B + C: Phase 3 second-pass Minus ✅ COMPLETE except D.3 sidx/mfra typed parse + F DRM) · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: 3/8 (`@catlabtech/webcvt-cli` + `@catlabtech/webcvt-backend-wasm` + `apps/playground`)** · CI green · 3,970 tests passing · 22 packages + 1 app · last revised 2026-04-20
+- **Status:** **Phase 1: 7/8 · Phase 2: 7/8 · Phase 3: 5/6 (+ second-pass A + E + D.1-4 + B + C: Phase 3 second-pass Minus ✅ COMPLETE except D.3 sidx/mfra typed parse + F DRM) · Phase 4: 5/5 ✅ COMPLETE · Phase 4.5: 11/N (image-legacy TIFF + TGA + XBM + PCX + XPM + ICNS, data-text JSONL + TOML + FWF + XML + YAML) · Phase 5: v0.1.0 launched 2026-04-23 ✅ (21 packages live on npm) · Phase 6 (Wave B — modern image codecs): ✅ COMPLETE on `main` — AVIF + JXL + HEIC + MozJPEG + OxiPNG + image→PDF + `convertBatch` + CI/CD (npm tag/publish pending)** · CI green · 4,440 tests passing · 27 publishable packages (+ `test-utils`) + 2 apps · last revised 2026-06-29
 
 ---
 
@@ -568,10 +568,15 @@ A 3rd-party dep gets in **only if**:
 - [x] npm v0.1.0 release — all 21 publishable packages live as `@catlabtech/webcvt-*@0.1.0` (2026-04-23). Granular access token with "Bypass 2FA" flag, scoped to `@catlabtech` org. `scripts/release.sh` drives the full pipeline (pre-flight → build → CF deploy → publish dry-run → confirmation → publish).
 - [ ] Show HN, Reddit, Twitter, Product Hunt
 
-### Phase 6 — Modern image codecs (Weeks 21–22) · Wave B
-- [ ] `@catlabtech/webcvt-image-jsquash-avif` (AVIF encoding)
-- [ ] `@catlabtech/webcvt-image-jsquash-jxl` (JPEG XL)
-- [ ] `@catlabtech/webcvt-image-heic` (HEIC/HEIF)
+### Phase 6 — Modern image codecs (Weeks 21–22) · Wave B — **✅ COMPLETE (shipped on `main`)**
+- [x] `@catlabtech/webcvt-image-jsquash-avif` (AVIF **encode + decode** via `@jsquash/avif`, libavif WASM, lazy-loaded)
+- [x] `@catlabtech/webcvt-image-jsquash-jxl` (JPEG XL **encode + decode** via `@jsquash/jxl`, libjxl WASM, royalty-free)
+- [x] `@catlabtech/webcvt-image-heic` (HEIC/HEIF **decode-only** — iPhone photos → PNG/JPEG/WebP — via `libheif-js` wasm-bundle + canvas pixel-bridge; 55 tests, 93.87% cov; ISOBMFF `ftyp` brand disambiguation added to core `detect.ts` so HEIC/HEIF/AVIF no longer mis-detect as MP4)
+- [x] `@catlabtech/webcvt-image-jsquash-mozjpeg` (smaller JPEGs via `@jsquash/jpeg`, MozJPEG WASM) — beyond original Wave B scope
+- [x] `@catlabtech/webcvt-image-jsquash-oxipng` (lossless PNG optimise via `@jsquash/oxipng`, OxiPNG WASM) — beyond original Wave B scope
+- [x] `@catlabtech/webcvt-image-pdf` (wrap an image into a one-page PDF; clean-room PDF writer, zero deps) — beyond original Wave B scope
+- [x] `convertBatch()` in core + `apps/playground` multi-file batch UI with "download all as ZIP"
+- [x] CI/CD: GitHub Actions (CI + Cloudflare Pages deploy + npm release on tag) + community-health files
 
 ### Phase 7 — Font + EPUB + EML + Comic archives (Weeks 23–25) · Wave C
 - [ ] `@catlabtech/webcvt-font` — TTF/OTF/WOFF/WOFF2 (using `DecompressionStream` for Brotli)
@@ -680,7 +685,7 @@ Note: format count grows slowly up to launch, then jumps hard in Waves D–E whe
 
 ### Where we are
 
-Repo live at https://github.com/Junhui20/webcvt. **🚀 v0.1.0 launched 2026-04-23 — all 21 publishable packages live on npm as `@catlabtech/webcvt-*@0.1.0`.** Phases 1–5 complete (work-track only; logo + announcement deferred to user voice). Playground live at https://webcvt.pages.dev, docs at https://webcvt-docs.pages.dev, 5 examples shipped (vanilla-html, node-subtitle, react, cloudflare-worker, nextjs). 21 packages, 2,215+ tests, lint+typecheck+build all green in CI. Phase 3 wrap-up tasks still deferred (interop tests, second-passes for mp4/webm/mkv/ts). data-text scope-cut: 5 simplest formats only (JSON/CSV/TSV/INI/ENV); YAML/TOML/XML/JSONL/FWF/TOON to Phase 4.5+.
+Repo live at https://github.com/Junhui20/webcvt. **🚀 v0.1.0 launched 2026-04-23 — all 21 publishable packages live on npm as `@catlabtech/webcvt-*@0.1.0`.** Phases 1–5 complete (work-track only; logo + announcement deferred to user voice). Playground live at https://webcvt.pages.dev, docs at https://webcvt-docs.pages.dev, 5 examples shipped (vanilla-html, node-subtitle, react, cloudflare-worker, nextjs). **Since v0.1.0, Phase 6 / Wave B shipped on `main`** (not yet a tagged npm release): 6 modern-image packages — AVIF + JXL (encode+decode), MozJPEG + OxiPNG optimisers, HEIC/HEIF decode (iPhone photos), and image→PDF — plus `convertBatch()`, the playground multi-file batch UI, and GitHub Actions CI/CD. Now **27 publishable packages (+ `test-utils`), 4,440 tests**, lint+typecheck+build all green in CI. Phase 3 wrap-up tasks still deferred (interop tests, second-passes for mp4/webm/mkv/ts). data-text scope-cut: 5 simplest formats only (JSON/CSV/TSV/INI/ENV); YAML/TOML/XML/JSONL/FWF/TOON to Phase 4.5+.
 
 ### Proven per-package pipeline (from container-mp3)
 
@@ -698,9 +703,9 @@ container-mp3 numbers from this loop: 120 → 124 → 131 tests, 97.09% → 96.8
 
 ### Immediate next step
 
-**Phase 6 / Wave B: `@catlabtech/webcvt-image-jsquash-avif` first-pass** — AVIF encode/decode wrapper around `@jsquash/avif` (Apache-2.0, with patent grant). Lazy wasm load, mirrors the `image-canvas` adapter shape. After: `image-jsquash-jxl` (JPEG XL), then `image-heic` (HEIC/HEIF — Apple iPhone photos). All three follow the proven 5-stage pipeline. Wave B target: ship as a v0.2.0 minor bump.
+**Tag & publish the Phase 6 packages to npm.** Phase 6 / Wave B is code-complete on `main` (AVIF, JXL, MozJPEG, OxiPNG, HEIC decode, image→PDF + `convertBatch`) but **not yet released** — the 6 new image packages need a version bump and a `scripts/release.sh` publish (v0.2.0 minor bump). **Blocker:** the npm token pasted into chat earlier must be **revoked** first; releases should run off the `NPM_TOKEN` GitHub Actions secret (the tag-triggered `release.yml`), not a hand-pasted token. After release, the next build target is **Phase 7 / Wave C** — `font` (TTF/OTF/WOFF/WOFF2 via `DecompressionStream`), self-written `doc-ebook-epub`, `email` (EML, RFC 5322), and the 7z/RAR comic archives.
 
-(`image-legacy` first-pass for the 13 bitmap formats already shipped during Phase 4.)
+(`image-legacy` first-pass for the 13 bitmap formats already shipped during Phase 4; AVIF/JXL/HEIC/MozJPEG/OxiPNG/image-pdf all shipped during Phase 6.)
 
 ### Phase 3 remaining
 
@@ -822,5 +827,5 @@ This:
 
 ---
 
-**Last updated:** 2026-04-19 (Option B self-written + planner review fixes applied)
-**Author:** bryan@instamedia.my
+**Last updated:** 2026-06-29 (Phase 6 / Wave B reconciled; contact set to GitHub)
+**Author:** Junhui20

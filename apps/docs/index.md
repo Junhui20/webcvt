@@ -25,7 +25,7 @@ features:
     icon: 📦
     details: >
       npm i @catlabtech/webcvt-container-mp3 if you only want MP3. No 30 MB blob.
-      22 packages — import only what you need.
+      27 packages — import only what you need.
   - title: TypeScript-native
     icon: 🔷
     details: Proper types throughout. Autocomplete works, end-to-end type safety from input format to output blob.
