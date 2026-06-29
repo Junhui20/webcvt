@@ -4,9 +4,10 @@ import {
   TsCorruptStreamError,
   TsInputTooLargeError,
   TsMissingPatError,
-  TsMultiProgramNotSupportedError,
+  TsMissingPmtError,
   TsReservedAdaptationControlError,
   TsScrambledNotSupportedError,
+  TsTooManyProgramsError,
 } from './errors.ts';
 import { parseTs } from './parser.ts';
 
@@ -99,6 +100,97 @@ function buildMinimalTs(opts: {
 
   return concatPackets(packets);
 }
+
+/** Minimal Annex-B SPS + PPS + IDR payload reused by the program builders. */
+function buildVideoAnnexB(): Uint8Array {
+  return new Uint8Array([
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x67,
+    0x64,
+    0x00,
+    0x28,
+    0xac,
+    0xd9,
+    0x10,
+    0x00, // SPS
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x68,
+    0xce,
+    0x38,
+    0x80, // PPS
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x65,
+    0x88,
+    0x84,
+    0x00,
+    0x47,
+    0xab,
+    0xcd,
+    0xef, // IDR
+  ]);
+}
+
+interface MultiProgramSpec {
+  programNumber: number;
+  pmtPid: number;
+  videoPid: number;
+  audioPid: number;
+}
+
+/** Build a PAT section listing several programs (multi-program multiplex). */
+function buildMultiProgramPatSection(tsId: number, programs: MultiProgramSpec[]): Uint8Array {
+  const body = new Uint8Array(programs.length * 4);
+  let off = 0;
+  for (const p of programs) {
+    body[off++] = (p.programNumber >> 8) & 0xff;
+    body[off++] = p.programNumber & 0xff;
+    body[off++] = 0xe0 | ((p.pmtPid >> 8) & 0x1f);
+    body[off++] = p.pmtPid & 0xff;
+  }
+  return buildPsiSection(0x00, tsId, body);
+}
+
+/**
+ * Build a multi-program TS stream: one PAT listing every program, one PMT per
+ * program, and a video + audio PES for each program.
+ */
+function buildMultiProgramTs(programs: MultiProgramSpec[], ptsUs = 1_000_000): Uint8Array {
+  const packets: Uint8Array[] = [];
+
+  packets.push(...wrapInTsPackets(0x0000, buildMultiProgramPatSection(0x0001, programs), true));
+
+  for (const p of programs) {
+    const streams = [
+      { streamType: 0x1b, pid: p.videoPid },
+      { streamType: 0x0f, pid: p.audioPid },
+    ];
+    const pmtSection = buildPmtSection(p.programNumber, p.videoPid, streams);
+    packets.push(...wrapInTsPackets(p.pmtPid, pmtSection, true));
+  }
+
+  for (const p of programs) {
+    const videoPes = buildPesPacket(0xe0, ptsUs, undefined, buildVideoAnnexB());
+    packets.push(...wrapInTsPackets(p.videoPid, videoPes, false));
+    const audioPes = buildPesPacket(0xc0, ptsUs, undefined, buildAdtsFrame());
+    packets.push(...wrapInTsPackets(p.audioPid, audioPes, false));
+  }
+
+  return concatPackets(packets);
+}
+
+const TWO_PROGRAMS: MultiProgramSpec[] = [
+  { programNumber: 1, pmtPid: 0x1000, videoPid: 0x0100, audioPid: 0x0101 },
+  { programNumber: 2, pmtPid: 0x1001, videoPid: 0x0200, audioPid: 0x0201 },
+];
 
 function buildPatSection(tsId: number, programNumber: number, pmtPid: number): Uint8Array {
   const body = new Uint8Array([
@@ -366,13 +458,13 @@ describe('parseTs', () => {
     expect(ac3?.unsupported).toBe(true);
   });
 
-  it('rejects PAT with two non-zero programs (TsMultiProgramNotSupportedError)', () => {
-    // Build a PAT with 2 programs
+  it('throws TsMissingPmtError when a PAT announces programs but no PMT arrives', () => {
+    // Build a PAT with 2 programs but provide no PMT/PES packets.
     const twoProgBody = new Uint8Array([0x00, 0x01, 0xe1, 0x00, 0x00, 0x02, 0xe2, 0x00]);
     const patSection = buildPsiSection(0x00, 0x0001, twoProgBody);
     const patPackets = wrapInTsPackets(0x0000, patSection, true);
     const ts = concatPackets(patPackets);
-    expect(() => parseTs(ts)).toThrow(TsMultiProgramNotSupportedError);
+    expect(() => parseTs(ts)).toThrow(TsMissingPmtError);
   });
 
   it('throws TsMissingPatError when no PAT is found', () => {
@@ -444,6 +536,75 @@ describe('parseTs', () => {
     const ts = buildMinimalTs({});
     const file = parseTs(ts);
     expect(file.packetCount).toBe(ts.length / 188);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Multi-program (multi-PMT) support
+// ---------------------------------------------------------------------------
+
+describe('parseTs multi-program', () => {
+  it('parses a PAT with 2 programs into file.programs (length 2, PAT order)', () => {
+    const file = parseTs(buildMultiProgramTs(TWO_PROGRAMS));
+
+    expect(file.pat.programs).toHaveLength(2);
+    expect(file.pat.programs.map((p) => p.programNumber)).toEqual([1, 2]);
+
+    expect(file.programs).toHaveLength(2);
+    expect(file.programs[0]?.programNumber).toBe(1);
+    expect(file.programs[1]?.programNumber).toBe(2);
+  });
+
+  it('exposes program as the first program (backward compatible)', () => {
+    const file = parseTs(buildMultiProgramTs(TWO_PROGRAMS));
+    expect(file.program).toBe(file.programs[0]);
+    expect(file.program.programNumber).toBe(1);
+  });
+
+  it('extracts the right PMT PIDs and stream types/PIDs per program', () => {
+    const file = parseTs(buildMultiProgramTs(TWO_PROGRAMS));
+
+    expect(file.programs[0]?.pmtPid).toBe(0x1000);
+    expect(file.programs[1]?.pmtPid).toBe(0x1001);
+
+    expect(file.programs[0]?.streams.map((s) => s.pid)).toEqual([0x0100, 0x0101]);
+    expect(file.programs[1]?.streams.map((s) => s.pid)).toEqual([0x0200, 0x0201]);
+
+    expect(file.programs[0]?.streams.map((s) => s.streamType)).toEqual([0x1b, 0x0f]);
+    expect(file.programs[1]?.streams.map((s) => s.streamType)).toEqual([0x1b, 0x0f]);
+  });
+
+  it('reassembles PES from BOTH programs (all four ES PIDs)', () => {
+    const file = parseTs(buildMultiProgramTs(TWO_PROGRAMS));
+    const pids = new Set(file.pesPackets.map((p) => p.pid));
+
+    expect(pids.has(0x0100)).toBe(true);
+    expect(pids.has(0x0101)).toBe(true);
+    expect(pids.has(0x0200)).toBe(true);
+    expect(pids.has(0x0201)).toBe(true);
+
+    // Each program's video PES carries the PTS we encoded.
+    const p2video = file.pesPackets.filter((p) => p.pid === 0x0200);
+    expect(p2video.length).toBeGreaterThan(0);
+    expect(p2video[0]?.ptsUs ?? 0).toBeGreaterThan(0);
+  });
+
+  it('still parses a single-program stream into programs of length 1', () => {
+    const file = parseTs(buildMinimalTs({}));
+    expect(file.programs).toHaveLength(1);
+    expect(file.program).toBe(file.programs[0]);
+  });
+
+  it('rejects a PAT that lists more than MAX_PROGRAMS programs', () => {
+    // 257 programs (> MAX_PROGRAMS = 256). PMT PIDs do not need to be unique
+    // for the cap to trip on the PAT.
+    const tooMany: MultiProgramSpec[] = [];
+    for (let i = 1; i <= 257; i++) {
+      tooMany.push({ programNumber: i, pmtPid: 0x1000, videoPid: 0x0100, audioPid: 0x0101 });
+    }
+    const patSection = buildMultiProgramPatSection(0x0001, tooMany);
+    const ts = concatPackets(wrapInTsPackets(0x0000, patSection, true));
+    expect(() => parseTs(ts)).toThrow(TsTooManyProgramsError);
   });
 });
 

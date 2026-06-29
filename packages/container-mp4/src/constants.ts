@@ -180,3 +180,29 @@ export const MAX_VIDEO_CODEC_CONFIG_BYTES = 1024 * 1024;
  * Real files have ≤4 tracks. 64 is a generous security cap.
  */
 export const MAX_TRACKS_PER_FILE = 64;
+
+// ---------------------------------------------------------------------------
+// Common Encryption (CENC) / DRM signaling caps (read-only — ISO/IEC 23001-7)
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum KID_count in a `pssh` v1 box. Real files carry a handful of KIDs;
+ * 1024 bounds the array allocation against a crafted KID_count.
+ */
+export const MAX_PSSH_KIDS = 1024;
+
+/**
+ * Maximum DataSize for a `pssh` box's system-specific data blob (1 MiB).
+ * Read-only: only the declared length is exposed (the bytes are not copied),
+ * but the field is still bounded against the box length and this hard cap.
+ */
+export const MAX_PSSH_DATA_SIZE = 1024 * 1024;
+
+/** Maximum number of `pssh` boxes collected per file (guards repeated boxes). */
+export const MAX_PSSH_BOXES = 1024;
+
+/**
+ * Maximum number of child boxes scanned while walking a `sinf`/`schi` subtree.
+ * These trees have a handful of children; 256 bounds adversarial repetition.
+ */
+export const MAX_SINF_CHILD_BOXES = 256;

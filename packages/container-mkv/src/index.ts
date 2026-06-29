@@ -17,12 +17,16 @@ export type {
   MkvTrack,
   MkvVideoTrack,
   MkvAudioTrack,
+  MkvSubtitleTrack,
   MkvVideoCodecId,
   MkvAudioCodecId,
+  MkvSubtitleCodecId,
 } from './elements/tracks.ts';
 export type { MkvCluster, MkvSimpleBlock } from './elements/cluster.ts';
 export type { MkvCuePoint } from './elements/cues.ts';
 export type { MkvSeekHead, MkvSeekEntry } from './elements/seek-head.ts';
+export type { MkvChapter } from './elements/chapters.ts';
+export type { MkvTag } from './elements/tags.ts';
 
 // Block iterators.
 export {
@@ -55,6 +59,8 @@ export {
   MkvUnsupportedCodecError,
   MkvLacingNotSupportedError,
   MkvMultiTrackNotSupportedError,
+  MkvTooManyTracksError,
+  MkvDuplicateTrackNumberError,
   MkvUnsupportedTrackTypeError,
   MkvMissingTimecodeError,
   MkvCodecPrivateTooLargeError,
@@ -62,6 +68,8 @@ export {
   MkvCorruptStreamError,
   MkvMissingSegmentError,
   MkvTooManyCuePointsError,
+  MkvTooManyChaptersError,
+  MkvTooManyTagsError,
   MkvEncodeNotImplementedError,
   MkvEncryptionNotSupportedError,
   MkvInvalidCodecPrivateError,

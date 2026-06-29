@@ -52,14 +52,14 @@ export class TsReservedAdaptationControlError extends WebcvtError {
   }
 }
 
-/** Thrown when a PAT with more than one non-zero program is encountered. */
-export class TsMultiProgramNotSupportedError extends WebcvtError {
-  constructor(count: number) {
+/** Thrown when a PAT lists more programs than MAX_PROGRAMS (security cap). */
+export class TsTooManyProgramsError extends WebcvtError {
+  constructor(count: number, max: number) {
     super(
-      'TS_MULTI_PROGRAM_NOT_SUPPORTED',
-      `PAT contains ${count} programs; only single-program TS is supported in first pass.`,
+      'TS_TOO_MANY_PROGRAMS',
+      `PAT lists ${count} programs; maximum supported is ${max}. The input may be corrupt or adversarially crafted.`,
     );
-    this.name = 'TsMultiProgramNotSupportedError';
+    this.name = 'TsTooManyProgramsError';
   }
 }
 

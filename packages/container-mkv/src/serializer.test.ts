@@ -96,6 +96,8 @@ function buildMinimalMkvFile(): MkvFile {
     },
     tracks: [videoTrack, audioTrack],
     clusters: [cluster],
+    chapters: [],
+    tags: [],
     fileBytes: new Uint8Array(0),
   };
 }
@@ -328,6 +330,8 @@ describe('serializeMkv', () => {
       info: { timecodeScale: 1_000_000, muxingApp: 'test', writingApp: 'test' },
       tracks: [audioTrack],
       clusters: [{ fileOffset: 0, timecode: 0n, blocks: [block] }],
+      chapters: [],
+      tags: [],
       fileBytes: new Uint8Array(0),
     };
     const result = serializeMkv(file);

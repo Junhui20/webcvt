@@ -43,8 +43,16 @@ import {
   parseMvhd,
   parseTkhd,
 } from './boxes/mvhd-tkhd-mdhd.ts';
+import {
+  type Mp4Protection,
+  assembleProtection,
+  collectPssh,
+  extractTrackProtection,
+} from './boxes/protection.ts';
+import type { Mp4Pssh } from './boxes/pssh.ts';
 import type { Mp4SegmentIndex } from './boxes/sidx.ts';
 import { parseSidx } from './boxes/sidx.ts';
+import type { Mp4TrackProtection } from './boxes/sinf.ts';
 import {
   type Mp4SampleTable,
   type StscEntry,
@@ -89,6 +97,8 @@ export type {
   Mp4TrackFragmentRandomAccess,
   Mp4TrackFragmentRandomAccessEntry,
 } from './boxes/mfra.ts';
+// Common Encryption (CENC / DRM) read-only signalling types (sub-pass E):
+export type { Mp4Protection };
 
 // ---------------------------------------------------------------------------
 // Public Types
@@ -206,6 +216,14 @@ export interface Mp4File {
    * files are always null.
    */
   readonly mfra: Mp4MovieFragmentRandomAccess | null;
+
+  /**
+   * Read-only Common Encryption (CENC / DRM) signalling — parsed `pssh` boxes
+   * and per-track `encv`/`enca` protection info. `null` when the file carries
+   * no protection signalling (the common, unencrypted case). Populated for both
+   * classic and fragmented files. This is signalling only; webcvt never decrypts.
+   */
+  readonly protection: Mp4Protection | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -295,6 +313,10 @@ export function parseMp4(input: Uint8Array): Mp4File {
     }
   }
 
+  // Collect read-only CENC/DRM signalling: pssh boxes may appear at the top
+  // level and/or inside moov (both classic and fragmented files).
+  const psshList = collectPssh(topLevel, moovBox);
+
   if (mvexBox) {
     // --- FRAGMENTED PATH ---
     return parseFragmented(
@@ -309,6 +331,7 @@ export function parseMp4(input: Uint8Array): Mp4File {
       mdatRanges,
       metadata,
       udtaOpaque,
+      psshList,
       boxCount,
     );
   }
@@ -322,6 +345,7 @@ export function parseMp4(input: Uint8Array): Mp4File {
     mdatRanges,
     metadata,
     udtaOpaque,
+    psshList,
     boxCount,
   );
 }
@@ -338,6 +362,7 @@ function parseClassic(
   mdatRanges: Array<{ offset: number; length: number }>,
   metadata: MetadataAtoms,
   udtaOpaque: Uint8Array | null,
+  psshList: Mp4Pssh[],
   boxCount: { value: number },
 ): Mp4File {
   // C.1: multi-track discovery — replace the single-track gate.
@@ -349,6 +374,7 @@ function parseClassic(
   }
 
   const tracks: Mp4Track[] = [];
+  const trackProtections: Mp4TrackProtection[] = [];
   const seenTrackIds = new Set<number>();
 
   for (const trakBox of trakBoxes) {
@@ -372,6 +398,11 @@ function parseClassic(
       }
     }
 
+    const trackProtection = extractTrackProtection(trakBox, track.trackId);
+    if (trackProtection) {
+      trackProtections.push(trackProtection);
+    }
+
     tracks.push(track);
   }
 
@@ -391,6 +422,7 @@ function parseClassic(
     originalMoovSize: null,
     mehd: null,
     mfra: null,
+    protection: assembleProtection(psshList, trackProtections),
   };
 }
 
@@ -410,6 +442,7 @@ function parseFragmented(
   mdatRanges: Array<{ offset: number; length: number }>,
   metadata: MetadataAtoms,
   udtaOpaque: Uint8Array | null,
+  psshList: Mp4Pssh[],
   boxCount: { value: number },
 ): Mp4File {
   // C.1: multi-track discovery — replace the single-track gate.
@@ -421,6 +454,7 @@ function parseFragmented(
   }
 
   const tracks: Mp4Track[] = [];
+  const trackProtections: Mp4TrackProtection[] = [];
   const seenTrackIds = new Set<number>();
 
   for (const trakBox of trakBoxes) {
@@ -433,6 +467,12 @@ function parseFragmented(
       throw new Mp4DuplicateTrackIdError(track.trackId);
     }
     seenTrackIds.add(track.trackId);
+
+    const trackProtection = extractTrackProtection(trakBox, track.trackId);
+    if (trackProtection) {
+      trackProtections.push(trackProtection);
+    }
+
     tracks.push(track);
   }
 
@@ -502,6 +542,7 @@ function parseFragmented(
     originalMoovSize,
     mehd: mvexResult.mehd,
     mfra,
+    protection: assembleProtection(psshList, trackProtections),
   };
 }
 

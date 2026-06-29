@@ -2,14 +2,15 @@
  * PAT (Program Association Table) parser.
  *
  * table_id = 0x00, always on PID 0x0000.
- * Single-program enforcement: throws TsMultiProgramNotSupportedError
- * when more than one non-zero program_number is found.
+ * Returns ALL non-zero programs (multi-program transport streams supported);
+ * program_number=0 entries are NIT pointers and are skipped. The MAX_PROGRAMS
+ * security cap is enforced by the caller (parseTs).
  *
  * References: ISO/IEC 13818-1 §2.4.4.3
  */
 
 import { TABLE_ID_PAT } from './constants.ts';
-import { TsCorruptStreamError, TsMultiProgramNotSupportedError } from './errors.ts';
+import { TsCorruptStreamError } from './errors.ts';
 import type { TsPsiSection } from './psi.ts';
 
 // ---------------------------------------------------------------------------
@@ -35,9 +36,8 @@ export interface PatTable {
  * Decode the body of a PAT PSI section.
  *
  * @param section   Fully assembled and CRC-verified PSI section.
- * @returns PatTable with exactly one non-zero program.
+ * @returns PatTable listing every non-zero program (NIT entries skipped).
  * @throws TsCorruptStreamError if table_id is not 0x00.
- * @throws TsMultiProgramNotSupportedError if more than one non-zero program.
  */
 export function decodePat(section: TsPsiSection): PatTable {
   if (section.tableId !== TABLE_ID_PAT) {
@@ -62,11 +62,6 @@ export function decodePat(section: TsPsiSection): PatTable {
     }
 
     entries.push({ programNumber, pid });
-  }
-
-  // Single-program enforcement
-  if (entries.length > 1) {
-    throw new TsMultiProgramNotSupportedError(entries.length);
   }
 
   return {

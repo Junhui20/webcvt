@@ -1,10 +1,12 @@
 /**
  * Tracks element (ID 0x1654AE6B) and TrackEntry decode and encode for Matroska.
  *
- * Wider codec allowlist than WebM: H.264/HEVC/VP8/VP9 + AAC/MP3/FLAC/Vorbis/Opus.
+ * Wider codec allowlist than WebM: H.264/HEVC/VP8/VP9/AV1 + AAC/MP3/FLAC/Vorbis/Opus,
+ * plus text subtitle tracks (S_TEXT/UTF8, S_TEXT/ASS, S_TEXT/SSA).
  * Per-codec codec string derivation via codec-meta/*.ts.
  * Rejects encryption (ContentEncodings) with MkvEncryptionNotSupportedError.
- * Rejects multi-video or multi-audio tracks (first-pass scope).
+ * Accepts multiple video + audio + subtitle tracks (capped at MAX_TRACKS);
+ * rejects duplicate TrackNumbers.
  */
 
 import {
@@ -29,6 +31,7 @@ import { normaliseFlacCodecPrivate } from '../codec-meta/flac-streaminfo.ts';
 import { parseHevcDecoderConfig } from '../codec-meta/hevc.ts';
 import {
   ALLOWED_AUDIO_CODEC_IDS,
+  ALLOWED_SUBTITLE_CODEC_IDS,
   ALLOWED_VIDEO_CODEC_IDS,
   ID_AUDIO,
   ID_BIT_DEPTH,
@@ -56,13 +59,15 @@ import {
   ID_TRACK_UID,
   ID_VIDEO,
   MAX_CODEC_PRIVATE_BYTES,
+  MAX_TRACKS,
 } from '../constants.ts';
 import {
   MkvCodecPrivateTooLargeError,
   MkvCorruptStreamError,
+  MkvDuplicateTrackNumberError,
   MkvEncryptionNotSupportedError,
   MkvMissingElementError,
-  MkvMultiTrackNotSupportedError,
+  MkvTooManyTracksError,
   MkvUnsupportedCodecError,
   MkvUnsupportedTrackTypeError,
 } from '../errors.ts';
@@ -79,6 +84,7 @@ import {
 
 export type MkvVideoCodecId = 'V_MPEG4/ISO/AVC' | 'V_MPEGH/ISO/HEVC' | 'V_VP8' | 'V_VP9' | 'V_AV01';
 export type MkvAudioCodecId = 'A_AAC' | 'A_MPEG/L3' | 'A_FLAC' | 'A_VORBIS' | 'A_OPUS';
+export type MkvSubtitleCodecId = 'S_TEXT/UTF8' | 'S_TEXT/ASS' | 'S_TEXT/SSA';
 
 export interface MkvVideoTrack {
   trackNumber: number;
@@ -120,7 +126,26 @@ export interface MkvAudioTrack {
   webcodecsCodecString: string;
 }
 
-export type MkvTrack = MkvVideoTrack | MkvAudioTrack;
+/**
+ * Text subtitle track (TrackType 0x11). Block payloads are UTF-8 text routed by
+ * trackNumber like any other SimpleBlock. S_TEXT/ASS and S_TEXT/SSA carry their
+ * script header ([Script Info], styles, format line) in CodecPrivate.
+ */
+export interface MkvSubtitleTrack {
+  trackNumber: number;
+  trackUid: bigint;
+  trackType: 17;
+  codecId: MkvSubtitleCodecId;
+  /** Present for S_TEXT/ASS and S_TEXT/SSA (script header); absent for S_TEXT/UTF8. */
+  codecPrivate?: Uint8Array;
+  defaultDuration?: number;
+  flagEnabled?: number;
+  flagDefault?: number;
+  flagLacing?: number;
+  language?: string;
+}
+
+export type MkvTrack = MkvVideoTrack | MkvAudioTrack | MkvSubtitleTrack;
 
 // ---------------------------------------------------------------------------
 // Decoder
@@ -133,18 +158,22 @@ export function decodeTracks(
 ): MkvTrack[] {
   const trackEntries = findChildren(children, ID_TRACK_ENTRY);
   const tracks: MkvTrack[] = [];
-  let videoCount = 0;
-  let audioCount = 0;
+  const seenTrackNumbers = new Set<number>();
 
   for (const entry of trackEntries) {
-    const track = decodeTrackEntry(bytes, entry, elementCount);
-    if (track.trackType === 1) {
-      videoCount++;
-      if (videoCount > 1) throw new MkvMultiTrackNotSupportedError('video', videoCount);
-    } else {
-      audioCount++;
-      if (audioCount > 1) throw new MkvMultiTrackNotSupportedError('audio', audioCount);
+    // Cap total tracks (video + audio + subtitle) before decoding the next one.
+    if (tracks.length >= MAX_TRACKS) {
+      throw new MkvTooManyTracksError(MAX_TRACKS);
     }
+
+    const track = decodeTrackEntry(bytes, entry, elementCount);
+
+    // Reject duplicate TrackNumbers — block routing requires unique numbers.
+    if (seenTrackNumbers.has(track.trackNumber)) {
+      throw new MkvDuplicateTrackNumberError(track.trackNumber);
+    }
+    seenTrackNumbers.add(track.trackNumber);
+
     tracks.push(track);
   }
 
@@ -181,7 +210,8 @@ function decodeTrackEntry(
   const trackType = readUintNumber(
     bytes.subarray(trackTypeElem.payloadOffset, trackTypeElem.nextOffset),
   );
-  if (trackType !== 1 && trackType !== 2) {
+  // 1 = video, 2 = audio, 17 (0x11) = subtitle.
+  if (trackType !== 1 && trackType !== 2 && trackType !== 17) {
     throw new MkvUnsupportedTrackTypeError(trackType);
   }
 
@@ -189,12 +219,12 @@ function decodeTrackEntry(
   if (!codecIdElem) throw new MkvMissingElementError('CodecID', 'TrackEntry');
   const codecId = readString(bytes.subarray(codecIdElem.payloadOffset, codecIdElem.nextOffset));
 
-  // Validate against allowlist (Trap §7).
-  if (
-    (trackType === 1 && !ALLOWED_VIDEO_CODEC_IDS.has(codecId)) ||
-    (trackType === 2 && !ALLOWED_AUDIO_CODEC_IDS.has(codecId)) ||
-    (trackType !== 1 && trackType !== 2)
-  ) {
+  // Validate against the per-track-type codec allowlist (Trap §7).
+  const codecAllowed =
+    (trackType === 1 && ALLOWED_VIDEO_CODEC_IDS.has(codecId)) ||
+    (trackType === 2 && ALLOWED_AUDIO_CODEC_IDS.has(codecId)) ||
+    (trackType === 17 && ALLOWED_SUBTITLE_CODEC_IDS.has(codecId));
+  if (!codecAllowed) {
     throw new MkvUnsupportedCodecError(codecId);
   }
 
@@ -255,6 +285,20 @@ function decodeTrackEntry(
       trackNumber,
       trackUid,
       codecId as MkvVideoCodecId,
+      codecPrivate,
+      defaultDuration,
+      flagEnabled,
+      flagDefault,
+      flagLacing,
+      language,
+    );
+  }
+
+  if (trackType === 17) {
+    return decodeSubtitleTrack(
+      trackNumber,
+      trackUid,
+      codecId as MkvSubtitleCodecId,
       codecPrivate,
       defaultDuration,
       flagEnabled,
@@ -432,6 +476,39 @@ function decodeAudioTrack(
   } satisfies MkvAudioTrack;
 }
 
+function decodeSubtitleTrack(
+  trackNumber: number,
+  trackUid: bigint,
+  codecId: MkvSubtitleCodecId,
+  codecPrivate: Uint8Array | undefined,
+  defaultDuration: number | undefined,
+  flagEnabled: number | undefined,
+  flagDefault: number | undefined,
+  flagLacing: number | undefined,
+  language: string | undefined,
+): MkvSubtitleTrack {
+  // ASS/SSA carry their mandatory script header in CodecPrivate; UTF8 has none.
+  if (
+    (codecId === 'S_TEXT/ASS' || codecId === 'S_TEXT/SSA') &&
+    (codecPrivate === undefined || codecPrivate.length === 0)
+  ) {
+    throw new MkvMissingElementError('CodecPrivate', `TrackEntry (${codecId})`);
+  }
+
+  return {
+    trackNumber,
+    trackUid,
+    trackType: 17,
+    codecId,
+    codecPrivate,
+    defaultDuration,
+    flagEnabled,
+    flagDefault,
+    flagLacing,
+    language,
+  } satisfies MkvSubtitleTrack;
+}
+
 // ---------------------------------------------------------------------------
 // Codec string derivation
 // ---------------------------------------------------------------------------
@@ -545,7 +622,7 @@ function encodeTrackEntry(track: MkvTrack): Uint8Array {
       parts.push(encodeBinaryElement(ID_CODEC_PRIVATE, track.codecPrivate));
     }
     parts.push(encodeVideoElement(track));
-  } else {
+  } else if (track.trackType === 2) {
     if (track.codecDelay !== undefined) {
       parts.push(encodeUintElement(ID_CODEC_DELAY, BigInt(track.codecDelay)));
     }
@@ -556,6 +633,11 @@ function encodeTrackEntry(track: MkvTrack): Uint8Array {
       parts.push(encodeBinaryElement(ID_CODEC_PRIVATE, track.codecPrivate));
     }
     parts.push(encodeAudioElement(track));
+  } else {
+    // Subtitle track: no Video/Audio sub-element; CodecPrivate holds ASS/SSA header.
+    if (track.codecPrivate && track.codecPrivate.length > 0) {
+      parts.push(encodeBinaryElement(ID_CODEC_PRIVATE, track.codecPrivate));
+    }
   }
 
   return encodeMasterElement(ID_TRACK_ENTRY, concatBytes(parts));

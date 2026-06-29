@@ -30,6 +30,24 @@ export const MAX_NEST_DEPTH = 8;
 /** Maximum number of blocks per track. */
 export const MAX_BLOCKS_PER_TRACK = 10_000_000;
 
+/** Maximum number of tracks (video + audio + subtitle) in a single MKV file. */
+export const MAX_TRACKS = 64;
+
+/** Maximum number of ChapterAtom entries collected from the Chapters element. */
+export const MAX_CHAPTERS = 10_000;
+
+/** Maximum nesting depth when recursing into nested ChapterAtoms. */
+export const MAX_CHAPTER_DEPTH = 8;
+
+/** Maximum number of Tag elements processed inside the Tags element. */
+export const MAX_TAGS = 10_000;
+
+/** Maximum number of flattened SimpleTag entries collected from all Tags. */
+export const MAX_SIMPLE_TAGS = 50_000;
+
+/** Maximum nesting depth when recursing into nested SimpleTags. */
+export const MAX_TAG_DEPTH = 8;
+
 /** Maximum VINT width in bytes per RFC 8794. */
 export const MAX_VINT_WIDTH = 8;
 
@@ -132,6 +150,25 @@ export const ID_BIT_DEPTH = 0x6264;
 export const ID_TIMECODE = 0xe7;
 export const ID_SIMPLE_BLOCK = 0xa3;
 
+// Chapters children
+export const ID_CHAPTERS = 0x1043a770;
+export const ID_EDITION_ENTRY = 0x45b9;
+export const ID_CHAPTER_ATOM = 0xb6;
+export const ID_CHAPTER_UID = 0x73c4;
+export const ID_CHAPTER_TIME_START = 0x91;
+export const ID_CHAPTER_TIME_END = 0x92;
+export const ID_CHAPTER_DISPLAY = 0x80;
+export const ID_CHAP_STRING = 0x85;
+export const ID_CHAP_LANGUAGE = 0x437c;
+
+// Tags children
+export const ID_TAGS = 0x1254c367;
+export const ID_TAG = 0x7373;
+export const ID_SIMPLE_TAG = 0x67c8;
+export const ID_TAG_NAME = 0x45a3;
+export const ID_TAG_STRING = 0x4487;
+export const ID_TAG_LANGUAGE = 0x447a;
+
 // Cues children
 export const ID_CUE_POINT = 0xbb;
 export const ID_CUE_TIME = 0xb3;
@@ -163,8 +200,19 @@ export const ALLOWED_AUDIO_CODEC_IDS = new Set([
   'A_OPUS',
 ]);
 
+/**
+ * Subtitle codecs supported in second pass. Text-based subtitles only:
+ * S_TEXT/UTF8 (SRT-like plain UTF-8) and S_TEXT/ASS + S_TEXT/SSA (carry their
+ * script header in CodecPrivate). Image subtitles (VobSub/PGS) are out of scope.
+ */
+export const ALLOWED_SUBTITLE_CODEC_IDS = new Set(['S_TEXT/UTF8', 'S_TEXT/ASS', 'S_TEXT/SSA']);
+
 /** All allowed codec IDs combined. */
-export const ALLOWED_CODEC_IDS = new Set([...ALLOWED_VIDEO_CODEC_IDS, ...ALLOWED_AUDIO_CODEC_IDS]);
+export const ALLOWED_CODEC_IDS = new Set([
+  ...ALLOWED_VIDEO_CODEC_IDS,
+  ...ALLOWED_AUDIO_CODEC_IDS,
+  ...ALLOWED_SUBTITLE_CODEC_IDS,
+]);
 
 // ---------------------------------------------------------------------------
 // MIME types handled by this backend

@@ -16,10 +16,11 @@
 import {
   DISCONTINUITY_WARN_INTERVAL,
   DISCONTINUITY_WARN_THRESHOLD,
-  MAX_ES_PIDS,
   MAX_INPUT_BYTES,
   MAX_PACKETS,
+  MAX_PROGRAMS,
   MAX_PSI_WAIT_PACKETS,
+  MAX_TOTAL_ES_PIDS,
   PID_PAT,
   TS_PACKET_SIZE,
   TS_SYNC_BYTE,
@@ -30,10 +31,11 @@ import {
   TsMissingPatError,
   TsMissingPmtError,
   TsTooManyPacketsError,
+  TsTooManyProgramsError,
 } from './errors.ts';
 import { maybeNormalizeM2ts } from './m2ts.ts';
 import { acquireSync, decodePacket } from './packet.ts';
-import { type PatEntry, decodePat } from './pat.ts';
+import { decodePat } from './pat.ts';
 import {
   type PesAssemblerState,
   type TsPesPacket,
@@ -54,8 +56,15 @@ export interface TsFile {
     transportStreamId: number;
     programs: Array<{ programNumber: number; pmtPid: number }>;
   };
+  /** Every program found in the stream, in PAT (program_number) order. */
+  readonly programs: TsProgram[];
+  /**
+   * The first program (== programs[0]). Retained for backward compatibility
+   * with single-program consumers; multi-program callers should read
+   * `programs`.
+   */
   program: TsProgram;
-  /** Reassembled PES packets in stream order (mixed PIDs). */
+  /** Reassembled PES packets in stream order (mixed PIDs across all programs). */
   pesPackets: readonly TsPesPacket[];
   /** Total raw-packet count seen. */
   packetCount: number;
@@ -66,11 +75,15 @@ export interface TsFile {
 // ---------------------------------------------------------------------------
 
 /**
- * Parse an MPEG-TS byte stream (first-pass: single-program H.264 + AAC ADTS).
+ * Parse an MPEG-TS byte stream (multi-program H.264 + AAC ADTS).
+ *
+ * The PAT may announce one or many programs; each program's PMT is decoded and
+ * every program's elementary streams are reassembled into PES packets. ES PIDs
+ * are unique per stream so PES keying by PID works across programs.
  *
  * @param input Raw TS bytes. Must be <= 200 MiB.
  * @throws TsInputTooLargeError, TsNoSyncByteError, TsScrambledNotSupportedError,
- *         TsReservedAdaptationControlError, TsMultiProgramNotSupportedError,
+ *         TsReservedAdaptationControlError, TsTooManyProgramsError,
  *         TsMissingPatError, TsMissingPmtError, TsCorruptStreamError,
  *         TsPsiCrcError
  */
@@ -92,7 +105,6 @@ export function parseTs(rawInput: Uint8Array): TsFile {
   // Parser state
   let packetCount = 0;
   let patSeen = false;
-  let pmtSeen = false;
   let patPacketIndex = -1;
 
   let patTable: {
@@ -100,17 +112,38 @@ export function parseTs(rawInput: Uint8Array): TsFile {
     programs: Array<{ programNumber: number; pmtPid: number }>;
   } | null = null;
 
-  let program: TsProgram | null = null;
-  let pmtPid = -1;
+  // Program numbers announced by the PAT (used to decide when ALL PMTs arrived).
+  const expectedProgramNumbers = new Set<number>();
+  // Decoded programs, keyed by program_number (first version of each wins).
+  const programsByNumber = new Map<number, TsProgram>();
+  // Running total of registered ES PIDs across all programs (global cap).
+  let totalEsPids = 0;
 
   const pesPackets: TsPesPacket[] = [];
 
   // PSI assemblers (keyed by PID)
   const patAssembler: PsiAssemblerState = createPsiAssembler(PID_PAT);
-  let pmtAssembler: PsiAssemblerState | null = null;
+  // One PMT section assembler per distinct PMT PID announced by the PAT.
+  const pmtAssemblers = new Map<number, PsiAssemblerState>();
 
-  // PES assemblers (keyed by PID)
+  // PES assemblers (keyed by PID — unique per elementary stream, even across
+  // programs).
   const pesAssemblers = new Map<number, PesAssemblerState>();
+
+  // True once a decoded program exists for every program_number in the PAT.
+  const allPmtsSeen = (): boolean =>
+    expectedProgramNumbers.size > 0 && programsByNumber.size >= expectedProgramNumbers.size;
+
+  // The PMT PID still carries an undecoded program announced by the PAT.
+  const pmtPidHasPending = (candidatePid: number): boolean => {
+    if (patTable === null) return false;
+    for (const entry of patTable.programs) {
+      if (entry.pmtPid === candidatePid && !programsByNumber.has(entry.programNumber)) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   // Continuity counter tracker (PID → expected CC)
   const ccMap = new Map<number, number>();
@@ -159,10 +192,15 @@ export function parseTs(rawInput: Uint8Array): TsFile {
       ccMap.set(pid, (continuityCounter + 1) & 0x0f);
     }
 
-    // PMT wait cap: if PAT was seen but PMT not yet, track packets elapsed
-    if (patSeen && !pmtSeen && patPacketIndex >= 0) {
+    // PMT wait cap: once the PAT is seen, allow MAX_PSI_WAIT_PACKETS packets for
+    // ALL announced PMTs to arrive (not just the first one). If the window is
+    // exceeded before every program's PMT is decoded, fail on a missing one.
+    if (patSeen && patPacketIndex >= 0 && expectedProgramNumbers.size > 0 && !allPmtsSeen()) {
       if (packetCount - patPacketIndex > MAX_PSI_WAIT_PACKETS) {
-        throw new TsMissingPmtError(pmtPid, MAX_PSI_WAIT_PACKETS);
+        const missing = (patTable as NonNullable<typeof patTable>).programs.find(
+          (e) => !programsByNumber.has(e.programNumber),
+        );
+        throw new TsMissingPmtError(missing?.pmtPid ?? -1, MAX_PSI_WAIT_PACKETS);
       }
     }
 
@@ -176,6 +214,12 @@ export function parseTs(rawInput: Uint8Array): TsFile {
         const decoded = decodePat(section);
         patSeen = true;
         patPacketIndex = packetCount;
+
+        // Security cap: bound the number of programs.
+        if (decoded.entries.length > MAX_PROGRAMS) {
+          throw new TsTooManyProgramsError(decoded.entries.length, MAX_PROGRAMS);
+        }
+
         patTable = {
           transportStreamId: decoded.transportStreamId,
           programs: decoded.entries.map((e) => ({
@@ -183,28 +227,42 @@ export function parseTs(rawInput: Uint8Array): TsFile {
             pmtPid: e.pid,
           })),
         };
-        if (decoded.entries.length > 0) {
-          pmtPid = (decoded.entries[0] as PatEntry).pid;
-          pmtAssembler = createPsiAssembler(pmtPid);
-        }
-      }
-    } else if (patSeen && !pmtSeen && pmtPid >= 0 && pid === pmtPid && pmtAssembler !== null) {
-      // PMT section assembler
-      const section = feedPsiPayload(pmtAssembler, payload, payloadUnitStart);
-      if (section !== null) {
-        program = decodePmt(section, pmtPid);
-        pmtSeen = true;
 
-        // Register ES PID assemblers for supported streams
-        let count = 0;
-        for (const stream of program.streams) {
-          if (!stream.unsupported && count < MAX_ES_PIDS) {
-            pesAssemblers.set(stream.pid, createPesAssembler());
-            count++;
+        // Register one PSI assembler per distinct PMT PID and remember which
+        // program numbers we still expect to see a PMT for.
+        for (const entry of patTable.programs) {
+          expectedProgramNumbers.add(entry.programNumber);
+          if (!pmtAssemblers.has(entry.pmtPid)) {
+            pmtAssemblers.set(entry.pmtPid, createPsiAssembler(entry.pmtPid));
           }
         }
       }
-    } else if (pmtSeen && program !== null && pesAssemblers.has(pid)) {
+    } else if (patSeen && pmtAssemblers.has(pid) && pmtPidHasPending(pid)) {
+      // PMT section assembler (one per PMT PID)
+      const pmtAssembler = pmtAssemblers.get(pid) as PsiAssemblerState;
+      const section = feedPsiPayload(pmtAssembler, payload, payloadUnitStart);
+      if (section !== null) {
+        const program = decodePmt(section, pid);
+
+        // Only accept programs announced by the PAT that we have not decoded yet.
+        if (
+          expectedProgramNumbers.has(program.programNumber) &&
+          !programsByNumber.has(program.programNumber)
+        ) {
+          programsByNumber.set(program.programNumber, program);
+
+          // Register ES PID assemblers for supported streams (global cap).
+          for (const stream of program.streams) {
+            if (stream.unsupported) continue;
+            if (totalEsPids >= MAX_TOTAL_ES_PIDS) break;
+            if (!pesAssemblers.has(stream.pid)) {
+              pesAssemblers.set(stream.pid, createPesAssembler());
+              totalEsPids++;
+            }
+          }
+        }
+      }
+    } else if (pesAssemblers.has(pid)) {
       // ES PES reassembler
       const assembler = pesAssemblers.get(pid) as PesAssemblerState;
 
@@ -228,12 +286,10 @@ export function parseTs(rawInput: Uint8Array): TsFile {
   }
 
   // Flush in-progress PES assemblers at stream end
-  if (program !== null) {
-    for (const [pid, assembler] of pesAssemblers) {
-      const last = flushPes(assembler, pid);
-      if (last !== null) {
-        pesPackets.push(last);
-      }
+  for (const [pid, assembler] of pesAssemblers) {
+    const last = flushPes(assembler, pid);
+    if (last !== null) {
+      pesPackets.push(last);
     }
   }
 
@@ -242,8 +298,21 @@ export function parseTs(rawInput: Uint8Array): TsFile {
     throw new TsMissingPatError();
   }
 
-  if (!pmtSeen || program === null) {
-    throw new TsMissingPmtError(pmtPid, MAX_PSI_WAIT_PACKETS);
+  // Collect decoded programs in PAT (program_number) order.
+  const programs: TsProgram[] = [];
+  const added = new Set<number>();
+  for (const entry of patTable.programs) {
+    if (added.has(entry.programNumber)) continue;
+    const decoded = programsByNumber.get(entry.programNumber);
+    if (decoded !== undefined) {
+      programs.push(decoded);
+      added.add(entry.programNumber);
+    }
+  }
+
+  if (programs.length === 0) {
+    // PAT seen but no PMT decoded (zero programs, or none arrived in time).
+    throw new TsMissingPmtError(patTable.programs[0]?.pmtPid ?? -1, MAX_PSI_WAIT_PACKETS);
   }
 
   // M-1 lesson: if non-empty input yields zero PES packets, the stream is corrupt
@@ -253,7 +322,8 @@ export function parseTs(rawInput: Uint8Array): TsFile {
 
   return {
     pat: patTable,
-    program,
+    programs,
+    program: programs[0] as TsProgram,
     pesPackets,
     packetCount,
   };

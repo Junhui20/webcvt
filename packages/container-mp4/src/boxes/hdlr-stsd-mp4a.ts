@@ -24,6 +24,7 @@ import { MAX_BOXES_PER_FILE, MAX_TABLE_ENTRIES } from '../constants.ts';
 import {
   Mp4ExternalDataRefError,
   Mp4InvalidBoxError,
+  Mp4ProtectionInvalidError,
   Mp4TableTooLargeError,
   Mp4TooManyBoxesError,
   Mp4UnsupportedSampleEntryError,
@@ -32,6 +33,7 @@ import {
   Mp4UnsupportedVideoCodecError,
 } from '../errors.ts';
 import { parseEsdsPayload } from './esds.ts';
+import { findSinfPayload, parseSinf } from './sinf.ts';
 import {
   type Mp4SampleEntry,
   type Mp4VideoFormat,
@@ -190,6 +192,8 @@ export function validateDref(payload: Uint8Array): void {
  *   'mp4a'                       → { kind: 'audio', entry: Mp4AudioSampleEntry }
  *   'avc1'|'avc3'|'hev1'|'hvc1'
  *   |'vp09'|'av01'               → { kind: 'video', entry: Mp4VideoSampleEntry }
+ *   'encv'|'enca' (CENC)         → unwrap via sinf/frma to the original format,
+ *                                   then parse the inner (decrypted-format) entry
  *   other                        → Mp4UnsupportedSampleEntryError (unknown) or
  *                                   Mp4UnsupportedVideoCodecError (known-video-but-unsupported)
  *
@@ -244,9 +248,42 @@ export function parseStsd(
     return { kind: 'video', entry };
   }
 
+  // Common Encryption (ISO/IEC 23001-7): a protected track replaces its real
+  // 4cc with 'encv'/'enca' and appends a sinf box recording the original
+  // format. We unwrap to the original format and parse the inner (decrypted-
+  // format) entry with the existing parsers so the track stays fully usable.
+  // The protection signalling itself is surfaced separately on
+  // Mp4File.protection (see boxes/sinf.ts → parseStsdTrackProtection).
+  if (entryType === 'encv' || entryType === 'enca') {
+    const entryPayload = payload.subarray(16, 8 + entrySize);
+    const sinfPayload = findSinfPayload(entryType, entryPayload);
+    if (sinfPayload === null) {
+      throw new Mp4ProtectionInvalidError(
+        `${entryType} sample entry has no sinf (Protection Scheme Information) box.`,
+      );
+    }
+    const { originalFormat } = parseSinf(sinfPayload);
+
+    if (entryType === 'encv') {
+      if (isVideoFormat(originalFormat)) {
+        const entry = parseVisualSampleEntry(originalFormat, entryPayload, boxCount);
+        return { kind: 'video', entry };
+      }
+      // An encrypted track wrapping a video codec we do not support yet — mirror
+      // the unencrypted unsupported-video path rather than inventing a new error.
+      throw new Mp4UnsupportedVideoCodecError(originalFormat);
+    }
+    // enca: only mp4a (AAC) is supported as an inner format.
+    if (originalFormat === 'mp4a') {
+      const entry = parseMp4aPayload(entryPayload, fileData, boxCount);
+      return { kind: 'audio', entry };
+    }
+    throw new Mp4UnsupportedSampleEntryError(originalFormat);
+  }
+
   // Unknown 4cc — check if it looks like a video format we don't support (dvh1, etc.)
   // The spec-defined video formats that we explicitly do NOT support yet:
-  const KNOWN_UNSUPPORTED_VIDEO = new Set(['dvh1', 'dvhe', 'dva1', 'dvav', 'encv', 'sinf']);
+  const KNOWN_UNSUPPORTED_VIDEO = new Set(['dvh1', 'dvhe', 'dva1', 'dvav']);
   if (KNOWN_UNSUPPORTED_VIDEO.has(entryType)) {
     throw new Mp4UnsupportedVideoCodecError(entryType);
   }

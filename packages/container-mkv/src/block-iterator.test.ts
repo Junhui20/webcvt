@@ -70,6 +70,8 @@ function buildFile(tracks: (MkvVideoTrack | MkvAudioTrack)[], clusters: MkvClust
     info: { timecodeScale: 1_000_000, muxingApp: 'test', writingApp: 'test' },
     tracks,
     clusters,
+    chapters: [],
+    tags: [],
     fileBytes: new Uint8Array(0),
   };
 }

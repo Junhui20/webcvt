@@ -116,6 +116,12 @@ export {
   Mp4Av1CBadMarkerError,
   Mp4UnsupportedVideoCodecError,
   Mp4IterateWrongKindError,
+  // Common Encryption (CENC) / protection signalling errors (read-only):
+  Mp4PsshInvalidError,
+  Mp4PsshKidCountTooLargeError,
+  Mp4PsshDataSizeTooLargeError,
+  Mp4PsshTooManyError,
+  Mp4ProtectionInvalidError,
 } from './errors.ts';
 
 // Core types re-exported for convenience.
@@ -161,3 +167,12 @@ export type {
   Mp4TrackFragmentRandomAccess,
   Mp4TrackFragmentRandomAccessEntry,
 } from './boxes/mfra.ts';
+
+// Common Encryption (CENC / DRM) read-only signalling types:
+export type { Mp4Protection } from './parser.ts';
+export type { Mp4Pssh } from './boxes/pssh.ts';
+export type {
+  Mp4TrackProtection,
+  Mp4ProtectionSchemeInfo,
+  Mp4TrackEncryption,
+} from './boxes/sinf.ts';

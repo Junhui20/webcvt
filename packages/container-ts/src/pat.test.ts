@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TsCorruptStreamError, TsMultiProgramNotSupportedError } from './errors.ts';
+import { TsCorruptStreamError } from './errors.ts';
 import { decodePat } from './pat.ts';
 import type { TsPsiSection } from './psi.ts';
 
@@ -48,20 +48,23 @@ describe('decodePat', () => {
     expect(pat.entries[0]?.programNumber).toBe(1);
   });
 
-  it('rejects PAT with two non-zero programs (TsMultiProgramNotSupportedError)', () => {
+  it('parses PAT with two non-zero programs (multi-program support)', () => {
     const body = new Uint8Array([
       0x00,
       0x01,
       0xe1,
-      0x00, // program 1
+      0x00, // program 1 → PMT PID 0x100
       0x00,
       0x02,
       0xe2,
-      0x00, // program 2
+      0x00, // program 2 → PMT PID 0x200
     ]);
     const section = makePsiSection({ body });
 
-    expect(() => decodePat(section)).toThrow(TsMultiProgramNotSupportedError);
+    const pat = decodePat(section);
+    expect(pat.entries).toHaveLength(2);
+    expect(pat.entries[0]).toEqual({ programNumber: 1, pid: 0x100 });
+    expect(pat.entries[1]).toEqual({ programNumber: 2, pid: 0x200 });
   });
 
   it('throws TsCorruptStreamError if table_id is not 0x00', () => {

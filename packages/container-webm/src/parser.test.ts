@@ -16,7 +16,7 @@
  * - "parses Cues block and resolves CueClusterPosition to absolute file offset"
  * - "tolerates missing Cues (writer synthesises a basic Cues on serialise)"
  * - "tolerates missing SeekHead"
- * - "rejects multi-video-track file with WebmMultiTrackNotSupportedError"
+ * - "parses multi-video-track file into multiple tracks (multi-track support)"
  * - "rejects S_TEXT/UTF8 subtitle track with WebmUnsupportedCodecError"
  * - "enforces 200 MiB input cap, per-element 64 MiB cap, recursion depth 8"
  */
@@ -35,7 +35,6 @@ import {
   WebmInputTooLargeError,
   WebmLacingNotSupportedError,
   WebmMissingElementError,
-  WebmMultiTrackNotSupportedError,
   WebmUnsupportedCodecError,
 } from './errors.ts';
 import { parseWebm } from './parser.ts';
@@ -626,9 +625,12 @@ function buildWebmWithSimpleBlockPayload(sbPayload: Uint8Array): Uint8Array {
 // ---------------------------------------------------------------------------
 
 describe('parseWebm — track validation', () => {
-  it('rejects multi-video-track file with WebmMultiTrackNotSupportedError', () => {
+  it('parses a multi-video-track file into two video tracks (multi-track support)', () => {
     const webm = buildWebmWithTwoVideoTracks();
-    expect(() => parseWebm(webm)).toThrow(WebmMultiTrackNotSupportedError);
+    const file = parseWebm(webm);
+    expect(file.tracks).toHaveLength(2);
+    expect(file.tracks.every((t) => t.trackType === 1)).toBe(true);
+    expect(file.tracks.map((t) => t.trackNumber)).toEqual([1, 2]);
   });
 
   it('rejects S_TEXT/UTF8 codec track with WebmUnsupportedCodecError', () => {

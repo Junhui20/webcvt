@@ -79,7 +79,13 @@ export class WebmLacingNotSupportedError extends WebcvtError {
   }
 }
 
-/** Thrown when more than 1 video track or more than 1 audio track is found. */
+/**
+ * @deprecated Multiple video and audio tracks are now supported. This class is
+ * retained only for source compatibility (existing `catch` clauses keep
+ * compiling) and is no longer thrown by the demuxer. Tracks that exceed the
+ * {@link WebmTooManyTracksError} cap or share a TrackNumber
+ * ({@link WebmDuplicateTrackNumberError}) raise their own typed errors instead.
+ */
 export class WebmMultiTrackNotSupportedError extends WebcvtError {
   constructor(trackType: 'video' | 'audio', count: number) {
     super(
@@ -87,6 +93,28 @@ export class WebmMultiTrackNotSupportedError extends WebcvtError {
       `Found ${count} ${trackType} tracks; only one ${trackType} track is supported in first pass. Multiple track support is deferred.`,
     );
     this.name = 'WebmMultiTrackNotSupportedError';
+  }
+}
+
+/** Thrown when a Tracks element declares more than MAX_TRACKS TrackEntry elements. */
+export class WebmTooManyTracksError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'WEBM_TOO_MANY_TRACKS',
+      `Tracks element declares ${count} tracks; maximum supported is ${max}. Input may be crafted.`,
+    );
+    this.name = 'WebmTooManyTracksError';
+  }
+}
+
+/** Thrown when two TrackEntry elements share the same TrackNumber (malformed file). */
+export class WebmDuplicateTrackNumberError extends WebcvtError {
+  constructor(trackNumber: number) {
+    super(
+      'WEBM_DUPLICATE_TRACK_NUMBER',
+      `Duplicate TrackNumber ${trackNumber}; every track must have a unique TrackNumber.`,
+    );
+    this.name = 'WebmDuplicateTrackNumberError';
   }
 }
 

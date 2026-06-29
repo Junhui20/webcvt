@@ -97,7 +97,8 @@ export interface WebmFile {
  * @throws WebmMissingSegmentError — no Segment element.
  * @throws WebmMissingElementError — required element missing.
  * @throws WebmUnsupportedCodecError — unsupported CodecID.
- * @throws WebmMultiTrackNotSupportedError — > 1 video or audio track.
+ * @throws WebmTooManyTracksError — more than MAX_TRACKS tracks.
+ * @throws WebmDuplicateTrackNumberError — two tracks share a TrackNumber.
  * @throws WebmCorruptStreamError — non-empty input with 0 tracks.
  * @throws WebmLacingNotSupportedError — fixed-size or EBML lacing.
  */

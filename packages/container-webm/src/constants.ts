@@ -30,6 +30,13 @@ export const MAX_NEST_DEPTH = 8;
 /** Maximum number of blocks per track (generous given the 200 MiB input cap). */
 export const MAX_BLOCKS_PER_TRACK = 10_000_000;
 
+/**
+ * Maximum number of TrackEntry elements accepted in a single Tracks element.
+ * Multiple video and/or audio tracks are supported; this caps the total to a
+ * sane bound against adversarial inputs that declare thousands of tracks.
+ */
+export const MAX_TRACKS = 64;
+
 /** Maximum VINT width in bytes per RFC 8794. */
 export const MAX_VINT_WIDTH = 8;
 

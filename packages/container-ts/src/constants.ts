@@ -21,8 +21,23 @@ export const MAX_PSI_SECTION_BYTES = 4096;
 /** Maximum distinct PSI PIDs tracked. */
 export const MAX_PSI_PIDS = 64;
 
-/** Maximum elementary-stream PIDs per program. */
+/** Maximum elementary-stream PIDs per program (enforced in decodePmt). */
 export const MAX_ES_PIDS = 16;
+
+/**
+ * Maximum programs (PMTs) parsed from a single PAT. Multi-program transport
+ * streams (e.g. broadcast multiplexes) are supported; this caps adversarial
+ * PATs that list thousands of program entries.
+ */
+export const MAX_PROGRAMS = 256;
+
+/**
+ * Global cap on the total number of elementary-stream PIDs tracked across ALL
+ * programs. Per-program ES count is bounded by MAX_ES_PIDS; this bounds the
+ * aggregate so a multi-program stream cannot allocate an unbounded number of
+ * PES assemblers.
+ */
+export const MAX_TOTAL_ES_PIDS = 512;
 
 /** Maximum PES packet size (16 MiB). */
 export const MAX_PES_BYTES = 16 * 1024 * 1024;

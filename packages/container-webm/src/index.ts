@@ -54,6 +54,8 @@ export {
   WebmUnsupportedCodecError,
   WebmLacingNotSupportedError,
   WebmMultiTrackNotSupportedError,
+  WebmTooManyTracksError,
+  WebmDuplicateTrackNumberError,
   WebmUnsupportedTrackTypeError,
   WebmMissingTimecodeError,
   WebmCodecPrivateTooLargeError,

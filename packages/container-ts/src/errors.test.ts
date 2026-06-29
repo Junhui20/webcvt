@@ -6,12 +6,12 @@ import {
   TsInputTooLargeError,
   TsMissingPatError,
   TsMissingPmtError,
-  TsMultiProgramNotSupportedError,
   TsNoSyncByteError,
   TsPsiCrcError,
   TsReservedAdaptationControlError,
   TsScrambledNotSupportedError,
   TsTooManyPacketsError,
+  TsTooManyProgramsError,
 } from './errors.ts';
 
 describe('TS error classes', () => {
@@ -39,10 +39,12 @@ describe('TS error classes', () => {
     expect(e.code).toBe('TS_RESERVED_ADAPTATION_CONTROL');
   });
 
-  it('TsMultiProgramNotSupportedError', () => {
-    const e = new TsMultiProgramNotSupportedError(3);
-    expect(e.code).toBe('TS_MULTI_PROGRAM_NOT_SUPPORTED');
-    expect(e.message).toContain('3');
+  it('TsTooManyProgramsError', () => {
+    const e = new TsTooManyProgramsError(300, 256);
+    expect(e.code).toBe('TS_TOO_MANY_PROGRAMS');
+    expect(e.name).toBe('TsTooManyProgramsError');
+    expect(e.message).toContain('300');
+    expect(e.message).toContain('256');
   });
 
   it('TsMissingPatError', () => {
@@ -83,7 +85,7 @@ describe('TS error classes', () => {
       new TsNoSyncByteError(100),
       new TsScrambledNotSupportedError(0, 1, 0),
       new TsReservedAdaptationControlError(0),
-      new TsMultiProgramNotSupportedError(2),
+      new TsTooManyProgramsError(2, 1),
       new TsMissingPatError(),
       new TsMissingPmtError(0, 500),
       new TsCorruptStreamError('test'),

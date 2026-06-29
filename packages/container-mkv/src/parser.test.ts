@@ -13,9 +13,9 @@
  * - rejects SimpleBlock with EBML / fixed-size lacing as deferred
  * - computes absolute timestamp = (Cluster.Timecode + delta) * TimecodeScale
  * - parses Cues block and resolves CueClusterPosition to absolute file offset
- * - tolerates and skips Chapters / Tags / Attachments at Segment depth
- * - rejects multi-video-track file with MkvMultiTrackNotSupportedError
- * - rejects subtitle track (S_TEXT/UTF8) with MkvUnsupportedTrackTypeError / MkvUnsupportedCodecError
+ * - parses Chapters and Tags at Segment depth; tolerates garbage Chapters payloads
+ * - accepts multi-video-track files (second pass)
+ * - parses subtitle tracks (S_TEXT/UTF8, S_TEXT/ASS) routed by trackNumber
  * - enforces 200 MiB input cap, per-element 64 MiB cap
  * - rejects ContentEncoding (encrypted track) with MkvEncryptionNotSupportedError
  * - decodes 2-byte track_number VINT in SimpleBlock for trackNumber > 127
@@ -31,10 +31,10 @@ import {
   MkvEncryptionNotSupportedError,
   MkvInputTooLargeError,
   MkvLacingNotSupportedError,
-  MkvMultiTrackNotSupportedError,
   MkvUnsupportedCodecError,
 } from './errors.ts';
 import { parseMkv } from './parser.ts';
+import { serializeMkv } from './serializer.ts';
 
 // ---------------------------------------------------------------------------
 // Synthetic MKV builder helpers
@@ -588,15 +588,17 @@ function buildMkvWithSimpleBlockPayload(sbPayload: Uint8Array): Uint8Array {
 // ---------------------------------------------------------------------------
 
 describe('parseMkv — track validation', () => {
-  it('rejects multi-video-track file with MkvMultiTrackNotSupportedError', () => {
+  it('accepts a multi-video-track file (multi-track now supported)', () => {
     const mkv = buildMkvWithTwoVideoTracks();
-    expect(() => parseMkv(mkv)).toThrow(MkvMultiTrackNotSupportedError);
+    const file = parseMkv(mkv);
+    expect(file.tracks.filter((t) => t.trackType === 1)).toHaveLength(2);
   });
 
-  it('rejects subtitle track type with MkvUnsupportedTrackTypeError', () => {
+  it('parses a subtitle track (TrackType 17, S_TEXT/UTF8)', () => {
     const mkv = buildMkvWithSubtitleTrackType();
-    // TrackType=17 (subtitle-like) → MkvUnsupportedTrackTypeError
-    expect(() => parseMkv(mkv)).toThrow();
+    const file = parseMkv(mkv);
+    const subtitle = file.tracks.find((t) => t.trackType === 17);
+    expect(subtitle?.codecId).toBe('S_TEXT/UTF8');
   });
 
   it('rejects unsupported codec S_TEXT/UTF8 as video type with MkvUnsupportedCodecError', () => {
@@ -1088,6 +1090,252 @@ function buildMkvWithCues(): Uint8Array {
   const cuesElem = makeElement(0x1c53bb6b, cuePointElem);
 
   const segPayload = concatUint8([infoElem, tracksElem, clusterElem, cuesElem]);
+  const segId = new Uint8Array([0x18, 0x53, 0x80, 0x67]);
+  const segSize = encodeVintSize(segPayload.length);
+  return concatUint8([ebmlHeader, segId, segSize, segPayload]);
+}
+
+// ---------------------------------------------------------------------------
+// Chapters / Tags / multi-track + subtitle tests (second pass)
+// ---------------------------------------------------------------------------
+
+describe('parseMkv — Chapters', () => {
+  it('parses 2 chapters with titles, start/end times and language', () => {
+    const file = parseMkv(buildMkvWithChapters());
+    expect(file.chapters).toHaveLength(2);
+
+    const [c0, c1] = file.chapters;
+    expect(c0?.uid).toBe(11n);
+    expect(c0?.startNs).toBe(0);
+    expect(c0?.endNs).toBe(5_000_000_000);
+    expect(c0?.title).toBe('Intro');
+    expect(c0?.language).toBe('eng');
+
+    expect(c1?.uid).toBe(22n);
+    expect(c1?.startNs).toBe(5_000_000_000);
+    expect(c1?.title).toBe('Main');
+  });
+
+  it('defaults chapters to [] when the element is absent', () => {
+    const file = parseMkv(buildMinimalMkv());
+    expect(file.chapters).toEqual([]);
+  });
+});
+
+describe('parseMkv — Tags', () => {
+  it('parses a few SimpleTags (name/value/language)', () => {
+    const file = parseMkv(buildMkvWithTags());
+    expect(file.tags.length).toBeGreaterThanOrEqual(3);
+
+    const title = file.tags.find((t) => t.name === 'TITLE');
+    expect(title?.value).toBe('My Movie');
+
+    const artist = file.tags.find((t) => t.name === 'ARTIST');
+    expect(artist?.value).toBe('Someone');
+    expect(artist?.language).toBe('eng');
+
+    // Nested SimpleTag is flattened into the same list.
+    const nested = file.tags.find((t) => t.name === 'SUBTITLE');
+    expect(nested?.value).toBe('Episode 1');
+  });
+
+  it('defaults tags to [] when the element is absent', () => {
+    const file = parseMkv(buildMinimalMkv());
+    expect(file.tags).toEqual([]);
+  });
+});
+
+describe('parseMkv — multi-track + subtitle round-trip', () => {
+  it('parses 2 video + 1 audio + 1 subtitle track and routes blocks by trackNumber', () => {
+    const file = parseMkv(buildMultiTrackWithSubtitleMkv());
+    expect(file.tracks).toHaveLength(4);
+    expect(file.tracks.filter((t) => t.trackType === 1)).toHaveLength(2);
+    expect(file.tracks.filter((t) => t.trackType === 2)).toHaveLength(1);
+    expect(file.tracks.filter((t) => t.trackType === 17)).toHaveLength(1);
+
+    // Subtitle SimpleBlock (track 4) is routed to the subtitle track.
+    const allBlocks = file.clusters.flatMap((c) => c.blocks);
+    const subBlocks = allBlocks.filter((b) => b.trackNumber === 4);
+    expect(subBlocks).toHaveLength(1);
+    expect(new TextDecoder().decode(subBlocks[0]!.frames[0]!)).toBe('Hello');
+  });
+
+  it('round-trips a multi-track file through serialize → re-parse (tracks preserved)', () => {
+    const file = parseMkv(buildMultiTrackWithSubtitleMkv());
+    const reparsed = parseMkv(serializeMkv(file));
+    expect(reparsed.tracks).toHaveLength(4);
+    const sub = reparsed.tracks.find((t) => t.trackType === 17);
+    expect(sub?.codecId).toBe('S_TEXT/ASS');
+    expect(sub?.trackType === 17 && sub.codecPrivate?.length).toBeGreaterThan(0);
+  });
+});
+
+function buildChaptersBaseSegment(extra: Uint8Array): Uint8Array {
+  const ebmlHeader = buildEbmlHeader('matroska');
+  const infoElem = makeElement(
+    0x1549a966,
+    concatUint8([
+      makeUintElement(0x2ad7b1, 1_000_000),
+      makeStringElement(0x4d80, 'test'),
+      makeStringElement(0x5741, 'test'),
+    ]),
+  );
+  const avcPrivate = buildAvcCodecPrivate();
+  const vTrackEntry = makeElement(
+    0xae,
+    concatUint8([
+      makeUintElement(0xd7, 1),
+      makeUintElement(0x73c5, 1),
+      makeUintElement(0x83, 1),
+      makeStringElement(0x86, 'V_MPEG4/ISO/AVC'),
+      makeElement(0x63a2, avcPrivate),
+      makeElement(0xe0, concatUint8([makeUintElement(0xb0, 160), makeUintElement(0xba, 120)])),
+    ]),
+  );
+  const tracksElem = makeElement(0x1654ae6b, vTrackEntry);
+  const clusterElem = makeElement(
+    0x1f43b675,
+    concatUint8([
+      makeUintElement(0xe7, 0),
+      makeElement(0xa3, new Uint8Array([0x81, 0x00, 0x00, 0x80, 0xaa])),
+    ]),
+  );
+
+  const segPayload = concatUint8([infoElem, tracksElem, clusterElem, extra]);
+  const segId = new Uint8Array([0x18, 0x53, 0x80, 0x67]);
+  const segSize = encodeVintSize(segPayload.length);
+  return concatUint8([ebmlHeader, segId, segSize, segPayload]);
+}
+
+function makeUint64Element(id: number, value: number): Uint8Array {
+  const payload = new Uint8Array(8);
+  const view = new DataView(payload.buffer);
+  view.setBigUint64(0, BigInt(value), false);
+  return makeElement(id, payload);
+}
+
+function buildChapterAtom(
+  uid: number,
+  startNs: number,
+  endNs: number | null,
+  title: string,
+  language: string,
+): Uint8Array {
+  const display = makeElement(
+    0x80,
+    concatUint8([makeStringElement(0x85, title), makeStringElement(0x437c, language)]),
+  );
+  const parts = [makeUintElement(0x73c4, uid), makeUint64Element(0x91, startNs)];
+  if (endNs !== null) parts.push(makeUint64Element(0x92, endNs));
+  parts.push(display);
+  return makeElement(0xb6, concatUint8(parts));
+}
+
+function buildMkvWithChapters(): Uint8Array {
+  const atom0 = buildChapterAtom(11, 0, 5_000_000_000, 'Intro', 'eng');
+  const atom1 = buildChapterAtom(22, 5_000_000_000, null, 'Main', 'eng');
+  const edition = makeElement(0x45b9, concatUint8([atom0, atom1]));
+  const chapters = makeElement(0x1043a770, edition);
+  return buildChaptersBaseSegment(chapters);
+}
+
+function buildSimpleTag(
+  name: string,
+  value: string,
+  language: string | null,
+  nested?: Uint8Array,
+): Uint8Array {
+  const parts = [makeStringElement(0x45a3, name), makeStringElement(0x4487, value)];
+  if (language !== null) parts.push(makeStringElement(0x447a, language));
+  if (nested) parts.push(nested);
+  return makeElement(0x67c8, concatUint8(parts));
+}
+
+function buildMkvWithTags(): Uint8Array {
+  const nested = buildSimpleTag('SUBTITLE', 'Episode 1', null);
+  const tag = makeElement(
+    0x7373,
+    concatUint8([
+      buildSimpleTag('TITLE', 'My Movie', null),
+      buildSimpleTag('ARTIST', 'Someone', 'eng', nested),
+    ]),
+  );
+  const tags = makeElement(0x1254c367, tag);
+  return buildChaptersBaseSegment(tags);
+}
+
+function buildMultiTrackWithSubtitleMkv(): Uint8Array {
+  const ebmlHeader = buildEbmlHeader('matroska');
+  const infoElem = makeElement(
+    0x1549a966,
+    concatUint8([
+      makeUintElement(0x2ad7b1, 1_000_000),
+      makeStringElement(0x4d80, 'test'),
+      makeStringElement(0x5741, 'test'),
+    ]),
+  );
+
+  const avcPrivate = buildAvcCodecPrivate();
+  const v1 = makeElement(
+    0xae,
+    concatUint8([
+      makeUintElement(0xd7, 1),
+      makeUintElement(0x73c5, 1),
+      makeUintElement(0x83, 1),
+      makeStringElement(0x86, 'V_MPEG4/ISO/AVC'),
+      makeElement(0x63a2, avcPrivate),
+      makeElement(0xe0, concatUint8([makeUintElement(0xb0, 160), makeUintElement(0xba, 120)])),
+    ]),
+  );
+  const v2 = makeElement(
+    0xae,
+    concatUint8([
+      makeUintElement(0xd7, 2),
+      makeUintElement(0x73c5, 2),
+      makeUintElement(0x83, 1),
+      makeStringElement(0x86, 'V_VP9'),
+      makeElement(0xe0, concatUint8([makeUintElement(0xb0, 320), makeUintElement(0xba, 240)])),
+    ]),
+  );
+  const a1 = makeElement(
+    0xae,
+    concatUint8([
+      makeUintElement(0xd7, 3),
+      makeUintElement(0x73c5, 3),
+      makeUintElement(0x83, 2),
+      makeStringElement(0x86, 'A_AAC'),
+      makeElement(0x63a2, buildAacAsc()),
+      makeElement(0xe1, concatUint8([makeFloat32Element(0xb5, 48000), makeUintElement(0x9f, 2)])),
+    ]),
+  );
+  const assHeader = new TextEncoder().encode('[Script Info]\nScriptType: v4.00+\n');
+  const s1 = makeElement(
+    0xae,
+    concatUint8([
+      makeUintElement(0xd7, 4),
+      makeUintElement(0x73c5, 4),
+      makeUintElement(0x83, 17),
+      makeStringElement(0x86, 'S_TEXT/ASS'),
+      makeElement(0x63a2, assHeader),
+      makeStringElement(0x22b59c, 'eng'),
+    ]),
+  );
+  const tracksElem = makeElement(0x1654ae6b, concatUint8([v1, v2, a1, s1]));
+
+  // Cluster with a video block (track 1) and a subtitle block (track 4).
+  const vBlock = makeElement(0xa3, new Uint8Array([0x81, 0x00, 0x00, 0x80, 0xaa]));
+  const subText = new TextEncoder().encode('Hello');
+  // SimpleBlock: track 4 (1-byte VINT 0x84), timecode 0x0000, flags 0x00, then text payload.
+  const subBlock = makeElement(
+    0xa3,
+    concatUint8([new Uint8Array([0x84, 0x00, 0x00, 0x00]), subText]),
+  );
+  const clusterElem = makeElement(
+    0x1f43b675,
+    concatUint8([makeUintElement(0xe7, 0), vBlock, subBlock]),
+  );
+
+  const segPayload = concatUint8([infoElem, tracksElem, clusterElem]);
   const segId = new Uint8Array([0x18, 0x53, 0x80, 0x67]);
   const segSize = encodeVintSize(segPayload.length);
   return concatUint8([ebmlHeader, segId, segSize, segPayload]);

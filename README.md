@@ -15,7 +15,7 @@
 🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
 - **30 packages** shipped across Phases 1–7 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 CLI, 3 ancillary)
-- **4,715 tests** passing; CI green
+- **4,796 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
@@ -75,10 +75,10 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 - `@catlabtech/webcvt-container-flac` — FLAC (native)
 - `@catlabtech/webcvt-container-ogg` — Ogg (Vorbis, Opus)
 - `@catlabtech/webcvt-container-aac` — AAC ADTS
-- `@catlabtech/webcvt-container-mp4` — M4A / MP4 (classic + fragmented; multi-track; avc1/avc3/hev1/hvc1/vp09/av01 video + AAC audio; edit lists + iTunes metadata)
-- `@catlabtech/webcvt-container-webm` — WebM (VP8/VP9 + Opus/Vorbis)
-- `@catlabtech/webcvt-container-mkv` — Matroska (AVC/HEVC/VP9 + AAC/FLAC/Opus/Vorbis)
-- `@catlabtech/webcvt-container-ts` — MPEG-TS / HLS (H.264 + AAC ADTS)
+- `@catlabtech/webcvt-container-mp4` — M4A / MP4 (classic + fragmented; multi-track; avc1/avc3/hev1/hvc1/vp09/av01 + AAC; edit lists + iTunes metadata; sidx/mfra + CENC/DRM signalling)
+- `@catlabtech/webcvt-container-webm` — WebM (VP8/VP9/AV1 + Opus/Vorbis; multi-track)
+- `@catlabtech/webcvt-container-mkv` — Matroska (AVC/HEVC/VP9/AV1 + AAC/FLAC/Opus/Vorbis; multi-track + subtitle tracks + Chapters/Tags)
+- `@catlabtech/webcvt-container-ts` — MPEG-TS / HLS + M2TS (H.264 + AAC ADTS; multi-program)
 - `@catlabtech/webcvt-ebml` — shared EBML primitives (RFC 8794)
 
 ### Images

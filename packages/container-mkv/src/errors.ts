@@ -76,7 +76,12 @@ export class MkvLacingNotSupportedError extends WebcvtError {
   }
 }
 
-/** Thrown when more than 1 video track or more than 1 audio track is found. */
+/**
+ * @deprecated Second pass added multi-track support. `decodeTracks` no longer
+ * throws this error; multiple video and audio tracks are now accepted (capped at
+ * MAX_TRACKS, beyond which `MkvTooManyTracksError` is thrown). The class is kept
+ * and still exported for backwards-compatible `instanceof` / catch-by-type checks.
+ */
 export class MkvMultiTrackNotSupportedError extends WebcvtError {
   constructor(trackType: 'video' | 'audio', count: number) {
     super(
@@ -87,14 +92,58 @@ export class MkvMultiTrackNotSupportedError extends WebcvtError {
   }
 }
 
-/** Thrown when a TrackType value other than 1 (video) or 2 (audio) is encountered. */
+/** Thrown when the Tracks element declares more than MAX_TRACKS TrackEntries. */
+export class MkvTooManyTracksError extends WebcvtError {
+  constructor(max: number) {
+    super('MKV_TOO_MANY_TRACKS', `Tracks element declares more than ${max} tracks.`);
+    this.name = 'MkvTooManyTracksError';
+  }
+}
+
+/** Thrown when two TrackEntries share the same TrackNumber. */
+export class MkvDuplicateTrackNumberError extends WebcvtError {
+  constructor(trackNumber: number) {
+    super(
+      'MKV_DUPLICATE_TRACK_NUMBER',
+      `Duplicate TrackNumber ${trackNumber}; each track must have a unique number.`,
+    );
+    this.name = 'MkvDuplicateTrackNumberError';
+  }
+}
+
+/**
+ * Thrown when a TrackType value other than 1 (video), 2 (audio) or 17 (subtitle)
+ * is encountered.
+ */
 export class MkvUnsupportedTrackTypeError extends WebcvtError {
   constructor(trackType: number) {
     super(
       'MKV_UNSUPPORTED_TRACK_TYPE',
-      `TrackType ${trackType} is not supported. Only 1 (video) and 2 (audio) are supported in first pass.`,
+      `TrackType ${trackType} is not supported. Only 1 (video), 2 (audio) and 17 (subtitle) are supported.`,
     );
     this.name = 'MkvUnsupportedTrackTypeError';
+  }
+}
+
+/** Thrown when the Chapters element contains more than MAX_CHAPTERS ChapterAtoms. */
+export class MkvTooManyChaptersError extends WebcvtError {
+  constructor(max: number) {
+    super(
+      'MKV_TOO_MANY_CHAPTERS',
+      `Chapters element contains more than ${max} ChapterAtom entries. Input may be crafted.`,
+    );
+    this.name = 'MkvTooManyChaptersError';
+  }
+}
+
+/** Thrown when the Tags element contains more than the allowed number of tag entries. */
+export class MkvTooManyTagsError extends WebcvtError {
+  constructor(max: number) {
+    super(
+      'MKV_TOO_MANY_TAGS',
+      `Tags element contains more than ${max} tag entries. Input may be crafted.`,
+    );
+    this.name = 'MkvTooManyTagsError';
   }
 }
 

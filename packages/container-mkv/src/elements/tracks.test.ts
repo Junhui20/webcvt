@@ -31,10 +31,11 @@ import {
 } from '../constants.ts';
 import {
   MkvCorruptStreamError,
+  MkvDuplicateTrackNumberError,
   MkvEncryptionNotSupportedError,
   MkvInvalidCodecPrivateError,
   MkvMissingElementError,
-  MkvMultiTrackNotSupportedError,
+  MkvTooManyTracksError,
   MkvUnsupportedCodecError,
   MkvUnsupportedTrackTypeError,
 } from '../errors.ts';
@@ -44,7 +45,7 @@ import {
   encodeStringElement,
   encodeUintElement,
 } from './header.ts';
-import type { MkvAudioTrack, MkvVideoTrack } from './tracks.ts';
+import type { MkvAudioTrack, MkvSubtitleTrack, MkvVideoTrack } from './tracks.ts';
 import { decodeTracks, encodeTracks } from './tracks.ts';
 
 // ---------------------------------------------------------------------------
@@ -297,21 +298,98 @@ describe('decodeTracks — VP9 video + FLAC/Vorbis audio', () => {
 // decodeTracks — validation errors
 // ---------------------------------------------------------------------------
 
-describe('decodeTracks — validation errors', () => {
-  it('throws MkvMultiTrackNotSupportedError for 2 video tracks', () => {
+describe('decodeTracks — multi-track (second pass)', () => {
+  it('decodes 2 video tracks (multi-track now supported)', () => {
     const v1 = buildTrackEntry(1, 1n, 1, 'V_VP9', null, [buildVideoSubElem(320, 240)]);
-    const v2 = buildTrackEntry(2, 2n, 1, 'V_VP9', null, [buildVideoSubElem(320, 240)]);
+    const v2 = buildTrackEntry(2, 2n, 1, 'V_VP9', null, [buildVideoSubElem(640, 480)]);
     const { bytes, children } = buildTracksElement([v1, v2]);
-    expect(() => decodeTracks(bytes, children)).toThrow(MkvMultiTrackNotSupportedError);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(2);
+    expect(tracks.every((t) => t.trackType === 1)).toBe(true);
   });
 
-  it('throws MkvMultiTrackNotSupportedError for 2 audio tracks', () => {
+  it('decodes 2 audio tracks (multi-track now supported)', () => {
     const a1 = buildTrackEntry(1, 1n, 2, 'A_OPUS', buildOpusHead(), [buildAudioSubElem(48000, 2)]);
     const a2 = buildTrackEntry(2, 2n, 2, 'A_OPUS', buildOpusHead(), [buildAudioSubElem(48000, 2)]);
     const { bytes, children } = buildTracksElement([a1, a2]);
-    expect(() => decodeTracks(bytes, children)).toThrow(MkvMultiTrackNotSupportedError);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(2);
+    expect(tracks.every((t) => t.trackType === 2)).toBe(true);
   });
 
+  it('decodes 2 video + 1 audio + 1 subtitle track', () => {
+    const v1 = buildTrackEntry(1, 1n, 1, 'V_VP9', null, [buildVideoSubElem(320, 240)]);
+    const v2 = buildTrackEntry(2, 2n, 1, 'V_VP8', null, [buildVideoSubElem(640, 480)]);
+    const a1 = buildTrackEntry(3, 3n, 2, 'A_OPUS', buildOpusHead(), [buildAudioSubElem(48000, 2)]);
+    const s1 = buildTrackEntry(4, 4n, 17, 'S_TEXT/UTF8', null, [makeStringElem(0x22b59c, 'eng')]);
+    const { bytes, children } = buildTracksElement([v1, v2, a1, s1]);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(4);
+    expect(tracks.filter((t) => t.trackType === 1)).toHaveLength(2);
+    expect(tracks.filter((t) => t.trackType === 2)).toHaveLength(1);
+    const subtitle = tracks.find((t) => t.trackType === 17) as MkvSubtitleTrack | undefined;
+    expect(subtitle?.codecId).toBe('S_TEXT/UTF8');
+    expect(subtitle?.language).toBe('eng');
+    expect(subtitle?.codecPrivate).toBeUndefined();
+  });
+
+  it('throws MkvDuplicateTrackNumberError when two tracks share a TrackNumber', () => {
+    const v1 = buildTrackEntry(1, 1n, 1, 'V_VP9', null, [buildVideoSubElem(320, 240)]);
+    const a1 = buildTrackEntry(1, 2n, 2, 'A_OPUS', buildOpusHead(), [buildAudioSubElem(48000, 2)]);
+    const { bytes, children } = buildTracksElement([v1, a1]);
+    expect(() => decodeTracks(bytes, children)).toThrow(MkvDuplicateTrackNumberError);
+  });
+
+  it('throws MkvTooManyTracksError beyond MAX_TRACKS (64)', () => {
+    const entries: Uint8Array[] = [];
+    for (let i = 1; i <= 65; i++) {
+      entries.push(buildTrackEntry(i, BigInt(i), 1, 'V_VP9', null, [buildVideoSubElem(320, 240)]));
+    }
+    const { bytes, children } = buildTracksElement(entries);
+    expect(() => decodeTracks(bytes, children)).toThrow(MkvTooManyTracksError);
+  });
+});
+
+describe('decodeTracks — subtitle tracks', () => {
+  it('decodes an S_TEXT/ASS subtitle track and exposes its CodecPrivate', () => {
+    const assHeader = new TextEncoder().encode(
+      '[Script Info]\nScriptType: v4.00+\n[V4+ Styles]\nFormat: Name\n',
+    );
+    const entry = buildTrackEntry(1, 1n, 17, 'S_TEXT/ASS', assHeader, [
+      makeStringElem(0x22b59c, 'jpn'),
+    ]);
+    const { bytes, children } = buildTracksElement([entry]);
+    const tracks = decodeTracks(bytes, children);
+    const subtitle = tracks.find((t) => t.trackType === 17) as MkvSubtitleTrack | undefined;
+    expect(subtitle?.codecId).toBe('S_TEXT/ASS');
+    expect(subtitle?.language).toBe('jpn');
+    expect(Array.from(subtitle?.codecPrivate ?? [])).toEqual(Array.from(assHeader));
+  });
+
+  it('decodes an S_TEXT/SSA subtitle track with CodecPrivate', () => {
+    const ssaHeader = new TextEncoder().encode('[Script Info]\nScriptType: v4.00\n');
+    const entry = buildTrackEntry(1, 1n, 17, 'S_TEXT/SSA', ssaHeader, []);
+    const { bytes, children } = buildTracksElement([entry]);
+    const tracks = decodeTracks(bytes, children);
+    const subtitle = tracks.find((t) => t.trackType === 17) as MkvSubtitleTrack | undefined;
+    expect(subtitle?.codecId).toBe('S_TEXT/SSA');
+    expect(subtitle?.codecPrivate?.length).toBe(ssaHeader.length);
+  });
+
+  it('throws MkvMissingElementError when S_TEXT/ASS has no CodecPrivate', () => {
+    const entry = buildTrackEntry(1, 1n, 17, 'S_TEXT/ASS', null, []);
+    const { bytes, children } = buildTracksElement([entry]);
+    expect(() => decodeTracks(bytes, children)).toThrow(MkvMissingElementError);
+  });
+
+  it('throws MkvUnsupportedCodecError for an unsupported subtitle codec', () => {
+    const entry = buildTrackEntry(1, 1n, 17, 'S_VOBSUB', null, []);
+    const { bytes, children } = buildTracksElement([entry]);
+    expect(() => decodeTracks(bytes, children)).toThrow(MkvUnsupportedCodecError);
+  });
+});
+
+describe('decodeTracks — validation errors', () => {
   it('throws MkvEncryptionNotSupportedError when ContentEncodings is present', () => {
     const contentEncodings = encodeMasterElement(ID_CONTENT_ENCODINGS, new Uint8Array(0));
     const entry = buildTrackEntry(1, 1n, 1, 'V_VP9', null, [
@@ -322,8 +400,8 @@ describe('decodeTracks — validation errors', () => {
     expect(() => decodeTracks(bytes, children)).toThrow(MkvEncryptionNotSupportedError);
   });
 
-  it('throws MkvUnsupportedTrackTypeError for track type 17 (subtitle)', () => {
-    const entry = buildTrackEntry(1, 1n, 17, 'S_TEXT/UTF8', null, []);
+  it('throws MkvUnsupportedTrackTypeError for an unsupported track type (3 = complex)', () => {
+    const entry = buildTrackEntry(1, 1n, 3, 'V_VP9', null, [buildVideoSubElem(320, 240)]);
     const { bytes, children } = buildTracksElement([entry]);
     expect(() => decodeTracks(bytes, children)).toThrow(MkvUnsupportedTrackTypeError);
   });
@@ -455,6 +533,58 @@ describe('encodeTracks', () => {
     expect(decoded[0]?.trackNumber).toBe(1);
     expect(decoded[0]?.codecId).toBe('V_VP9');
     expect(decoded[0]?.webcodecsCodecString).toBe('vp09.00.10.08');
+  });
+
+  it('round-trips a multi-track file with video + audio + subtitle', () => {
+    const assHeader = new TextEncoder().encode('[Script Info]\nScriptType: v4.00+\n');
+    const originalTracks: (MkvVideoTrack | MkvAudioTrack | MkvSubtitleTrack)[] = [
+      {
+        trackNumber: 1,
+        trackUid: 1n,
+        trackType: 1 as const,
+        codecId: 'V_VP9' as const,
+        pixelWidth: 320,
+        pixelHeight: 240,
+        webcodecsCodecString: 'vp09.00.10.08',
+      },
+      {
+        trackNumber: 2,
+        trackUid: 2n,
+        trackType: 2 as const,
+        codecId: 'A_AAC' as const,
+        codecPrivate: buildAacAsc(),
+        samplingFrequency: 44100,
+        channels: 2,
+        webcodecsCodecString: 'mp4a.40.2',
+      },
+      {
+        trackNumber: 3,
+        trackUid: 3n,
+        trackType: 17 as const,
+        codecId: 'S_TEXT/ASS' as const,
+        codecPrivate: assHeader,
+        language: 'eng',
+      },
+    ];
+    const encoded = encodeTracks(originalTracks);
+    const payloadStart = getMasterPayloadOffset(encoded, 4);
+    const children = readChildren(
+      encoded,
+      payloadStart,
+      encoded.length,
+      1,
+      { value: 0 },
+      1000,
+      64 * 1024 * 1024,
+      ID_TRACKS,
+      0x18538067,
+    );
+    const decoded = decodeTracks(encoded, children);
+    expect(decoded).toHaveLength(3);
+    const subtitle = decoded.find((t) => t.trackType === 17) as MkvSubtitleTrack | undefined;
+    expect(subtitle?.codecId).toBe('S_TEXT/ASS');
+    expect(subtitle?.language).toBe('eng');
+    expect(Array.from(subtitle?.codecPrivate ?? [])).toEqual(Array.from(assHeader));
   });
 });
 

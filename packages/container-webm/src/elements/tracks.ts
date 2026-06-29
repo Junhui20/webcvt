@@ -1,8 +1,9 @@
 /**
  * Tracks element (ID 0x1654AE6B) and TrackEntry decode and encode.
  *
- * Validates codec IDs against allowlist {V_VP8, V_VP9, A_VORBIS, A_OPUS}.
- * Rejects multi-video or multi-audio tracks (first-pass scope).
+ * Validates codec IDs against allowlist {V_VP8, V_VP9, V_AV01, A_VORBIS, A_OPUS}.
+ * Supports multiple video and/or audio tracks, capped at MAX_TRACKS total.
+ * Rejects duplicate TrackNumbers (malformed file) and >MAX_TRACKS as typed errors.
  * Captures CodecPrivate verbatim (Trap §12/§13).
  */
 
@@ -47,12 +48,14 @@ import {
   ID_TRACK_UID,
   ID_VIDEO,
   MAX_CODEC_PRIVATE_BYTES,
+  MAX_TRACKS,
 } from '../constants.ts';
 import {
   WebmCodecPrivateTooLargeError,
   WebmCorruptStreamError,
+  WebmDuplicateTrackNumberError,
   WebmMissingElementError,
-  WebmMultiTrackNotSupportedError,
+  WebmTooManyTracksError,
   WebmUnsupportedCodecError,
   WebmUnsupportedTrackTypeError,
 } from '../errors.ts';
@@ -119,9 +122,15 @@ export type WebmTrack = WebmVideoTrack | WebmAudioTrack;
 /**
  * Decode the Tracks element from its children.
  *
+ * Multiple video and/or audio tracks are supported. The total number of tracks
+ * is capped at {@link MAX_TRACKS}; each TrackNumber must be unique.
+ *
  * @param bytes          Full file buffer.
  * @param children       Direct children of the Tracks master element.
  * @param elementCount   Mutable global element counter for cap enforcement (Q-H-2 / Sec-M-1).
+ *
+ * @throws WebmTooManyTracksError        — more than MAX_TRACKS TrackEntry elements.
+ * @throws WebmDuplicateTrackNumberError — two tracks share the same TrackNumber.
  */
 export function decodeTracks(
   bytes: Uint8Array,
@@ -129,19 +138,20 @@ export function decodeTracks(
   elementCount: { value: number } = { value: 0 },
 ): WebmTrack[] {
   const trackEntries = findChildren(children, ID_TRACK_ENTRY);
+
+  if (trackEntries.length > MAX_TRACKS) {
+    throw new WebmTooManyTracksError(trackEntries.length, MAX_TRACKS);
+  }
+
   const tracks: WebmTrack[] = [];
-  let videoCount = 0;
-  let audioCount = 0;
+  const seenTrackNumbers = new Set<number>();
 
   for (const entry of trackEntries) {
     const track = decodeTrackEntry(bytes, entry, elementCount);
-    if (track.trackType === 1) {
-      videoCount++;
-      if (videoCount > 1) throw new WebmMultiTrackNotSupportedError('video', videoCount);
-    } else {
-      audioCount++;
-      if (audioCount > 1) throw new WebmMultiTrackNotSupportedError('audio', audioCount);
+    if (seenTrackNumbers.has(track.trackNumber)) {
+      throw new WebmDuplicateTrackNumberError(track.trackNumber);
     }
+    seenTrackNumbers.add(track.trackNumber);
     tracks.push(track);
   }
 

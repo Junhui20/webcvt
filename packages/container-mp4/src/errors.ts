@@ -914,3 +914,63 @@ export class Mp4IterateWrongKindError extends WebcvtError {
     this.name = 'Mp4IterateWrongKindError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// Common Encryption (CENC) / protection signaling errors (read-only)
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown when a `pssh` (Protection System Specific Header) box is truncated,
+ * declares an unsupported version, or its DataSize overruns the box length.
+ */
+export class Mp4PsshInvalidError extends WebcvtError {
+  constructor(reason: string) {
+    super('MP4_PSSH_INVALID', `Invalid pssh box: ${reason}`);
+    this.name = 'Mp4PsshInvalidError';
+  }
+}
+
+/** Thrown when a `pssh` v1 box declares a KID_count exceeding MAX_PSSH_KIDS. */
+export class Mp4PsshKidCountTooLargeError extends WebcvtError {
+  constructor(count: number, max: number) {
+    super(
+      'MP4_PSSH_KID_COUNT_TOO_LARGE',
+      `pssh KID_count ${count} exceeds maximum ${max}. Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4PsshKidCountTooLargeError';
+  }
+}
+
+/** Thrown when a `pssh` box declares a DataSize exceeding MAX_PSSH_DATA_SIZE. */
+export class Mp4PsshDataSizeTooLargeError extends WebcvtError {
+  constructor(size: number, max: number) {
+    super(
+      'MP4_PSSH_DATA_SIZE_TOO_LARGE',
+      `pssh DataSize ${size} exceeds maximum ${max} bytes. Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4PsshDataSizeTooLargeError';
+  }
+}
+
+/** Thrown when the number of `pssh` boxes in a file exceeds MAX_PSSH_BOXES. */
+export class Mp4PsshTooManyError extends WebcvtError {
+  constructor(max: number) {
+    super(
+      'MP4_PSSH_TOO_MANY',
+      `File contains more than ${max} pssh boxes. Input may be adversarially crafted.`,
+    );
+    this.name = 'Mp4PsshTooManyError';
+  }
+}
+
+/**
+ * Thrown when an `encv`/`enca` protected sample entry's Protection Scheme
+ * Information (`sinf`) subtree is malformed — e.g. a missing/short `frma`,
+ * `schm`, or `tenc` box, or too many child boxes.
+ */
+export class Mp4ProtectionInvalidError extends WebcvtError {
+  constructor(reason: string) {
+    super('MP4_PROTECTION_INVALID', `Invalid protection scheme info: ${reason}`);
+    this.name = 'Mp4ProtectionInvalidError';
+  }
+}

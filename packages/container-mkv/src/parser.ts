@@ -28,18 +28,22 @@ import {
   EbmlUnknownSizeError,
 } from '@catlabtech/webcvt-ebml';
 import {
+  ID_CHAPTERS,
   ID_CLUSTER,
   ID_CUES,
   ID_EBML,
   ID_INFO,
   ID_SEEK_HEAD,
   ID_SEGMENT,
+  ID_TAGS,
   ID_TRACKS,
   MAX_CLUSTER_BYTES,
   MAX_ELEMENTS_PER_FILE,
   MAX_ELEMENT_PAYLOAD_BYTES,
   MAX_INPUT_BYTES,
 } from './constants.ts';
+import { decodeChapters } from './elements/chapters.ts';
+import type { MkvChapter } from './elements/chapters.ts';
 import { decodeCluster } from './elements/cluster.ts';
 import type { MkvCluster } from './elements/cluster.ts';
 import { decodeCues } from './elements/cues.ts';
@@ -50,6 +54,8 @@ import { decodeSeekHead } from './elements/seek-head.ts';
 import type { MkvSeekHead } from './elements/seek-head.ts';
 import { decodeInfo } from './elements/segment-info.ts';
 import type { MkvInfo } from './elements/segment-info.ts';
+import { decodeTags } from './elements/tags.ts';
+import type { MkvTag } from './elements/tags.ts';
 import { decodeTracks } from './elements/tracks.ts';
 import type { MkvTrack } from './elements/tracks.ts';
 import {
@@ -72,6 +78,10 @@ export interface MkvFile {
   clusters: MkvCluster[];
   cues?: MkvCuePoint[];
   seekHead?: MkvSeekHead;
+  /** Chapter list from the Chapters element; empty when absent. */
+  chapters: MkvChapter[];
+  /** Flattened SimpleTag list from the Tags element; empty when absent. */
+  tags: MkvTag[];
   /** Reference to the original input bytes (zero-copy SimpleBlock access). */
   fileBytes: Uint8Array;
 }
@@ -92,7 +102,8 @@ export interface MkvFile {
  * @throws MkvMissingSegmentError — no Segment element.
  * @throws MkvMissingElementError — required element missing.
  * @throws MkvUnsupportedCodecError — unsupported CodecID.
- * @throws MkvMultiTrackNotSupportedError — > 1 video or audio track.
+ * @throws MkvTooManyTracksError — more than MAX_TRACKS tracks.
+ * @throws MkvDuplicateTrackNumberError — two tracks share a TrackNumber.
  * @throws MkvCorruptStreamError — non-empty input with 0 tracks.
  * @throws MkvLacingNotSupportedError — fixed-size or EBML lacing.
  */
@@ -176,7 +187,7 @@ export function parseMkv(input: Uint8Array): MkvFile {
   // -------------------------------------------------------------------------
   interface SegmentChildRecord {
     elem: EbmlElement;
-    kind: 'seekHead' | 'info' | 'tracks' | 'cluster' | 'cues' | 'other';
+    kind: 'seekHead' | 'info' | 'tracks' | 'cluster' | 'cues' | 'chapters' | 'tags' | 'other';
   }
 
   const segChildRecords: SegmentChildRecord[] = [];
@@ -235,7 +246,9 @@ export function parseMkv(input: Uint8Array): MkvFile {
     else if (id === ID_TRACKS) kind = 'tracks';
     else if (id === ID_CLUSTER) kind = 'cluster';
     else if (id === ID_CUES) kind = 'cues';
-    // Void, Chapters, Tags, Attachments, etc.: 'other' — skip (Trap §14)
+    else if (id === ID_CHAPTERS) kind = 'chapters';
+    else if (id === ID_TAGS) kind = 'tags';
+    // Void, Attachments, etc.: 'other' — skip (Trap §14)
 
     segChildRecords.push({ elem, kind });
     cursor = nextOff;
@@ -318,6 +331,16 @@ export function parseMkv(input: Uint8Array): MkvFile {
     cues = decodeCues(input, cuesChildren, segmentPayloadOffset, elementCount);
   }
 
+  // Parse Chapters (optional — empty when absent or unparseable).
+  const chaptersRecord = segChildRecords.find((r) => r.kind === 'chapters');
+  const chapters: MkvChapter[] = chaptersRecord
+    ? decodeChapters(input, chaptersRecord.elem, elementCount)
+    : [];
+
+  // Parse Tags (optional — empty when absent or unparseable).
+  const tagsRecord = segChildRecords.find((r) => r.kind === 'tags');
+  const tags: MkvTag[] = tagsRecord ? decodeTags(input, tagsRecord.elem, elementCount) : [];
+
   // Parse Clusters.
   const blockCounts = new Map<number, number>();
   const clusters: MkvCluster[] = [];
@@ -348,6 +371,8 @@ export function parseMkv(input: Uint8Array): MkvFile {
     clusters,
     cues,
     seekHead,
+    chapters,
+    tags,
     fileBytes: input,
   };
 }

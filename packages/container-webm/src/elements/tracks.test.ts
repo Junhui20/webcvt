@@ -6,7 +6,9 @@ import type { EbmlElement } from '@catlabtech/webcvt-ebml';
 import { describe, expect, it } from 'vitest';
 import {
   WebmCorruptStreamError,
+  WebmDuplicateTrackNumberError,
   WebmMultiTrackNotSupportedError,
+  WebmTooManyTracksError,
   WebmUnsupportedCodecError,
 } from '../errors.ts';
 import { decodeTracks, encodeTracks } from './tracks.ts';
@@ -172,11 +174,70 @@ describe('decodeTracks', () => {
     expect(tracks[0]?.codecId).toBe('A_OPUS');
   });
 
-  it('rejects multi-video-track with WebmMultiTrackNotSupportedError', () => {
+  it('decodes multiple video tracks (multi-track support)', () => {
     const entry1 = buildVideoTrackEntry(1, 1, 'V_VP8');
-    const entry2 = buildVideoTrackEntry(2, 2, 'V_VP8');
+    const entry2 = buildVideoTrackEntry(2, 2, 'V_VP9');
     const { bytes, children } = buildTracksElement([entry1, entry2]);
-    expect(() => decodeTracks(bytes, children)).toThrow(WebmMultiTrackNotSupportedError);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(2);
+    expect(tracks[0]?.trackNumber).toBe(1);
+    expect(tracks[0]?.codecId).toBe('V_VP8');
+    expect(tracks[1]?.trackNumber).toBe(2);
+    expect(tracks[1]?.codecId).toBe('V_VP9');
+  });
+
+  it('decodes 2 video + 1 audio tracks into 3 tracks in declaration order', () => {
+    const v1 = buildVideoTrackEntry(1, 11, 'V_VP8');
+    const v2 = buildVideoTrackEntry(2, 22, 'V_VP9');
+    const a1 = buildAudioTrackEntry(3, 33, 'A_OPUS');
+    const { bytes, children } = buildTracksElement([v1, v2, a1]);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(3);
+    expect(tracks.map((t) => t.trackNumber)).toEqual([1, 2, 3]);
+    expect(tracks.map((t) => t.trackType)).toEqual([1, 1, 2]);
+    expect(tracks.map((t) => t.codecId)).toEqual(['V_VP8', 'V_VP9', 'A_OPUS']);
+  });
+
+  it('decodes multiple audio tracks', () => {
+    const a1 = buildAudioTrackEntry(1, 1, 'A_OPUS');
+    const a2 = buildAudioTrackEntry(2, 2, 'A_VORBIS');
+    const { bytes, children } = buildTracksElement([a1, a2]);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(2);
+    expect(tracks.map((t) => t.trackType)).toEqual([2, 2]);
+  });
+
+  it('rejects duplicate TrackNumber with WebmDuplicateTrackNumberError', () => {
+    const entry1 = buildVideoTrackEntry(1, 1, 'V_VP8');
+    const entry2 = buildAudioTrackEntry(1, 2, 'A_OPUS'); // same TrackNumber 1
+    const { bytes, children } = buildTracksElement([entry1, entry2]);
+    expect(() => decodeTracks(bytes, children)).toThrow(WebmDuplicateTrackNumberError);
+  });
+
+  it('rejects more than MAX_TRACKS (64) track entries with WebmTooManyTracksError', () => {
+    const entries: Uint8Array[] = [];
+    for (let i = 1; i <= 65; i++) {
+      entries.push(buildVideoTrackEntry(i, i, 'V_VP8'));
+    }
+    const { bytes, children } = buildTracksElement(entries);
+    expect(() => decodeTracks(bytes, children)).toThrow(WebmTooManyTracksError);
+  });
+
+  it('accepts exactly MAX_TRACKS (64) track entries', () => {
+    const entries: Uint8Array[] = [];
+    for (let i = 1; i <= 64; i++) {
+      entries.push(buildVideoTrackEntry(i, i, 'V_VP8'));
+    }
+    const { bytes, children } = buildTracksElement(entries);
+    const tracks = decodeTracks(bytes, children);
+    expect(tracks).toHaveLength(64);
+  });
+
+  it('keeps the deprecated WebmMultiTrackNotSupportedError exported and constructible', () => {
+    // Source-compat: the class is retained but is no longer thrown by the demuxer.
+    const err = new WebmMultiTrackNotSupportedError('video', 2);
+    expect(err).toBeInstanceOf(WebmMultiTrackNotSupportedError);
+    expect(err.code).toBe('WEBM_MULTI_TRACK_NOT_SUPPORTED');
   });
 
   it('rejects S_TEXT/UTF8 codec (even on video type) with WebmUnsupportedCodecError', () => {
