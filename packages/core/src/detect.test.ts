@@ -184,6 +184,23 @@ describe('detectFormat', () => {
     expect(result?.ext).not.toBe('ts');
   });
 
+  it('detects M2TS by sync byte 0x47 at offset 4 and offset 196', async () => {
+    // M2TS: 4-byte TP_extra_header before each 188-byte TS packet → sync at 4 and 196.
+    const m2ts = new Uint8Array(197);
+    m2ts[4] = 0x47;
+    m2ts[196] = 0x47;
+    const result = await detectFormat(m2ts);
+    expect(result?.ext).toBe('ts');
+    expect(result?.mime).toBe('video/mp2t');
+  });
+
+  it('does NOT detect M2TS when only offset 4 has 0x47 (too short for confirmation)', async () => {
+    const buf = new Uint8Array(100);
+    buf[4] = 0x47;
+    const result = await detectFormat(buf);
+    expect(result?.ext).not.toBe('ts');
+  });
+
   it('detects GIF before TS even though GIF starts with 0x47', async () => {
     // GIF89a: 0x47 0x49 0x46 0x38 0x39 0x61
     const gif = new Uint8Array(189);

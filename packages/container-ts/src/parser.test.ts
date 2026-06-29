@@ -462,3 +462,50 @@ describe('parseTs MAX_PACKETS cap', () => {
     expect(file.packetCount).toBeLessThan(1_200_000);
   });
 });
+
+// ---------------------------------------------------------------------------
+// M2TS (192-byte BDAV / AVCHD packets)
+// ---------------------------------------------------------------------------
+
+/** Wrap each 188-byte TS packet with a 4-byte TP_extra_header → 192-byte M2TS. */
+function toM2ts(ts: Uint8Array): Uint8Array {
+  const packetCount = ts.length / 188;
+  const out = new Uint8Array(packetCount * 192);
+  for (let k = 0; k < packetCount; k++) {
+    const dst = k * 192;
+    // Arbitrary 4-byte arrival-timestamp prefix (none equal to 0x47).
+    out[dst] = 0x12;
+    out[dst + 1] = 0x34;
+    out[dst + 2] = 0x56;
+    out[dst + 3] = 0x78;
+    out.set(ts.subarray(k * 188, k * 188 + 188), dst + 4);
+  }
+  return out;
+}
+
+describe('parseTs M2TS (192-byte packets)', () => {
+  it('parses an M2TS stream identically to the equivalent 188-byte TS', () => {
+    const ts = buildMinimalTs({});
+    const fromTs = parseTs(ts);
+    const fromM2ts = parseTs(toM2ts(ts));
+
+    // The stripped M2TS buffer is byte-identical to the plain TS, so the whole
+    // parsed structure (offsets, payloads, programs) must match.
+    expect(fromM2ts).toEqual(fromTs);
+  });
+
+  it('strips prefixes so PES payloads match the plain-TS parse', () => {
+    const ts = buildMinimalTs({ audioPid: 0x0101, videoPid: 0x0100 });
+    const fromTs = parseTs(ts);
+    const fromM2ts = parseTs(toM2ts(ts));
+
+    expect(fromM2ts.packetCount).toBe(fromTs.packetCount);
+    expect(fromM2ts.pesPackets).toHaveLength(fromTs.pesPackets.length);
+    expect(fromM2ts.program.streams.map((s) => s.pid)).toEqual(
+      fromTs.program.streams.map((s) => s.pid),
+    );
+    expect(Array.from(fromM2ts.pesPackets[0]?.payload ?? [])).toEqual(
+      Array.from(fromTs.pesPackets[0]?.payload ?? []),
+    );
+  });
+});

@@ -47,6 +47,16 @@ export const TS_PACKET_SIZE = 188;
 /** TS sync byte. */
 export const TS_SYNC_BYTE = 0x47;
 
+/**
+ * M2TS (BDAV / AVCHD) packet size in bytes: a 4-byte TP_extra_header (a 30-bit
+ * arrival timestamp + 2-bit copy-permission) prefixes each 188-byte TS packet.
+ * Used by Blu-ray (.m2ts) and AVCHD camcorder (.mts) files.
+ */
+export const M2TS_PACKET_SIZE = 192;
+
+/** Byte length of the TP_extra_header that precedes each TS packet in M2TS. */
+export const M2TS_PREFIX_SIZE = 4;
+
 /** Well-known PIDs. */
 export const PID_PAT = 0x0000;
 export const PID_NULL = 0x1fff;

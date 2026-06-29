@@ -264,6 +264,14 @@ export async function detectFormat(
     return findByExt('ts');
   }
 
+  // M2TS (Blu-ray .m2ts / AVCHD .mts): each 188-byte TS packet is prefixed by a
+  // 4-byte TP_extra_header, so the sync byte sits at offset 4 and repeats every
+  // 192 bytes. Two-anchor confirmation at offsets 4 and 196 (container-ts strips
+  // the prefixes and parses it as TS, so it maps to the same 'ts' format).
+  if (head[4] === 0x47 && head.length >= 197 && head[196] === 0x47) {
+    return findByExt('ts');
+  }
+
   // Netpbm detection: all magics start with 'P' (0x50) followed by a digit or 'f'/'F'.
   // P1..P6 → 2-byte ASCII magic; Pf/PF → 2-byte ASCII magic.
   // These are checked as text patterns because the signatures overlap with 'P' at offset 0.

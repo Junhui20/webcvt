@@ -31,6 +31,7 @@ import {
   TsMissingPmtError,
   TsTooManyPacketsError,
 } from './errors.ts';
+import { maybeNormalizeM2ts } from './m2ts.ts';
 import { acquireSync, decodePacket } from './packet.ts';
 import { type PatEntry, decodePat } from './pat.ts';
 import {
@@ -73,11 +74,17 @@ export interface TsFile {
  *         TsMissingPatError, TsMissingPmtError, TsCorruptStreamError,
  *         TsPsiCrcError
  */
-export function parseTs(input: Uint8Array): TsFile {
+export function parseTs(rawInput: Uint8Array): TsFile {
   // Security cap — FIRST statement (container-flac C-1 lesson)
-  if (input.length > MAX_INPUT_BYTES) {
-    throw new TsInputTooLargeError(input.length, MAX_INPUT_BYTES);
+  if (rawInput.length > MAX_INPUT_BYTES) {
+    throw new TsInputTooLargeError(rawInput.length, MAX_INPUT_BYTES);
   }
+
+  // M2TS (192-byte BDAV/AVCHD packets): strip the 4-byte TP_extra_header
+  // prefixes to a standard 188-byte TS stream so the rest of the demuxer is
+  // unchanged. Returns null for plain TS (and for non-TS input, leaving the
+  // sync-acquisition step below to raise TsNoSyncByteError).
+  const input = maybeNormalizeM2ts(rawInput) ?? rawInput;
 
   // Step 1: Sync acquisition
   let offset = acquireSync(input, 0);
