@@ -57,7 +57,8 @@ describe('D.1: Fragmented MP4 detection', () => {
     expect(file.trackExtends).toHaveLength(1);
     expect(file.fragments).toHaveLength(1);
     // D.4: fragmentedTail is now populated (non-null) for fragmented files.
-    expect(file.sidx).toBeNull();
+    // D.3: sidx is now a parsed array (empty here — this fixture has no sidx).
+    expect(file.sidx).toEqual([]);
     expect(file.fragmentedTail).not.toBeNull(); // populated in D.4
     expect(file.originalMoovSize).not.toBeNull(); // populated in D.4
     expect(file.mfra).toBeNull();

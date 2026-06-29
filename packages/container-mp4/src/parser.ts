@@ -29,6 +29,8 @@ import { type Mp4Box, findChild, findChildren, walkBoxes } from './box-tree.ts';
 import { type EditListEntry, parseElst } from './boxes/elst.ts';
 import { type Mp4Ftyp, parseFtyp } from './boxes/ftyp.ts';
 import { type Mp4SampleEntry, parseHdlr, parseStsd, validateDref } from './boxes/hdlr-stsd-mp4a.ts';
+import type { Mp4MovieFragmentRandomAccess } from './boxes/mfra.ts';
+import { parseMfra } from './boxes/mfra.ts';
 import type { Mp4MovieFragment, Mp4TrackFragment } from './boxes/moof.ts';
 import { parseMoof } from './boxes/moof.ts';
 import type { Mp4Mehd, Mp4MvexResult, Mp4TrackExtends } from './boxes/mvex.ts';
@@ -41,6 +43,8 @@ import {
   parseMvhd,
   parseTkhd,
 } from './boxes/mvhd-tkhd-mdhd.ts';
+import type { Mp4SegmentIndex } from './boxes/sidx.ts';
+import { parseSidx } from './boxes/sidx.ts';
 import {
   type Mp4SampleTable,
   type StscEntry,
@@ -79,6 +83,12 @@ import {
 export type { Mp4MovieFragment, Mp4TrackFragment, Mp4TrackRun };
 export type { Mp4TrackExtends };
 export type { Mp4SampleEntry };
+export type { Mp4SegmentIndex, Mp4SegmentReference } from './boxes/sidx.ts';
+export type {
+  Mp4MovieFragmentRandomAccess,
+  Mp4TrackFragmentRandomAccess,
+  Mp4TrackFragmentRandomAccessEntry,
+} from './boxes/mfra.ts';
 
 // ---------------------------------------------------------------------------
 // Public Types
@@ -164,10 +174,11 @@ export interface Mp4File {
   readonly fragments: readonly Mp4MovieFragment[];
 
   /**
-   * Parsed `sidx` (Segment Index) box. Currently always null (D.3 will parse it).
-   * The sidx box is silently skipped in sub-pass D.
+   * Parsed `sidx` (Segment Index) boxes, in file order — the DASH/CMAF
+   * sub-segment index. Empty array when the file has no sidx; classic
+   * (non-fragmented) files are always `[]`.
    */
-  readonly sidx: null;
+  readonly sidx: readonly Mp4SegmentIndex[];
 
   /**
    * Bytes from end-of-init-segment to end-of-file for byte-equivalent round-trip (D.4).
@@ -190,10 +201,11 @@ export interface Mp4File {
   readonly mehd: Mp4Mehd | null;
 
   /**
-   * Opaque `mfra` payload bytes (D.3 placeholder).
-   * null in sub-pass D; D.3 will parse this.
+   * Parsed `mfra` (Movie Fragment Random Access) box — the end-of-file
+   * random-access index — or null when absent. Classic (non-fragmented)
+   * files are always null.
    */
-  readonly mfra: Uint8Array | null;
+  readonly mfra: Mp4MovieFragmentRandomAccess | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -374,7 +386,7 @@ function parseClassic(
     isFragmented: false,
     trackExtends: [],
     fragments: [],
-    sidx: null,
+    sidx: [],
     fragmentedTail: null,
     originalMoovSize: null,
     mehd: null,
@@ -427,8 +439,10 @@ function parseFragmented(
   // Parse mvex → trex defaults and optional mehd.
   const mvexResult: Mp4MvexResult = parseMvex(mvexBox);
 
-  // Walk top-level boxes after moov for moof, sidx, mfra (D.1 scope: skip sidx/mfra).
+  // Walk top-level boxes after moov for moof, sidx, mfra (D.3: sidx/mfra typed parse).
   const fragments: Mp4MovieFragment[] = [];
+  const sidx: Mp4SegmentIndex[] = [];
+  let mfra: Mp4MovieFragmentRandomAccess | null = null;
   let lastSequenceNumber = -1;
 
   for (const box of topLevel) {
@@ -453,8 +467,13 @@ function parseFragmented(
       lastSequenceNumber = fragment.sequenceNumber;
 
       fragments.push(fragment);
+    } else if (box.type === 'sidx') {
+      // D.3: a fragmented file may carry one or more sidx (segment index) boxes.
+      sidx.push(parseSidx(box.payload));
+    } else if (box.type === 'mfra' && mfra === null) {
+      // D.3: at most one mfra (end-of-file random-access index); ignore any extras.
+      mfra = parseMfra(box);
     }
-    // sidx and mfra: silently skip in sub-pass D.
   }
 
   // D.4: Compute fragmentedTail and originalMoovSize for byte-equivalent round-trip.
@@ -478,11 +497,11 @@ function parseFragmented(
     isFragmented: true,
     trackExtends: mvexResult.trackExtends,
     fragments,
-    sidx: null,
+    sidx,
     fragmentedTail,
     originalMoovSize,
     mehd: mvexResult.mehd,
-    mfra: null,
+    mfra,
   };
 }
 

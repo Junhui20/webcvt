@@ -127,19 +127,19 @@ describe('fragmented round-trip — byte-identical', () => {
   // Test 3: fMP4 with sidx in tail — sidx preserved verbatim, byte-identical
   // ---------------------------------------------------------------------------
 
-  it('test 3: fMP4 with sidx in tail round-trips byte-identical (sidx opaque)', () => {
-    // Build a normal fMP4, then append a fake sidx-like box after init+moof+mdat.
-    // The sidx lives in the fragmentedTail region, so it is preserved verbatim.
+  it('test 3: fMP4 with sidx in tail round-trips byte-identical (sidx parsed + preserved)', () => {
+    // Build a normal fMP4, then append a sidx box after init+moof+mdat.
+    // D.3 parses the sidx into file.sidx, AND it stays in the fragmentedTail
+    // region, so the round-trip is still byte-identical.
     const base = buildMinimalFmp4({ sampleCount: 3, sampleSize: 4 });
 
-    // Append a minimal opaque box (using 'sidx' four-cc) to simulate real sidx.
-    const fakeBoxPayload = new Uint8Array(8); // fake sidx content
-    const fakeBox = wrapBox('sidx', fakeBoxPayload);
-    const bytes = concat(base, fakeBox);
+    // A valid minimal v0 sidx (24-byte payload, reference_count = 0).
+    const sidxBox = wrapBox('sidx', new Uint8Array(24));
+    const bytes = concat(base, sidxBox);
 
-    // Parser silently skips sidx; it becomes part of fragmentedTail.
     const parsed = parseMp4(bytes);
     expect(parsed.isFragmented).toBe(true);
+    expect(parsed.sidx).toHaveLength(1);
 
     const serialized = serializeMp4(parsed);
     assertByteIdentical(serialized, bytes, 'test3-sidx-tail');
@@ -631,13 +631,17 @@ describe('fragmented round-trip — byte-identical', () => {
       sampleSize: 4,
     });
 
-    // Append two fake opaque boxes (like mfro + mfra at EOF).
-    const fakeMfro = wrapBox('mfro', new Uint8Array(4));
-    const fakeMfra = wrapBox('mfra', new Uint8Array(16));
-    const bytes = concat(base, fakeMfra, fakeMfro);
+    // Append a valid mfra (tfra + mfro children) at EOF. D.3 parses it into
+    // file.mfra, AND it stays in the fragmentedTail, so the round-trip is still
+    // byte-identical. (tfra: v0, trackId 0, 0 entries; mfro: declared size 0.)
+    const tfra = wrapBox('tfra', new Uint8Array(16));
+    const mfro = wrapBox('mfro', new Uint8Array(8));
+    const mfraBox = wrapBox('mfra', concat(tfra, mfro));
+    const bytes = concat(base, mfraBox);
 
     const parsed = parseMp4(bytes);
     expect(parsed.isFragmented).toBe(true);
+    expect(parsed.mfra).not.toBeNull();
 
     const serialized = serializeMp4(parsed);
     assertByteIdentical(serialized, bytes, 'test12-mfra-tail');

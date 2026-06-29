@@ -85,6 +85,8 @@ export const CONTAINER_BOX_TYPES = new Set([
   'mvex',
   'moof',
   'traf',
+  // Movie Fragment Random Access container (D.3): holds tfra + mfro children.
+  'mfra',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -108,6 +110,12 @@ export const MAX_SIDX_REFERENCES = 65_536;
 
 /** Maximum sidx nesting depth (D.3). */
 export const MAX_SIDX_DEPTH = 8;
+
+/** Maximum number of tfra boxes per mfra (one per track in practice). */
+export const MAX_MFRA_TFRA_BOXES = 256;
+
+/** Maximum number_of_entry per tfra (Track Fragment Random Access) box. */
+export const MAX_TFRA_ENTRIES = 1_000_000;
 
 /** Canonical output brand set when synthesising a new M4A file. */
 export const CANONICAL_MAJOR_BRAND = 'mp42';

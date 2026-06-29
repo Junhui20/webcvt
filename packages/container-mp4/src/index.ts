@@ -154,3 +154,10 @@ export type { Mp4MovieFragment, Mp4TrackFragment, Mp4TrackRun } from './parser.t
 export type { Mp4TrackExtends } from './parser.ts';
 export type { Mp4FragmentSample } from './boxes/trun.ts';
 export type { Mp4Mehd } from './boxes/mvex.ts';
+// Segment index + random-access types (sub-pass D.3):
+export type { Mp4SegmentIndex, Mp4SegmentReference } from './boxes/sidx.ts';
+export type {
+  Mp4MovieFragmentRandomAccess,
+  Mp4TrackFragmentRandomAccess,
+  Mp4TrackFragmentRandomAccessEntry,
+} from './boxes/mfra.ts';
