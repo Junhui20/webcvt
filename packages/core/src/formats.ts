@@ -162,6 +162,25 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'document',
     description: 'EPUB Electronic Publication (EPUB 3 / OCF)',
   },
+  // Document (comic package — CBZ → PDF; CBR/CB7 detected, decode deferred)
+  {
+    ext: 'cbz',
+    mime: 'application/vnd.comicbook+zip',
+    category: 'document',
+    description: 'Comic Book ZIP archive (CBZ)',
+  },
+  {
+    ext: 'cbr',
+    mime: 'application/vnd.comicbook-rar',
+    category: 'document',
+    description: 'Comic Book RAR archive (CBR)',
+  },
+  {
+    ext: 'cb7',
+    mime: 'application/x-cb7',
+    category: 'document',
+    description: 'Comic Book 7z archive (CB7)',
+  },
   // Email (email package — RFC 5322 / MIME message parsing)
   {
     ext: 'eml',

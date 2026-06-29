@@ -20,6 +20,11 @@ import type { FormatDescriptor } from './types.ts';
  * - MP3: ID3 tag ("ID3") or MPEG frame sync (0xFF 0xFB/0xFA/0xF3/0xF2)
  * - FLAC: "fLaC" at offset 0
  * - ZIP: "PK\x03\x04" at offset 0 (PKWARE APPNOTE.TXT)
+ * - CBR (Comic Book RAR): "Rar!\x1a\x07" at offset 0 (RAR 1.5–5; the 7th byte
+ *   distinguishes RAR4/RAR5). A plain .rar shares this magic — acceptable.
+ * - CB7 (Comic Book 7z): "7z\xbc\xaf\x27\x1c" at offset 0. A plain .7z shares
+ *   this magic — acceptable. (CBZ shares ZIP magic and relies on the filename
+ *   hint, exactly like EPUB before its OCF marker, so it has no signature here.)
  * - GZip: 0x1F 0x8B at offset 0 (RFC 1952)
  * - bzip2: "BZh" (0x42 0x5A 0x68) at offset 0
  * - xz: 0xFD 0x37 0x7A 0x58 0x5A 0x00 at offset 0 (XZ file format spec)
@@ -49,6 +54,10 @@ const SIGNATURES: readonly Signature[] = [
   { ext: 'mp3', offset: 0, bytes: [0x49, 0x44, 0x33] }, // ID3v2
   { ext: 'flac', offset: 0, bytes: [0x66, 0x4c, 0x61, 0x43] },
   { ext: 'zip', offset: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
+  // CBR (Comic Book RAR): "Rar!\x1a\x07" — shared by RAR4 and RAR5 (and plain .rar).
+  { ext: 'cbr', offset: 0, bytes: [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07] },
+  // CB7 (Comic Book 7z): "7z\xbc\xaf\x27\x1c" (and plain .7z).
+  { ext: 'cb7', offset: 0, bytes: [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c] },
   { ext: 'gz', offset: 0, bytes: [0x1f, 0x8b] },
   { ext: 'bz2', offset: 0, bytes: [0x42, 0x5a, 0x68] }, // 'BZh'
   { ext: 'xz', offset: 0, bytes: [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00] },

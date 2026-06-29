@@ -14,8 +14,8 @@
 
 🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
 
-- **31 packages** shipped across Phases 1–8 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 pdf, 1 CLI, 3 ancillary)
-- **4,870 tests** passing; CI green
+- **32 packages** shipped across Phases 1–8 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 pdf, 1 comic, 1 CLI, 3 ancillary)
+- **4,908 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
@@ -106,6 +106,7 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 - `@catlabtech/webcvt-doc-ebook-epub` — read-only EPUB (OCF + OPF) → text / HTML / JSON; composes `archive-zip` + `data-text` (no new parsing surface)
 - `@catlabtech/webcvt-font` — sfnt (TTF/OTF) ↔ WOFF 1.0 container repackaging (self-written, zero deps; recomputes checksums; WOFF2 deferred)
 - `@catlabtech/webcvt-doc-pdf` — clean-room multi-page image→PDF writer (`imagesToPdf`) + structural PDF read (page count + metadata); self-written, no pdfjs/pdf-lib
+- `@catlabtech/webcvt-comic` — comic archives: CBZ → PDF (composes `archive-zip` + `doc-pdf`); CBR/CB7 detected, decode deferred (needs RAR/7z wasm)
 
 ### CLI
 

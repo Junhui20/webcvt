@@ -94,6 +94,7 @@ in all three; WebCodecs-backed paths require a runtime that provides WebCodecs.
 | `doc-ebook-epub` | EPUB (OCF + OPF) → text / HTML / JSON | Read-only; composes `archive-zip` (unzip) + `data-text` (`parseXml`); spine-ordered extraction; `../`-traversal + bomb caps |
 | `font` | sfnt (TTF/OTF) ↔ WOFF 1.0 | Container repackaging; recomputes checksums + `head.checkSumAdjustment`; per-table zlib; decompression-bomb caps. WOFF2 deferred (Brotli); ttf↔otf outline conversion out of scope |
 | `doc-pdf` | images → multi-page PDF; PDF → JSON (info) | Clean-room PDF writer (no pdfjs/pdf-lib); JPEG via DCTDecode, RGB/gray PNG via Flate+predictor. Read = page count + metadata only (no text extraction) |
+| `comic` | CBZ → PDF | Composes `archive-zip` + `doc-pdf`; natural-sorted pages. CBR/CB7 detected, decode deferred (needs RAR/7z wasm) |
 
 ### Archives
 
