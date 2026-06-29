@@ -1,0 +1,63 @@
+{
+  "name": "@catlabtech/webcvt-doc-ebook-epub",
+  "version": "0.1.0",
+  "description": "Browser-first, read-only EPUB (OCF + OPF) reader for webcvt — self-written, composes archive-zip + data-text",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .turbo"
+  },
+  "dependencies": {
+    "@catlabtech/webcvt-archive-zip": "workspace:*",
+    "@catlabtech/webcvt-core": "workspace:*",
+    "@catlabtech/webcvt-data-text": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/doc-ebook-epub"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/doc-ebook-epub#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "browser",
+    "typescript",
+    "epub",
+    "ebook",
+    "ocf",
+    "opf",
+    "xhtml",
+    "document"
+  ]
+}

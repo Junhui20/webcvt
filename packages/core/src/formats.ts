@@ -155,6 +155,13 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
     category: 'document',
     description: 'Portable Document Format',
   },
+  // Document (doc-ebook-epub package — read-only EPUB reader)
+  {
+    ext: 'epub',
+    mime: 'application/epub+zip',
+    category: 'document',
+    description: 'EPUB Electronic Publication (EPUB 3 / OCF)',
+  },
   // Email (email package — RFC 5322 / MIME message parsing)
   {
     ext: 'eml',

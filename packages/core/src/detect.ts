@@ -76,6 +76,25 @@ function matchesAt(buf: Uint8Array, offset: number, bytes: readonly number[]): b
   return true;
 }
 
+// EPUB OCF marker bytes: the ASCII filename "mimetype" and its required content
+// "application/epub+zip" (EPUB 3.3 OCF §4 — abbreviated container signature).
+const EPUB_MIMETYPE_NAME: readonly number[] = [0x6d, 0x69, 0x6d, 0x65, 0x74, 0x79, 0x70, 0x65];
+const EPUB_MIMETYPE_VALUE: readonly number[] = [
+  0x61, 0x70, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x65, 0x70, 0x75, 0x62,
+  0x2b, 0x7a, 0x69, 0x70,
+];
+
+/**
+ * Disambiguate a ZIP as an EPUB. A conformant EPUB is an OCF ZIP whose first
+ * entry is an uncompressed `mimetype` file. The 30-byte local file header is
+ * followed by the filename "mimetype" at offset 30 and — with no extra field,
+ * as the OCF spec mandates for this entry — its content "application/epub+zip"
+ * at offset 38. A normal ZIP fails this check and stays a ZIP.
+ */
+function isEpubOcf(buf: Uint8Array): boolean {
+  return matchesAt(buf, 30, EPUB_MIMETYPE_NAME) && matchesAt(buf, 38, EPUB_MIMETYPE_VALUE);
+}
+
 /**
  * Detect SVG from a byte buffer by scanning the first SVG_SCAN_BYTES bytes as UTF-8
  * text for an `<svg` root element preceded only by BOM, XML declaration, whitespace,
@@ -253,6 +272,8 @@ export async function detectFormat(
       if (sig.ext === 'png') return findByExt(disambiguatePng(head));
       // 'ftyp' is shared by MP4 / HEIC / HEIF / AVIF — decide by brand.
       if (sig.ext === 'mp4') return findByExt(disambiguateFtyp(head));
+      // ZIP may actually be an EPUB OCF container (first entry == "mimetype").
+      if (sig.ext === 'zip' && isEpubOcf(head)) return findByExt('epub');
       return findByExt(sig.ext);
     }
   }

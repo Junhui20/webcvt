@@ -573,6 +573,31 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
 
+  packages/doc-ebook-epub:
+    dependencies:
+      '@catlabtech/webcvt-archive-zip':
+        specifier: workspace:*
+        version: link:../archive-zip
+      '@catlabtech/webcvt-core':
+        specifier: workspace:*
+        version: link:../core
+      '@catlabtech/webcvt-data-text':
+        specifier: workspace:*
+        version: link:../data-text
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
+
   packages/ebml:
     dependencies:
       '@catlabtech/webcvt-core':

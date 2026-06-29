@@ -86,11 +86,12 @@ in all three; WebCodecs-backed paths require a runtime that provides WebCodecs.
 |---------|---------|-------|
 | `data-text` | JSON, JSONL, CSV, TSV, INI, ENV, TOML, FWF, XML, YAML | Security gates: billion-laughs + XXE (XML/YAML), prototype-pollution (INI/ENV/YAML), depth bombs |
 
-### Email
+### Email + Ebook
 
 | Package | Formats | Notes |
 |---------|---------|-------|
 | `email` | EML (RFC 5322 + MIME) → text / JSON | Self-written, zero deps; multipart, base64/QP, RFC 2047 encoded-words; depth/size security caps |
+| `doc-ebook-epub` | EPUB (OCF + OPF) → text / HTML / JSON | Read-only; composes `archive-zip` (unzip) + `data-text` (`parseXml`); spine-ordered extraction; `../`-traversal + bomb caps |
 
 ### Archives
 
