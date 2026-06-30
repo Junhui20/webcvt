@@ -322,3 +322,135 @@ describe('detectFormatWithHint', () => {
     expect(await detectFormatWithHint(unknown, 'no_extension_file')).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Font, comic, APNG, EPUB, and RIFF-fallthrough detection (coverage for the
+// signatures/branches added across Phases 6–9).
+// ---------------------------------------------------------------------------
+
+describe('detectFormat — fonts / comics / apng / epub', () => {
+  it('detects WOFF by "wOFF" magic', async () => {
+    expect((await detectFormat(bytes(0x77, 0x4f, 0x46, 0x46, 0, 0)))?.ext).toBe('woff');
+  });
+  it('detects OTF by "OTTO" magic', async () => {
+    expect((await detectFormat(bytes(0x4f, 0x54, 0x54, 0x4f, 0, 0)))?.ext).toBe('otf');
+  });
+  it('detects TTF by 0x00010000 sfnt version', async () => {
+    expect((await detectFormat(bytes(0x00, 0x01, 0x00, 0x00, 0, 0)))?.ext).toBe('ttf');
+  });
+  it('detects TTF by legacy "true" magic', async () => {
+    expect((await detectFormat(bytes(0x74, 0x72, 0x75, 0x65, 0, 0)))?.ext).toBe('ttf');
+  });
+  it('detects CBR by RAR magic', async () => {
+    expect((await detectFormat(bytes(0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0, 0)))?.ext).toBe('cbr');
+  });
+  it('detects CB7 by 7z magic', async () => {
+    expect((await detectFormat(bytes(0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c, 0, 0)))?.ext).toBe('cb7');
+  });
+
+  it('disambiguates APNG (acTL chunk before IDAT) from PNG', async () => {
+    const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    const acTL = [0, 0, 0, 0, 0x61, 0x63, 0x54, 0x4c, 0, 0, 0, 0]; // len0 'acTL' crc
+    const idat = [0, 0, 0, 0, 0x49, 0x44, 0x41, 0x54, 0, 0, 0, 0];
+    expect((await detectFormat(Uint8Array.from([...sig, ...acTL, ...idat])))?.ext).toBe('apng');
+  });
+  it('keeps a PNG as png when an ancillary chunk precedes IDAT (no acTL)', async () => {
+    const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    const tEXt = [0, 0, 0, 0, 0x74, 0x45, 0x58, 0x74, 0, 0, 0, 0]; // len0 'tEXt' crc
+    const idat = [0, 0, 0, 0, 0x49, 0x44, 0x41, 0x54, 0, 0, 0, 0];
+    expect((await detectFormat(Uint8Array.from([...sig, ...tEXt, ...idat])))?.ext).toBe('png');
+  });
+
+  it('detects an EPUB OCF zip (mimetype=application/epub+zip)', async () => {
+    const b = new Uint8Array(60);
+    b.set([0x50, 0x4b, 0x03, 0x04], 0); // PK\x03\x04
+    b.set(
+      [...'mimetype'].map((c) => c.charCodeAt(0)),
+      30,
+    );
+    b.set(
+      [...'application/epub+zip'].map((c) => c.charCodeAt(0)),
+      38,
+    );
+    expect((await detectFormat(b))?.ext).toBe('epub');
+  });
+  it('keeps a plain ZIP as zip (no epub mimetype marker)', async () => {
+    expect((await detectFormat(bytes(0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0)))?.ext).toBe('zip');
+  });
+
+  it('returns undefined for a RIFF that is neither WEBP nor WAVE', async () => {
+    // 'RIFF' + size + 'AVI ' fourcc → not a format we detect.
+    const riff = bytes(0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x41, 0x56, 0x49, 0x20);
+    expect(await detectFormat(riff)).toBeUndefined();
+  });
+});
+
+describe('detectFormat — ftyp brand variants (HEIC/AVIF family)', () => {
+  function ftypB(major: string): Uint8Array {
+    const a = (s: string) => [s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3)];
+    return Uint8Array.from([0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70, ...a(major), 0, 0, 0, 0]);
+  }
+  it('detects HEIC variant brands heix/heim/heis', async () => {
+    for (const b of ['heix', 'heim', 'heis']) {
+      expect((await detectFormat(ftypB(b)))?.ext).toBe('heic');
+    }
+  });
+  it('detects AVIF sequence brand avis', async () => {
+    expect((await detectFormat(ftypB('avis')))?.ext).toBe('avif');
+  });
+  it('detects HEIF variant brands msf1/heif', async () => {
+    for (const b of ['msf1', 'heif']) {
+      expect((await detectFormat(ftypB(b)))?.ext).toBe('heif');
+    }
+  });
+});
+
+describe('detectFormat — Netpbm + PNG chunk-walk edges', () => {
+  it('detects every Netpbm magic (P1-P6, Pf, PF)', async () => {
+    const cases: Array<[number, string]> = [
+      [0x31, 'pbm'],
+      [0x34, 'pbm'],
+      [0x32, 'pgm'],
+      [0x35, 'pgm'],
+      [0x33, 'ppm'],
+      [0x36, 'ppm'],
+      [0x66, 'pfm'],
+      [0x46, 'pfm'],
+    ];
+    for (const [b1, ext] of cases) {
+      expect((await detectFormat(bytes(0x50, b1, 0x0a, 0x31)))?.ext).toBe(ext);
+    }
+  });
+  it('returns undefined for a P-prefixed non-Netpbm buffer', async () => {
+    expect(await detectFormat(bytes(0x50, 0x99, 0x00, 0x00))).toBeUndefined();
+  });
+  it('returns undefined for a single byte (Netpbm length guard)', async () => {
+    expect(await detectFormat(bytes(0x50))).toBeUndefined();
+  });
+  it('keeps a PNG with an IEND-first chunk (no acTL) as png', async () => {
+    const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    const iend = [0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0, 0, 0, 0];
+    expect((await detectFormat(Uint8Array.from([...sig, ...iend])))?.ext).toBe('png');
+  });
+  it('routes an ftyp via a compatible brand (major brand unmatched)', async () => {
+    // major 'isom' (no match) → minor_version skipped → compatible 'avif' matches.
+    const a = (s: string) => [s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3)];
+    const buf = Uint8Array.from([
+      0,
+      0,
+      0,
+      0,
+      0x66,
+      0x74,
+      0x79,
+      0x70,
+      ...a('isom'),
+      0,
+      0,
+      0,
+      0,
+      ...a('avif'),
+    ]);
+    expect((await detectFormat(buf))?.ext).toBe('avif');
+  });
+});

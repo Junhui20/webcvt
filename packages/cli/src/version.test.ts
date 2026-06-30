@@ -15,8 +15,9 @@ describe('readPackageVersion', () => {
 
   it('returns the version from package.json', async () => {
     const version = await readPackageVersion();
-    // Semver string read from the CLI's own package.json; pinned to the
-    // minor so this test doesn't break on every patch bump.
-    expect(version).toMatch(/^0\.1\.\d+/);
+    // A real semver string read from the CLI's own package.json. Kept
+    // version-agnostic (any major.minor.patch) so it never blocks a release
+    // when the workspace version is bumped.
+    expect(version).toMatch(/^\d+\.\d+\.\d+(?:[-+].*)?$/);
   });
 });
