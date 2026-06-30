@@ -1,5 +1,5 @@
 /**
- * Typed error classes for @catlabtech/webcvt-doc-ebook-epub.
+ * Typed error classes for @catlabtech/webcvt-epub.
  *
  * Every error code is an UPPER_SNAKE_CASE string for programmatic matching.
  * Never throw a bare Error or a bare WebcvtError from this package — always use

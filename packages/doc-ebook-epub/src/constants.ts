@@ -1,5 +1,5 @@
 /**
- * Shared security-cap and MIME constants for @catlabtech/webcvt-doc-ebook-epub.
+ * Shared security-cap and MIME constants for @catlabtech/webcvt-epub.
  *
  * An EPUB is untrusted input: a ZIP (OCF) container wrapping XML (OPF + OCF
  * container.xml) and XHTML content. ZIP-bomb / zip-slip protection is delegated

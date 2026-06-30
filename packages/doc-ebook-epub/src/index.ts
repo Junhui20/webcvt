@@ -1,5 +1,5 @@
 /**
- * @catlabtech/webcvt-doc-ebook-epub — Public API
+ * @catlabtech/webcvt-epub — Public API
  *
  * A self-written, read-only EPUB (EPUB 3.3 OCF + OPF) reader that composes two
  * hardened webcvt packages:

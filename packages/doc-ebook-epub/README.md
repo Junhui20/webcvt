@@ -1,4 +1,4 @@
-# @catlabtech/webcvt-doc-ebook-epub
+# @catlabtech/webcvt-epub
 
 Read-only **EPUB** (EPUB 3.3 OCF + OPF) reader for [webcvt](https://github.com/Junhui20/webcvt) — extract an ebook's metadata and reading order, and convert it to text, HTML, or JSON, entirely client-side.
 
@@ -13,13 +13,13 @@ It is **composed from existing hardened webcvt packages** rather than re-rolling
 npm install @catlabtech/webcvt-core \
   @catlabtech/webcvt-archive-zip \
   @catlabtech/webcvt-data-text \
-  @catlabtech/webcvt-doc-ebook-epub
+  @catlabtech/webcvt-epub
 ```
 
 ## Usage
 
 ```typescript
-import { parseEpub } from '@catlabtech/webcvt-doc-ebook-epub';
+import { parseEpub } from '@catlabtech/webcvt-epub';
 
 const book = await parseEpub(epubBytes);   // async: ZIP entry reads are async
 book.metadata;   // { title?, creators: string[], language?, identifier? }
@@ -31,7 +31,7 @@ Convert via the backend (opt-in registration — never auto-registers):
 
 ```typescript
 import { convert, defaultRegistry } from '@catlabtech/webcvt-core';
-import { EpubBackend } from '@catlabtech/webcvt-doc-ebook-epub';
+import { EpubBackend } from '@catlabtech/webcvt-epub';
 
 defaultRegistry.register(new EpubBackend());
 const txt = await convert(epubBlob, { format: 'txt' });   // spine text, concatenated

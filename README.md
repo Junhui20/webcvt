@@ -105,7 +105,7 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 ### Email + Ebook + Font
 
 - `@catlabtech/webcvt-email` — EML (RFC 5322 + MIME) parser → text / JSON (self-written, zero deps; multipart, base64/QP, RFC 2047 encoded-words)
-- `@catlabtech/webcvt-doc-ebook-epub` — read-only EPUB (OCF + OPF) → text / HTML / JSON; composes `archive-zip` + `data-text` (no new parsing surface)
+- `@catlabtech/webcvt-epub` — read-only EPUB (OCF + OPF) → text / HTML / JSON; composes `archive-zip` + `data-text` (no new parsing surface)
 - `@catlabtech/webcvt-font` — sfnt (TTF/OTF) ↔ WOFF 1.0 container repackaging (self-written, zero deps; recomputes checksums; WOFF2 deferred)
 - `@catlabtech/webcvt-doc-pdf` — clean-room multi-page image→PDF writer (`imagesToPdf`) + structural PDF read (page count + metadata); self-written, no pdfjs/pdf-lib
 - `@catlabtech/webcvt-comic` — comic archives: CBZ → PDF (composes `archive-zip` + `doc-pdf`); CBR/CB7 detected, decode deferred (needs RAR/7z wasm)

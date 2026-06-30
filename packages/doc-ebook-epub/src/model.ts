@@ -1,5 +1,5 @@
 /**
- * Public data model for @catlabtech/webcvt-doc-ebook-epub.
+ * Public data model for @catlabtech/webcvt-epub.
  *
  * These types describe the structured shape returned by `parseEpub`. They are
  * plain data (no methods) so the metadata/spine/manifest portions round-trip
