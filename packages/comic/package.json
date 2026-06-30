@@ -29,6 +29,7 @@
     "@catlabtech/webcvt-doc-pdf": "workspace:*"
   },
   "devDependencies": {
+    "@catlabtech/webcvt-test-utils": "workspace:*",
     "@vitest/coverage-v8": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",

@@ -8,6 +8,7 @@ export default defineConfig({
       '@catlabtech/webcvt-archive-zip': resolve(__dirname, '../archive-zip/src/index.ts'),
       '@catlabtech/webcvt-doc-pdf': resolve(__dirname, '../doc-pdf/src/index.ts'),
       '@catlabtech/webcvt-image-pdf': resolve(__dirname, '../image-pdf/src/index.ts'),
+      '@catlabtech/webcvt-test-utils': resolve(__dirname, '../test-utils/src/index.ts'),
     },
   },
   test: {

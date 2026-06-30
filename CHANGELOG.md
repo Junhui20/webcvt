@@ -33,6 +33,10 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`@catlabtech/webcvt-image-jsquash-avif`** (`0.2.0-rc.0`) — first-pass AVIF encode/decode via `@jsquash` WASM.
 - **`docs/supported-formats.md`** — consolidated supported-format / conversion matrix.
 
+### Tests
+
+- **Real-file regression tests** for the new Phase 7–8 packages: `font` (a real Ubuntu Mono TTF → sfnt parse + lossless WOFF round-trip), `doc-pdf` (real ffmpeg JPEG/PNG → multi-page PDF read back), and `comic` (real images → CBZ → PDF). Tiny real fixtures added under `tests/fixtures/{image,font}/` (the audio/video containers already parse committed `tests/fixtures/` clips). Validated the `doc-pdf` output against real poppler tools (`pdfinfo`/`pdftoppm` read *and* render it).
+
 ### Fixed
 
 - **`@catlabtech/webcvt-codec-webcodecs`** — `VideoEncoder`/`AudioEncoder` now close the input `VideoFrame`/`AudioData` after encoding, matching the documented WebCodecs ownership contract (prevents GPU-frame leaks in transcode loops).
