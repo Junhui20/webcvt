@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-heic",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "HEIC/HEIF decode for webcvt via libheif (WASM) — convert iPhone photos to PNG/JPEG/WebP in the browser",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-jsquash-jxl",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "JPEG XL (JXL) decode/encode for webcvt — lazy-loads @jsquash/jxl wasm, plugs into the image adapter pipeline",
   "type": "module",
   "main": "./dist/index.cjs",

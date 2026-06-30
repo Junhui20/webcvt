@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-jsquash-mozjpeg",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "High-quality JPEG (MozJPEG) decode/encode for webcvt — lazy-loads @jsquash/jpeg wasm, plugs into the image adapter pipeline",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-email",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Browser-first EML (RFC 5322 + MIME) parsing for webcvt — self-written, no runtime dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

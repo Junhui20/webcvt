@@ -6,20 +6,21 @@
 [![npm](https://img.shields.io/npm/v/@catlabtech/webcvt-core?label=npm)](https://www.npmjs.com/package/@catlabtech/webcvt-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen)
-![Status](https://img.shields.io/badge/status-v0.1.0--prep-orange)
+![Status](https://img.shields.io/badge/status-v0.2.0--prep-orange)
 
 ![webcvt — convert files in your browser. No upload. Hardware-accelerated.](apps/playground/public/og-image.png)
 
 ## Status
 
-🚧 **Pre-release** — feature-complete and in launch prep. The v0.1.0 npm publish is the remaining step, so packages aren't on npm yet; APIs may still change before then.
+**v0.1.0 is on npm** (`@catlabtech/webcvt-*@0.1.0`, 2026-04-23). **v0.2.0 is prepared and pending publish** — it adds the modern image codecs, the full container second passes, and the Phase 7–9 packages (email, EPUB, font, doc-pdf, comic, backend-native, api-server). The tag-triggered release workflow publishes it once the `NPM_TOKEN` secret is set.
 
 - **34 packages** shipped across Phases 1–9 (`@catlabtech/webcvt-core` + 11 image/codec, 9 container, 2 data/subtitle, 1 email, 1 ebook, 1 font, 1 pdf, 1 comic, 1 CLI, 1 HTTP API, 4 ancillary)
 - **4,986 tests** passing; CI green
 - Phase 3 (core containers, second-pass Minus): **complete** — classic + fragmented MP4, multi-track, avc/hevc/vp9/av1 video, edit lists, iTunes metadata
 - Phase 4 (image, animation, archive, data-text): **complete** (5/5)
 - Phase 4.5 (deferred-format roll-up): **11 shipped** — image: TIFF, TGA, XBM, PCX, XPM, ICNS; data-text: JSONL, TOML, FWF, XML, YAML
-- Phase 5 (launch prep): `@catlabtech/webcvt-cli`, `@catlabtech/webcvt-backend-wasm`, `apps/playground`, `apps/docs`, and the `examples/` are all shipped — **the v0.1.0 npm publish is the only remaining step**
+- Phase 5 (launch prep): `@catlabtech/webcvt-cli`, `@catlabtech/webcvt-backend-wasm`, `apps/playground`, `apps/docs`, and the `examples/` are all shipped; **v0.1.0 published to npm 2026-04-23**
+- Phases 6–9 (modern codecs, container second passes, email/EPUB/font/PDF/comic, native + HTTP backends): **complete on `main`, prepared as v0.2.0 — pending the npm publish**
 
 See [`plan.md`](./plan.md) for the full project plan,
 [`CHANGELOG.md`](./CHANGELOG.md) for release notes, and
@@ -116,10 +117,10 @@ Live list grows as Phases complete. See [plan.md §3](./plan.md) for the full ro
 
 ### Planned
 
-See [plan.md §6 Roadmap](./plan.md) — 9 Phases over ~9 months. Phase 6 modern-codec
-work has already landed on `main`: AVIF & JPEG XL (encode + decode), HEIC/HEIF
-decode (iPhone photos), MozJPEG / OxiPNG optimisers, and image→PDF. Next up is the
-**v0.1.0 npm release**; further codecs and HEIC/AVIF tuning follow in v0.2+.
+See [plan.md §6 Roadmap](./plan.md). Phases 1–9 are complete on `main` and prepared
+as **v0.2.0** (pending publish). What remains is the irreducible third-party-wasm-dep
+tier — MOBI/AZW ebooks, SQLite, Parquet/Arrow, legacy-image wasm (PSD/JP2/…), and
+RAR/7z comic decode — each shipping behind a lazy optional dependency as demand warrants.
 
 ## Quickstart
 

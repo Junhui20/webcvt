@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-font",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Browser-first sfnt (TTF/OTF) ↔ WOFF 1.0 font-container repackaging for webcvt — self-written, no runtime dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -4,6 +4,14 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-30
+
+> **34 packages, 4,991 tests.** Adds the modern image codecs, HEIC, image→PDF, the
+> full container second passes (DRM/CENC signalling, multi-program TS, multi-track
+> WebM/MKV, MKV subtitles/chapters/tags, M2TS, AV1), and the Phase 7–9 packages
+> (`email`, `doc-ebook-epub`, `font`, `doc-pdf`, `comic`, `backend-native`,
+> `api-server`).
+
 ### Added
 
 - **`@catlabtech/webcvt-api-server`** — an HTTP convert API built on **Hono**, so it runs on Node, Bun, Deno, and Cloudflare Workers. `createApiServer({ registry?, maxInputBytes?, basePath? })` returns a Hono app exposing `GET /health`, `GET /formats`, and `POST /convert` (multipart `file` + `to`, or a raw body with `?to=`). Streamed input-size-cap enforcement (413), permissive CORS, and a central error→status mapping (400 / 413 / 415 / 500) returning `{ error: { code, message } }`. No backends are auto-registered — the caller wires the backends it wants into the registry. `hono@4` (zero transitive deps) is the only new external dependency. **(Phase 9 — optional server tier)**
@@ -47,9 +55,9 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`apps/playground`** — added a Content-Security-Policy plus `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy`; **`apps/docs`** — added nosniff / frame / referrer headers.
 - **`apps/playground`** — `escHtml()` now also escapes single quotes.
 
-## [0.1.0] — Unreleased
+## [0.1.0] — 2026-04-23
 
-First public release, in preparation. **22 packages, 3,970 tests, ~110,000 LOC.** On release, all packages will be published to npm as `@catlabtech/webcvt-*@0.1.0`.
+First public release. **22 packages, 3,970 tests, ~110,000 LOC.** Published to npm as `@catlabtech/webcvt-*@0.1.0`.
 
 ### Design guarantees
 
