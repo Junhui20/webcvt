@@ -5,8 +5,18 @@ name: Release (npm)
 # skipped automatically by `pnpm -r publish`.
 #
 # Required repository secret (Settings → Secrets and variables → Actions):
-#   NPM_TOKEN — a granular npm token scoped to the @catlabtech scope with
-#               "Read and write" (publish) permission.
+#   NPM_TOKEN — a granular npm token with ALL THREE of:
+#     1. "Read and write" permission on the @catlabtech scope / packages
+#        (read-only or wrong scope → publish fails with 404 "not in registry").
+#     2. "Bypass 2FA" enabled (the account enforces 2FA; without bypass the
+#        publish fails with 403 "two-factor authentication ... is required").
+#        A classic "Automation" token satisfies this by design.
+#   Issued from an account that is a member of the @catlabtech org with publish
+#   rights. (Learned the hard way during the v0.2.0 release: 403 → 404 → success.)
+#
+# Package names also pass npm's content filter: avoid keyword-stuffed names
+# (e.g. ...-doc-ebook-epub triggered E400 "That word is not allowed"; it was
+# renamed to @catlabtech/webcvt-epub).
 #
 # NEVER paste a token into source, a prompt, or a commit — only into the
 # encrypted GitHub secret above.
