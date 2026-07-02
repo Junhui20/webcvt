@@ -10,9 +10,19 @@ Phase 1 scaffold. Do not use in production yet.
 
 - `convert(input, options)` — the public entry point
 - `detectFormat(blob)` — magic-byte format detection
-- `BackendRegistry` — pluggable backend selection
+- `BackendRegistry` — pluggable backend selection (single-hop routing, see below)
 - Shared types: `FormatDescriptor`, `ConvertOptions`, `ConvertResult`, `Backend`, error classes
 - `detectCapabilities()` — runtime browser capability probe
+
+## Routing is single-hop
+
+`BackendRegistry.findFor` selects a single backend whose
+`canHandle(input, output)` returns true. It does **not** chain conversions
+through an intermediate format (no A→B→C planning). This is a deliberate
+decision: single-hop routing keeps backend selection predictable and cheap, and
+avoids surprise quality loss from re-encoding through a lossy middle format the
+caller never requested. Multi-hop planning may arrive later, but only behind an
+explicit opt-in so the default behavior stays single-hop.
 
 ## Implementation references
 

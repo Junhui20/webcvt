@@ -12,6 +12,14 @@ import type { Backend, FormatDescriptor } from './types.ts';
  * that never set a priority see exactly the historical first-match-wins behavior.
  * Priority lets specialized codecs (e.g. MozJPEG for png→jpeg) win over generic
  * any-in/any-out backends (Canvas, ffmpeg-wasm) regardless of registration order.
+ *
+ * Routing is single-hop (documented decision). `findFor` looks for one backend
+ * whose `canHandle(input, output)` is true — it never chains A→B→C through an
+ * intermediate format. This is deliberate: it keeps selection predictable and
+ * cheap, and it avoids surprise quality loss from re-encoding through a lossy
+ * middle format the caller never asked for. Multi-hop planning (a BFS over
+ * `canHandle` edges) may be added later, but only behind an explicit opt-in so
+ * the default stays single-hop.
  */
 export class BackendRegistry {
   private readonly backends: Backend[] = [];
