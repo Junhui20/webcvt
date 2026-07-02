@@ -1,0 +1,26 @@
+{
+  "name": "@catlabtech/webcvt-integration-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Cross-package integration tests: drives core convert() against real backends. Never published.",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf coverage .turbo"
+  },
+  "devDependencies": {
+    "@catlabtech/webcvt-archive-zip": "workspace:*",
+    "@catlabtech/webcvt-container-wav": "workspace:*",
+    "@catlabtech/webcvt-core": "workspace:*",
+    "@catlabtech/webcvt-data-text": "workspace:*",
+    "@catlabtech/webcvt-email": "workspace:*",
+    "@catlabtech/webcvt-font": "workspace:*",
+    "@catlabtech/webcvt-subtitle": "workspace:*",
+    "@vitest/coverage-v8": "^2.1.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT"
+}
