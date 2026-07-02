@@ -147,6 +147,8 @@ export {
 export {
   InputTooLargeError,
   InputTooManyCharsError,
+  DataTextUnsupportedFormatError,
+  // Deprecated alias for DataTextUnsupportedFormatError — kept for back-compat.
   UnsupportedFormatError,
   JsonInvalidUtf8Error,
   JsonDepthExceededError,

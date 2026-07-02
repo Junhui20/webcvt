@@ -43,7 +43,7 @@ import {
   YAML_MIME_ALIAS_TEXT_X,
   YAML_MIME_ALIAS_X,
 } from './constants.ts';
-import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
+import { DataTextUnsupportedFormatError, InputTooLargeError } from './errors.ts';
 import { type DataTextFormat, parseDataText } from './parser.ts';
 import { serializeDataText } from './serializer.ts';
 
@@ -132,11 +132,11 @@ export class DataTextBackend implements Backend {
 
     const inFmt = MIME_TO_FORMAT.get(input.type);
     if (inFmt === undefined) {
-      throw new UnsupportedFormatError(input.type);
+      throw new DataTextUnsupportedFormatError(input.type);
     }
     const outFmt = MIME_TO_FORMAT.get(output.mime);
     if (outFmt === undefined) {
-      throw new UnsupportedFormatError(output.mime);
+      throw new DataTextUnsupportedFormatError(output.mime);
     }
 
     options.onProgress?.({ percent: 5, phase: 'demux' });
