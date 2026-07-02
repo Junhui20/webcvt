@@ -29,13 +29,15 @@ describe('Mp3Backend', () => {
       expect(await backend.canHandle(MP3_DESCRIPTOR, MP3_DESCRIPTOR)).toBe(true);
     });
 
-    it('accepts MP3 input to any audio output', async () => {
-      expect(await backend.canHandle(MP3_DESCRIPTOR, WAV_DESCRIPTOR)).toBe(true);
+    it('rejects MP3 input to a non-MP3 audio output (routed to transcode)', async () => {
+      // Narrowed to identity: mp3 → wav is now owned by the transcode backend,
+      // so container-mp3 must NOT claim it (it could not actually convert it).
+      expect(await backend.canHandle(MP3_DESCRIPTOR, WAV_DESCRIPTOR)).toBe(false);
     });
 
-    it('accepts alternative MP3 MIME types', async () => {
+    it('accepts alternative MP3 MIME types (identity)', async () => {
       const altMp3 = { ...MP3_DESCRIPTOR, mime: 'audio/mp3' };
-      expect(await backend.canHandle(altMp3, WAV_DESCRIPTOR)).toBe(true);
+      expect(await backend.canHandle(altMp3, MP3_DESCRIPTOR)).toBe(true);
     });
 
     it('rejects non-MP3 input', async () => {

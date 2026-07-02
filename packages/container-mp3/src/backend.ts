@@ -31,20 +31,22 @@ const MAX_INPUT_BYTES = 200 * 1024 * 1024; // 200 MiB
 // ---------------------------------------------------------------------------
 
 /**
- * Backend that round-trips MP3 files and scaffolds the WebCodecs decode path.
+ * Backend that round-trips MP3 files (identity only).
  *
- * canHandle is looser than the identity-only containers: any MP3 input can
- * target any audio output category (the future decode path). Non-MP3 outputs
- * pass canHandle but throw Mp3EncodeNotImplementedError in convert until that
- * decode + re-mux path lands in Phase 2.
+ * canHandle is identity-set: MP3 input → MP3 output only. The decode path
+ * (mp3 → wav/opus/…) is now owned by the WebCodecs transcode backend
+ * (`@catlabtech/webcvt-transcode`, priority 0), so this container no longer
+ * over-claims `mp3 → any-audio` — that previously made canHandle return true
+ * for pairs it could not convert (they threw in `convert`), which would shadow
+ * the real decode backend at equal priority depending on registration order.
  */
 export class Mp3Backend extends RoundTripBackend<ReturnType<typeof parseMp3>> {
   constructor() {
     super({
       name: 'container-mp3',
       mimes: MP3_MIMES,
-      // Decode any MP3 input to any audio output category (Phase 2 decode path).
-      acceptsOutput: (_input, output) => output.category === 'audio',
+      // Identity-only: MP3 → MP3. Cross-format decode routes to the transcode
+      // backend (default 'identity-set' mode: output must be an MP3 MIME).
       // Identity round-trip always emits the canonical audio/mpeg MIME.
       outputMime: MP3_MIME,
       sizeGuard: {
