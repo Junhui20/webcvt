@@ -58,6 +58,12 @@ export { parseArchive } from './parser.ts';
 export { iterateZip, iterateZipAll, iterateTar, iterateTarAll } from './entry-iterator.ts';
 
 // ---------------------------------------------------------------------------
+// Cross-container projection (zip ↔ tar)
+// ---------------------------------------------------------------------------
+
+export { canCrossContainers, zipToTar, tarToZip } from './cross.ts';
+
+// ---------------------------------------------------------------------------
 // Backend + format descriptors
 // ---------------------------------------------------------------------------
 

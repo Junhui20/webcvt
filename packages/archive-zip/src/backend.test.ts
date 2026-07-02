@@ -56,10 +56,35 @@ describe('ArchiveBackend', () => {
       expect(TGZ_MIME).toBe(GZIP_MIME);
     });
 
-    it('returns false for cross-MIME (zip → tar)', async () => {
+    // Cross-container route (Task 5): zip↔tar now handled in-package.
+    it('returns true for zip → tar cross-container', async () => {
       const zip = { ext: 'zip', mime: ZIP_MIME, category: 'archive' as const };
       const tar = { ext: 'tar', mime: TAR_MIME, category: 'archive' as const };
-      expect(await backend.canHandle(zip, tar)).toBe(false);
+      expect(await backend.canHandle(zip, tar)).toBe(true);
+    });
+
+    it('returns true for tar → zip cross-container', async () => {
+      const zip = { ext: 'zip', mime: ZIP_MIME, category: 'archive' as const };
+      const tar = { ext: 'tar', mime: TAR_MIME, category: 'archive' as const };
+      expect(await backend.canHandle(tar, zip)).toBe(true);
+    });
+
+    it('returns false for gz → zip (gz is a compression wrapper, not a container)', async () => {
+      const gz = { ext: 'gz', mime: GZIP_MIME, category: 'archive' as const };
+      const zip = { ext: 'zip', mime: ZIP_MIME, category: 'archive' as const };
+      expect(await backend.canHandle(gz, zip)).toBe(false);
+    });
+
+    it('returns false for gz → tar (gz is a compression wrapper, not a container)', async () => {
+      const gz = { ext: 'gz', mime: GZIP_MIME, category: 'archive' as const };
+      const tar = { ext: 'tar', mime: TAR_MIME, category: 'archive' as const };
+      expect(await backend.canHandle(gz, tar)).toBe(false);
+    });
+
+    it('returns false for zip → gz (gz is a compression wrapper, not a container)', async () => {
+      const zip = { ext: 'zip', mime: ZIP_MIME, category: 'archive' as const };
+      const gz = { ext: 'gz', mime: GZIP_MIME, category: 'archive' as const };
+      expect(await backend.canHandle(zip, gz)).toBe(false);
     });
 
     it('returns false for bz2 input', async () => {
@@ -134,10 +159,12 @@ describe('ArchiveBackend', () => {
       );
     });
 
-    it('throws ArchiveEncodeNotImplementedError for unsupported conversion', async () => {
+    it('throws ArchiveEncodeNotImplementedError for unsupported conversion (zip → gz)', async () => {
+      // zip → tar is now supported (Task 5); zip → gz is not (gz is a
+      // single-stream compression wrapper, not a container to project into).
       const zip = buildZip([{ name: 'f.txt', bytes: new TextEncoder().encode('x') }]);
       const blob = new Blob([zip.buffer as ArrayBuffer], { type: ZIP_MIME });
-      await expect(backend.convert(blob, tarFmt, noop)).rejects.toThrow(
+      await expect(backend.convert(blob, gzFmt, noop)).rejects.toThrow(
         ArchiveEncodeNotImplementedError,
       );
     });
