@@ -78,6 +78,8 @@ export interface JxlBackendOptions {
  */
 export class JxlBackend implements Backend {
   readonly name = 'image-jsquash-jxl';
+  /** Specialized JPEG XL codec — outrank generic any-in/any-out backends (Canvas, wasm). */
+  readonly priority = 10;
 
   private readonly encodeDefaults: JxlEncodeOptions | undefined;
   private readonly maxInputBytes: number;

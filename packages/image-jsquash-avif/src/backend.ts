@@ -78,6 +78,8 @@ export interface AvifBackendOptions {
  */
 export class AvifBackend implements Backend {
   readonly name = 'image-jsquash-avif';
+  /** Specialized AVIF codec — outrank generic any-in/any-out backends (Canvas, wasm). */
+  readonly priority = 10;
 
   private readonly encodeDefaults: AvifEncodeOptions | undefined;
   private readonly maxInputBytes: number;

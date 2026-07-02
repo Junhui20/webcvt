@@ -42,6 +42,8 @@ export interface HeicBackendOptions {
 /** Backend that decodes HEIC/HEIF to PNG/JPEG/WebP using libheif (wasm). */
 export class HeicBackend implements Backend {
   readonly name = 'image-heic';
+  /** Specialized HEIC/HEIF decoder — outrank generic any-in/any-out backends (Canvas, wasm). */
+  readonly priority = 10;
 
   private readonly maxInputBytes: number;
   private readonly maxPixels: number;

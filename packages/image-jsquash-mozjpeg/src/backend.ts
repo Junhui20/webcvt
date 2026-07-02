@@ -51,6 +51,8 @@ export interface MozjpegBackendOptions {
  */
 export class MozjpegBackend implements Backend {
   readonly name = 'image-jsquash-mozjpeg';
+  /** Specialized JPEG codec — outrank generic any-in/any-out backends (Canvas, wasm). */
+  readonly priority = 10;
 
   private readonly encodeDefaults: MozjpegEncodeOptions | undefined;
   private readonly maxInputBytes: number;

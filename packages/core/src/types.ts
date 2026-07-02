@@ -71,6 +71,8 @@ export interface ConvertResult {
 export interface Backend {
   /** Stable identifier. e.g. "webcodecs", "ffmpeg-wasm", "canvas". */
   readonly name: string;
+  /** Selection priority; higher wins. Ties resolve by registration order. Default 0. */
+  readonly priority?: number;
   /** Returns true if this backend can perform the given conversion. */
   canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean>;
   /** Perform the conversion. */
