@@ -10,6 +10,16 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`@catlabtech/webcvt-core`** — `Backend.priority` (optional, default 0): the registry now selects the highest-priority matching backend, with ties keeping registration order — specialized codecs win over generic any-in/any-out backends regardless of registration order. MozJPEG/OxiPNG/AVIF/JXL/HEIC backends rank 10, `ffmpeg-wasm` −10, `image-canvas` stays 0.
 - **`@catlabtech/webcvt-data-text`** — cross-format conversion via a new value bridge (`bridge`, `canBridge`, `toPlain`, `fromPlain`): json / yaml / toml / csv / tsv / jsonl / ini / env inter-convert, all pairs, both directions (XML and FWF are excluded — no canonical plain-value mapping / not MIME-routable). Lossiness is explicit, never silent, with typed errors (`CrossFormatNotSupportedError`, `CrossFormatShapeError`, `CrossFormatValueError`): bigint→JSON only within ±(2^53−1), NaN/±Inf rejected for JSON targets, TOML datetimes render as ISO 8601 strings, nested values are shape errors in tabular/keyed targets. `text/plain` is only treated as ENV when the descriptor's ext is `env`. Identity conversions stay byte-for-byte unchanged.
 
+### Changed
+
+- **`@catlabtech/webcvt-core`** — new `RoundTripBackend` base class plus generic `InputTooLargeError` / `EncodeNotImplementedError` bases; all nine `container-*` backends migrated onto them (−333 lines of duplicated boilerplate). Behavior, error codes, and messages are byte-identical — every container package's error classes now extend the core bases. Also new: `createLazyWasmLoader` (module singleton, double-checked load, dispose-race generation counter), powering the image wasm backends.
+- **`@catlabtech/webcvt-image-canvas`** — now exports the shared pixel helpers (`imageDataToBlob`, `blobToImageData`, `createCanvas`, `canvasToBlob`); the four jsquash packages, `image-heic`, and `image-pdf` consume them instead of private copies (≈620 duplicated lines removed; lazy-wasm semantics unchanged).
+- **`@catlabtech/webcvt-backend-wasm`** — format descriptors are now derived from core's `findByMime()` instead of a private map. Five drifted descriptions unified to core's canonical strings (e.g. `'Ogg Vorbis'` → `'Ogg'`, `'Waveform Audio'` → `'Waveform Audio File'`), and 14 formats formerly private to the allowlist were promoted into core `KNOWN_FORMATS` (mov, avi, flv, 3gp, wmv, f4v, opus, wma, aiff, psd, blp, dds, eps, jp2).
+
+### Deprecated
+
+- **`@catlabtech/webcvt-data-text`** — `UnsupportedFormatError` is renamed `DataTextUnsupportedFormatError` (the old name shadowed core's class with a different constructor, silently breaking cross-package `instanceof`). The old export remains as a deprecated alias.
+
 ### Fixed
 
 - **`@catlabtech/webcvt-core`** — the registry docstring claimed backends self-register at import time; they never did. It now documents explicit registration and the priority/tie-break rules.
