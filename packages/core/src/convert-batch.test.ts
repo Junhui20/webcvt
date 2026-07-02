@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { type BatchItemResult, convertBatch } from './convert-batch.ts';
 import { BackendRegistry } from './registry.ts';
-import type { Backend, ConvertResult, FormatDescriptor } from './types.ts';
+import {
+  type Backend,
+  type ConvertResult,
+  type FormatDescriptor,
+  UnsupportedFormatError,
+} from './types.ts';
 
 function pngBlob(): Blob {
   return new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])]);
@@ -152,5 +157,29 @@ describe('convertBatch', () => {
       { registry },
     );
     expect(results.every((r) => r.result === null && r.error !== null)).toBe(true);
+  });
+
+  it('routes a text-format item via item.name when magic detection fails', async () => {
+    // JSON has no magic bytes; without the item.name filename fallback this
+    // item would fail with UnsupportedFormatError before reaching the registry.
+    const registry = registryWith(passthroughBackend('data-backend'));
+    const results = await convertBatch(
+      [{ input: new Blob(['{"a":1}']), name: 'data.json', options: { format: 'yaml' } }],
+      {},
+      { registry },
+    );
+    expect(results[0]?.error).toBeNull();
+    expect(results[0]?.result?.backend).toBe('data-backend');
+  });
+
+  it('still fails a text-format item whose name has no usable extension', async () => {
+    const registry = registryWith(passthroughBackend('data-backend'));
+    const results = await convertBatch(
+      [{ input: new Blob(['{"a":1}']), name: 'no-extension', options: { format: 'yaml' } }],
+      {},
+      { registry },
+    );
+    expect(results[0]?.result).toBeNull();
+    expect(results[0]?.error).toBeInstanceOf(UnsupportedFormatError);
   });
 });

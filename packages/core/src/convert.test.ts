@@ -148,3 +148,48 @@ describe('convert', () => {
     );
   });
 });
+
+describe('convert input blob MIME alignment', () => {
+  /** Backend that records the `Blob.type` it received. */
+  function typeRecordingBackend(name: string): { backend: Backend; receivedType: () => string } {
+    let received = '';
+    return {
+      receivedType: () => received,
+      backend: {
+        name,
+        async canHandle() {
+          return true;
+        },
+        async convert(input: Blob, output: FormatDescriptor): Promise<ConvertResult> {
+          received = input.type;
+          return {
+            blob: new Blob(['converted'], { type: output.mime }),
+            format: output,
+            durationMs: 0,
+            backend: name,
+            hardwareAccelerated: false,
+          };
+        },
+      },
+    };
+  }
+
+  it('re-types a typeless input blob to the resolved input format MIME', async () => {
+    // Backends dispatch on Blob.type; a typeless blob routed via inputFormat
+    // must reach the backend carrying the resolved MIME.
+    const registry = new BackendRegistry();
+    const { backend, receivedType } = typeRecordingBackend('recorder');
+    registry.register(backend);
+    await convert(new Blob(['a: 1']), { format: 'json', inputFormat: 'yaml' }, { registry });
+    expect(receivedType()).toBe('application/yaml');
+  });
+
+  it('passes the blob through untouched when its MIME already matches', async () => {
+    const registry = new BackendRegistry();
+    const { backend, receivedType } = typeRecordingBackend('recorder');
+    registry.register(backend);
+    const blob = new Blob(['{"a":1}'], { type: 'application/json' });
+    await convert(blob, { format: 'yaml', inputFormat: 'json' }, { registry });
+    expect(receivedType()).toBe('application/json');
+  });
+});

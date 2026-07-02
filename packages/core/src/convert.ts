@@ -70,5 +70,13 @@ export async function convert(
     throw new NoBackendError(inputFormat.ext, outputFormat.ext);
   }
 
-  return backend.convert(input, outputFormat, options);
+  // Backends dispatch on `Blob.type` (Backend.convert does not receive the
+  // input descriptor), but browser Files for text formats (.yaml, .json, …)
+  // frequently arrive with an empty or mismatched `type`. Hand the backend a
+  // blob typed as the format routing just resolved — `Blob.slice` re-types
+  // without copying the underlying bytes.
+  const aligned =
+    input.type === inputFormat.mime ? input : input.slice(0, input.size, inputFormat.mime);
+
+  return backend.convert(aligned, outputFormat, options);
 }
