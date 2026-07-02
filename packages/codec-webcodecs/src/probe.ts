@@ -66,9 +66,14 @@ export interface ProbeResult {
   readonly hardwareAccelerated: boolean;
   /**
    * The config as returned by the browser's isConfigSupported().
-   * Undefined when supported is false.
+   * Undefined when supported is false. Encoder probes return an encoder config;
+   * decoder probes return a decoder config.
    */
-  readonly supportedConfig?: VideoEncoderConfig | AudioEncoderConfig;
+  readonly supportedConfig?:
+    | VideoEncoderConfig
+    | AudioEncoderConfig
+    | VideoDecoderConfig
+    | AudioDecoderConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -83,6 +88,18 @@ function assertVideoEncoderAvailable(): void {
 
 function assertAudioEncoderAvailable(): void {
   if (typeof globalThis.AudioEncoder === 'undefined') {
+    throw new WebCodecsNotSupportedError();
+  }
+}
+
+function assertVideoDecoderAvailable(): void {
+  if (typeof globalThis.VideoDecoder === 'undefined') {
+    throw new WebCodecsNotSupportedError();
+  }
+}
+
+function assertAudioDecoderAvailable(): void {
+  if (typeof globalThis.AudioDecoder === 'undefined') {
     throw new WebCodecsNotSupportedError();
   }
 }
@@ -154,6 +171,78 @@ export async function probeAudioCodec(config: AudioProbeConfig): Promise<ProbeRe
     codecString,
     hardwareAccelerated: false, // Audio encoding is always software in current browsers
     supportedConfig: result.supported ? (result.config as AudioEncoderConfig) : undefined,
+  };
+}
+
+/**
+ * Probes whether the given video codec + configuration can be DECODED in the
+ * current runtime by calling VideoDecoder.isConfigSupported().
+ *
+ * A transcode pipeline must probe both sides of a conversion (can I decode the
+ * input codec? can I encode the output codec?). This is the decoder counterpart
+ * to {@link probeVideoCodec}; caching and codec-string mapping are identical.
+ *
+ * @throws {WebCodecsNotSupportedError} when VideoDecoder is not available.
+ * @throws {UnsupportedCodecError} when the codec name has no known codec string.
+ */
+export async function probeVideoDecoder(config: VideoProbeConfig): Promise<ProbeResult> {
+  assertVideoDecoderAvailable();
+
+  const codecString = config.codecString ?? VIDEO_CODEC_STRINGS[config.codec];
+  if (!codecString) {
+    throw new UnsupportedCodecError(config.codec, 'No codec string mapping found.');
+  }
+
+  const decoderConfig: VideoDecoderConfig = {
+    codec: codecString,
+    codedWidth: config.width ?? 1280,
+    codedHeight: config.height ?? 720,
+    hardwareAcceleration: config.hardwareAcceleration ?? 'no-preference',
+  };
+
+  const result = await globalThis.VideoDecoder.isConfigSupported(decoderConfig);
+
+  return {
+    supported: result.supported ?? false,
+    codecString,
+    hardwareAccelerated: isHardwareAccelerated(result.config?.hardwareAcceleration),
+    supportedConfig: result.supported ? (result.config as VideoDecoderConfig) : undefined,
+  };
+}
+
+/**
+ * Probes whether the given audio codec + configuration can be DECODED in the
+ * current runtime by calling AudioDecoder.isConfigSupported().
+ *
+ * Decoder counterpart to {@link probeAudioCodec}. On Safari < 26 (and any
+ * runtime without WebCodecs audio) `AudioDecoder` is absent, so this throws
+ * {@link WebCodecsNotSupportedError} — the transcode backend treats that as
+ * "cannot handle" and falls through to ffmpeg-wasm.
+ *
+ * @throws {WebCodecsNotSupportedError} when AudioDecoder is not available.
+ * @throws {UnsupportedCodecError} when the codec name has no known codec string.
+ */
+export async function probeAudioDecoder(config: AudioProbeConfig): Promise<ProbeResult> {
+  assertAudioDecoderAvailable();
+
+  const codecString = config.codecString ?? AUDIO_CODEC_STRINGS[config.codec];
+  if (!codecString) {
+    throw new UnsupportedCodecError(config.codec, 'No codec string mapping found.');
+  }
+
+  const decoderConfig: AudioDecoderConfig = {
+    codec: codecString,
+    sampleRate: config.sampleRate ?? 48_000,
+    numberOfChannels: config.numberOfChannels ?? 2,
+  };
+
+  const result = await globalThis.AudioDecoder.isConfigSupported(decoderConfig);
+
+  return {
+    supported: result.supported ?? false,
+    codecString,
+    hardwareAccelerated: false, // Audio decoding is always software in current browsers
+    supportedConfig: result.supported ? (result.config as AudioDecoderConfig) : undefined,
   };
 }
 

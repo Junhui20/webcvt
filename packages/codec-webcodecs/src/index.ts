@@ -9,6 +9,8 @@ export {
 export {
   probeVideoCodec,
   probeAudioCodec,
+  probeVideoDecoder,
+  probeAudioDecoder,
   type VideoCodecName,
   type AudioCodecName,
   type CodecName,

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UnsupportedCodecError, WebCodecsNotSupportedError } from './errors.ts';
-import { probeAudioCodec, probeVideoCodec } from './probe.ts';
+import { probeAudioCodec, probeAudioDecoder, probeVideoCodec, probeVideoDecoder } from './probe.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers to build mock isConfigSupported responses
@@ -225,5 +225,142 @@ describe('probeAudioCodec', () => {
     expect(call?.[0].sampleRate).toBe(44_100);
     expect(call?.[0].numberOfChannels).toBe(1);
     expect(call?.[0].bitrate).toBe(64_000);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// probeVideoDecoder
+// ---------------------------------------------------------------------------
+
+describe('probeVideoDecoder', () => {
+  beforeEach(() => {
+    vi.stubGlobal('VideoDecoder', {
+      isConfigSupported: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns supported=true for h264 when browser accepts config', async () => {
+    const codecString = 'avc1.42001E';
+    vi.mocked(globalThis.VideoDecoder.isConfigSupported).mockResolvedValue({
+      supported: true,
+      config: { codec: codecString } as VideoDecoderConfig,
+    });
+
+    const result = await probeVideoDecoder({ codec: 'h264' });
+
+    expect(result.supported).toBe(true);
+    expect(result.codecString).toBe(codecString);
+    expect(result.supportedConfig).toBeDefined();
+  });
+
+  it('passes codedWidth/codedHeight to the decoder config', async () => {
+    vi.mocked(globalThis.VideoDecoder.isConfigSupported).mockResolvedValue({
+      supported: true,
+      config: { codec: 'vp09.00.10.08' } as VideoDecoderConfig,
+    });
+
+    await probeVideoDecoder({ codec: 'vp9', width: 1920, height: 1080 });
+
+    const call = vi.mocked(globalThis.VideoDecoder.isConfigSupported).mock.calls[0];
+    expect(call?.[0].codec).toBe('vp09.00.10.08');
+    expect((call?.[0] as VideoDecoderConfig).codedWidth).toBe(1920);
+    expect((call?.[0] as VideoDecoderConfig).codedHeight).toBe(1080);
+  });
+
+  it('returns supported=false when browser rejects config', async () => {
+    vi.mocked(globalThis.VideoDecoder.isConfigSupported).mockResolvedValue({
+      supported: false,
+      config: undefined as unknown as VideoDecoderConfig,
+    });
+
+    const result = await probeVideoDecoder({ codec: 'hevc' });
+
+    expect(result.supported).toBe(false);
+    expect(result.supportedConfig).toBeUndefined();
+  });
+
+  it('throws UnsupportedCodecError for an unknown codecString mapping', async () => {
+    vi.mocked(globalThis.VideoDecoder.isConfigSupported).mockResolvedValue({
+      supported: true,
+      config: {} as VideoDecoderConfig,
+    });
+
+    await expect(probeVideoDecoder({ codec: 'bogus' as unknown as 'h264' })).rejects.toThrow(
+      UnsupportedCodecError,
+    );
+  });
+
+  it('throws WebCodecsNotSupportedError when VideoDecoder is absent', async () => {
+    vi.unstubAllGlobals();
+    vi.stubGlobal('VideoDecoder', undefined);
+
+    await expect(probeVideoDecoder({ codec: 'h264' })).rejects.toThrow(WebCodecsNotSupportedError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// probeAudioDecoder
+// ---------------------------------------------------------------------------
+
+describe('probeAudioDecoder', () => {
+  beforeEach(() => {
+    vi.stubGlobal('AudioDecoder', {
+      isConfigSupported: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns supported=true for opus when browser accepts config', async () => {
+    vi.mocked(globalThis.AudioDecoder.isConfigSupported).mockResolvedValue({
+      supported: true,
+      config: { codec: 'opus', sampleRate: 48_000, numberOfChannels: 2 } as AudioDecoderConfig,
+    });
+
+    const result = await probeAudioDecoder({ codec: 'opus' });
+
+    expect(result.supported).toBe(true);
+    expect(result.codecString).toBe('opus');
+    expect(result.hardwareAccelerated).toBe(false);
+    expect(result.supportedConfig).toBeDefined();
+  });
+
+  it('forwards sampleRate/numberOfChannels to the decoder config', async () => {
+    vi.mocked(globalThis.AudioDecoder.isConfigSupported).mockResolvedValue({
+      supported: true,
+      config: { codec: 'mp4a.40.2' } as AudioDecoderConfig,
+    });
+
+    await probeAudioDecoder({ codec: 'aac', sampleRate: 44_100, numberOfChannels: 1 });
+
+    const call = vi.mocked(globalThis.AudioDecoder.isConfigSupported).mock.calls[0];
+    expect(call?.[0].codec).toBe('mp4a.40.2');
+    expect((call?.[0] as AudioDecoderConfig).sampleRate).toBe(44_100);
+    expect((call?.[0] as AudioDecoderConfig).numberOfChannels).toBe(1);
+  });
+
+  it('returns supported=false when browser rejects config', async () => {
+    vi.mocked(globalThis.AudioDecoder.isConfigSupported).mockResolvedValue({
+      supported: false,
+      config: undefined as unknown as AudioDecoderConfig,
+    });
+
+    const result = await probeAudioDecoder({ codec: 'flac' });
+
+    expect(result.supported).toBe(false);
+    expect(result.supportedConfig).toBeUndefined();
+  });
+
+  it('throws WebCodecsNotSupportedError when AudioDecoder is absent (Safari < 26 sim)', async () => {
+    vi.unstubAllGlobals();
+    vi.stubGlobal('AudioDecoder', undefined);
+
+    await expect(probeAudioDecoder({ codec: 'opus' })).rejects.toThrow(WebCodecsNotSupportedError);
   });
 });
