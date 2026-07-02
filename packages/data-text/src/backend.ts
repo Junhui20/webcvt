@@ -37,7 +37,7 @@ import {
   YAML_MIME_ALIAS_TEXT_X,
   YAML_MIME_ALIAS_X,
 } from './constants.ts';
-import { InputTooLargeError, UnsupportedFormatError } from './errors.ts';
+import { DataTextUnsupportedFormatError, InputTooLargeError } from './errors.ts';
 import { type DataTextFormat, parseDataText } from './parser.ts';
 import { serializeDataText } from './serializer.ts';
 
@@ -108,7 +108,7 @@ export class DataTextBackend implements Backend {
 
     const format = MIME_TO_FORMAT.get(input.type);
     if (format === undefined) {
-      throw new UnsupportedFormatError(input.type);
+      throw new DataTextUnsupportedFormatError(input.type);
     }
 
     options.onProgress?.({ percent: 5, phase: 'demux' });

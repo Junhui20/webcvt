@@ -14,6 +14,7 @@ import {
   CsvRowCapError,
   CsvUnexpectedQuoteError,
   CsvUnterminatedQuoteError,
+  DataTextUnsupportedFormatError,
   EnvBadEscapeError,
   EnvInvalidUtf8Error,
   EnvSyntaxError,
@@ -25,6 +26,7 @@ import {
   JsonDepthExceededError,
   JsonInvalidUtf8Error,
   JsonParseError,
+  UnsupportedFormatError,
 } from './errors.ts';
 
 describe('errors', () => {
@@ -145,5 +147,19 @@ describe('errors', () => {
     const err = new EnvBadEscapeError(2, 'r');
     expect(err).toBeInstanceOf(WebcvtError);
     expect(err.code).toBe('ENV_BAD_ESCAPE');
+  });
+
+  it('DataTextUnsupportedFormatError extends WebcvtError', () => {
+    const err = new DataTextUnsupportedFormatError('text/x-unknown');
+    expect(err).toBeInstanceOf(WebcvtError);
+    expect(err.code).toBe('UNSUPPORTED_FORMAT');
+    expect(err.name).toBe('DataTextUnsupportedFormatError');
+  });
+
+  it('deprecated UnsupportedFormatError alias is the renamed class', () => {
+    // The old export must remain a working alias so consumers using the pre-rename
+    // name keep compiling and their instanceof checks keep passing.
+    expect(UnsupportedFormatError).toBe(DataTextUnsupportedFormatError);
+    expect(new UnsupportedFormatError('x/y')).toBeInstanceOf(DataTextUnsupportedFormatError);
   });
 });

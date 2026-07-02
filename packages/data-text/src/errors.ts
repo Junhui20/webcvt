@@ -153,13 +153,26 @@ export class CsvColCapError extends WebcvtError {
  * allowlist gate but not actually supported by the format dispatcher.
  * Defensive guard for an internally inconsistent state; never reached via
  * the public canHandle -> convert flow.
+ *
+ * Named with a `DataText` prefix to avoid shadowing core's
+ * `UnsupportedFormatError` (which has a different `(format, direction)`
+ * constructor). Sharing the bare name made `instanceof` checks against the
+ * wrong import silently fail.
  */
-export class UnsupportedFormatError extends WebcvtError {
+export class DataTextUnsupportedFormatError extends WebcvtError {
   constructor(mime: string) {
     super('UNSUPPORTED_FORMAT', `data-text does not support MIME '${mime}'.`);
-    this.name = 'UnsupportedFormatError';
+    this.name = 'DataTextUnsupportedFormatError';
   }
 }
+
+/**
+ * @deprecated Renamed to {@link DataTextUnsupportedFormatError} to stop it
+ * shadowing core's `UnsupportedFormatError`. This alias points at the same
+ * class and is kept only for backward compatibility; prefer the new name.
+ */
+export const UnsupportedFormatError = DataTextUnsupportedFormatError;
+export type UnsupportedFormatError = DataTextUnsupportedFormatError;
 
 /**
  * Thrown when the cumulative cell count (rows × cols) exceeds MAX_CSV_CELLS
