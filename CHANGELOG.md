@@ -12,6 +12,10 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`@catlabtech/webcvt-archive-zip`** — zip ↔ tar cross-container conversion (`zipToTar`, `tarToZip`, `canCrossContainers`): entry paths, directory structure, mtimes, and contents preserved; documented lossiness (zip→tar defaults Unix modes, drops the archive comment; tar→zip drops owner/mode, quantises mtimes to the MS-DOS 2-second grid). Encrypted zip entries and unsupported tar entry types are rejected with the existing typed errors; all input caps, decompression-bomb caps, and zip-slip guards apply on the new path. gz stays identity-only (compression wrapper, not an archive).
 - **Uniform registration helpers** — every backend package now exports a one-line `registerXxx(registry = defaultRegistry)` helper (20 added; 8 packages already had one). The playground wires its backends through them.
 - **`@catlabtech/webcvt-integration-tests`** (private, unpublished) — the first cross-package suite driving core `convert()`/`convertBatch` against real backends (containers, subtitle, data-text, archive, email, font): routing truth, input-format hints end-to-end, priority selection, batch index-alignment, negative paths, and Blob-MIME alignment. 26 tests.
+- **`@catlabtech/webcvt-transcode`** — new WebCodecs transcode backend (`"webcodecs-transcode"`, priority 0): hardware-accelerated cross-format audio/video conversion in the browser with **no COOP/COEP requirement** (plain HTTPS — unlike multi-threaded ffmpeg.wasm). Audio: wav/mp3/aac/flac/opus-in-ogg (+ audio tracks extracted from mp4/m4a/webm/mkv) → wav / opus-in-ogg / opus-in-webm / aac-ADTS / flac. Video: **mp4 (H.264+AAC) → webm/mkv (VP9 or VP8 + Opus)** and webm/mkv re-encode; video-only output where the platform lacks `AudioEncoder` (Safari 16.4–18.7). Two-stage `canHandle` (static matrix → cached `isConfigSupported` probes on both decode and encode sides) so unsupported pairs fall through to `ffmpeg-wasm` instead of failing; `quality` maps to per-codec bitrate ladders; four-phase progress; abort closes codecs and `VideoFrame`s. 77 tests against mocked WebCodecs plus real container round-trips. Design note: `docs/design-notes/transcode.md`.
+- **`@catlabtech/webcvt-codec-webcodecs`** — decoder-side probes `probeVideoDecoder` / `probeAudioDecoder` (mirroring the encoder probes).
+- **`@catlabtech/webcvt-container-ogg`** — public `buildOpusHead` / `buildOpusTags` byte builders (round-trip-tested against the package's own parsers; the OpusHead bytes double as WebM `CodecPrivate`).
+- **Playground** — WebCodecs transcode wired in behind a runtime capability check (no-ops where `VideoEncoder`/`AudioEncoder` are absent): mp4/webm/mkv → webm/mkv video conversion plus the audio matrix, all client-side.
 
 ### Changed
 
@@ -27,6 +31,7 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 - **`@catlabtech/webcvt-core`** — the registry docstring claimed backends self-register at import time; they never did. It now documents explicit registration and the priority/tie-break rules.
 - **`@catlabtech/webcvt-data-text`** — package docs pointed cross-format users at `@catlabtech/webcvt-convert`, a package that does not exist.
+- **`@catlabtech/webcvt-container-mp3`** — `canHandle` no longer claims mp3 → any-audio conversions it could only throw on (a placeholder awaiting the transcode backend, which now owns those routes); it is identity-only like the other containers.
 
 ## [0.2.0] — 2026-06-30
 
