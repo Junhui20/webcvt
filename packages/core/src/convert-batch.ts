@@ -90,8 +90,20 @@ export async function convertBatch(
         res = { index, name: item.name, result: null, error: abortError(batchOptions.signal) };
       } else {
         const signal = combineSignals(batchOptions.signal, item.options.signal);
+        // Thread a filename hint so text formats route in batch mode too. Prefer
+        // an explicit options.filename, else a File input's .name (same File-global
+        // guard as convert(), so core keeps working in Node), else the item's
+        // `name` — which is typically the original filename and carries the ext.
+        const filename =
+          item.options.filename ??
+          (typeof File !== 'undefined' && item.input instanceof File
+            ? item.input.name
+            : undefined) ??
+          item.name;
         const itemOptions: ConvertOptions =
-          signal === item.options.signal ? item.options : { ...item.options, signal };
+          signal === item.options.signal && filename === item.options.filename
+            ? item.options
+            : { ...item.options, signal, filename };
         try {
           const result = await convert(item.input, itemOptions, context);
           res = { index, name: item.name, result, error: null };

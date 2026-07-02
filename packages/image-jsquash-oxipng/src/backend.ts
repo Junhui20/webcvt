@@ -47,6 +47,8 @@ export interface OxipngBackendOptions {
  */
 export class OxipngBackend implements Backend {
   readonly name = 'image-jsquash-oxipng';
+  /** Specialized PNG optimizer — outrank generic any-in/any-out backends (Canvas, wasm). */
+  readonly priority = 10;
 
   private readonly optimiseDefaults: OxipngOptions | undefined;
   private readonly maxInputBytes: number;

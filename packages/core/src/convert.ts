@@ -1,9 +1,10 @@
-import { detectFormat } from './detect.ts';
+import { detectFormatWithHint } from './detect.ts';
 import { resolveFormat } from './formats.ts';
 import { type BackendRegistry, defaultRegistry } from './registry.ts';
 import {
   type ConvertOptions,
   type ConvertResult,
+  type FormatDescriptor,
   NoBackendError,
   UnsupportedFormatError,
 } from './types.ts';
@@ -33,9 +34,35 @@ export async function convert(
     throw new UnsupportedFormatError(raw, 'output');
   }
 
-  const inputFormat = await detectFormat(input);
+  // Resolve the input format. Order (first hit wins):
+  //   1. options.inputFormat — explicit route. The ONLY way to convert text
+  //      formats (JSON/CSV/YAML/…): they have no magic bytes, and byte-level
+  //      auto-detection is a deliberate no (see detect.ts:334) because their
+  //      byte patterns overlap and guessing would silently corrupt data.
+  //   2. detectFormatWithHint — magic bytes, then a filename-extension fallback
+  //      (options.filename, else a File input's .name).
+  //   3. Fail with a hint pointing at the two explicit routes above.
+  let inputFormat: FormatDescriptor | undefined;
+  if (options.inputFormat !== undefined) {
+    inputFormat = resolveFormat(options.inputFormat);
+    if (!inputFormat) {
+      const raw =
+        typeof options.inputFormat === 'string' ? options.inputFormat : options.inputFormat.ext;
+      throw new UnsupportedFormatError(raw, 'input');
+    }
+  } else {
+    // Guard the `File` global — core must keep working in Node without DOM types.
+    const filenameHint =
+      options.filename ??
+      (typeof File !== 'undefined' && input instanceof File ? input.name : undefined);
+    inputFormat = await detectFormatWithHint(input, filenameHint);
+  }
   if (!inputFormat) {
-    throw new UnsupportedFormatError('(unknown)', 'input');
+    throw new UnsupportedFormatError(
+      '(unknown)',
+      'input',
+      'Pass options.inputFormat or options.filename for text formats that have no magic bytes.',
+    );
   }
 
   const backend = await registry.findFor(inputFormat, outputFormat);
@@ -43,5 +70,13 @@ export async function convert(
     throw new NoBackendError(inputFormat.ext, outputFormat.ext);
   }
 
-  return backend.convert(input, outputFormat, options);
+  // Backends dispatch on `Blob.type` (Backend.convert does not receive the
+  // input descriptor), but browser Files for text formats (.yaml, .json, …)
+  // frequently arrive with an empty or mismatched `type`. Hand the backend a
+  // blob typed as the format routing just resolved — `Blob.slice` re-types
+  // without copying the underlying bytes.
+  const aligned =
+    input.type === inputFormat.mime ? input : input.slice(0, input.size, inputFormat.mime);
+
+  return backend.convert(aligned, outputFormat, options);
 }

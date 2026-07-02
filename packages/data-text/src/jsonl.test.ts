@@ -15,7 +15,7 @@
  * TC12: Serialize empty file = '' (NOT '\n')
  * TC13: Serialize forbids undefined record
  * TC14: Round-trip preserves order and values
- * TC15: DataTextBackend.canHandle identity + alias + cross-alias=false
+ * TC15: DataTextBackend.canHandle identity + alias + cross-format bridge
  * TC16: parseDataText(..., 'jsonl') returns { kind: 'jsonl' } branch
  */
 
@@ -471,7 +471,7 @@ describe('TC14: round-trip preserves order and values', () => {
 });
 
 // ---------------------------------------------------------------------------
-// TC15: DataTextBackend.canHandle identity + alias + cross-alias=false
+// TC15: DataTextBackend.canHandle identity + alias + cross-format bridge
 // ---------------------------------------------------------------------------
 
 describe('TC15: DataTextBackend.canHandle for JSONL', () => {
@@ -493,16 +493,19 @@ describe('TC15: DataTextBackend.canHandle for JSONL', () => {
     expect(await backend.canHandle(NDJSON_DESCRIPTOR, NDJSON_DESCRIPTOR)).toBe(true);
   });
 
-  it('rejects application/jsonl → application/x-ndjson (cross-alias)', async () => {
-    expect(await backend.canHandle(JSONL_DESCRIPTOR, NDJSON_DESCRIPTOR)).toBe(false);
+  it('accepts application/jsonl → application/x-ndjson (cross-alias, same jsonl kind)', async () => {
+    // Both MIMEs map to the 'jsonl' format; the value bridge treats this as an
+    // identity re-projection (v0.3 cross-format support).
+    expect(await backend.canHandle(JSONL_DESCRIPTOR, NDJSON_DESCRIPTOR)).toBe(true);
   });
 
-  it('rejects application/x-ndjson → application/jsonl (reverse cross-alias)', async () => {
-    expect(await backend.canHandle(NDJSON_DESCRIPTOR, JSONL_DESCRIPTOR)).toBe(false);
+  it('accepts application/x-ndjson → application/jsonl (reverse cross-alias)', async () => {
+    expect(await backend.canHandle(NDJSON_DESCRIPTOR, JSONL_DESCRIPTOR)).toBe(true);
   });
 
-  it('rejects application/jsonl → application/json (cross-format)', async () => {
-    expect(await backend.canHandle(JSONL_DESCRIPTOR, JSON_DESCRIPTOR)).toBe(false);
+  it('accepts application/jsonl → application/json (cross-format, bridgeable)', async () => {
+    // v0.3: JSONL and JSON inter-convert through the value bridge.
+    expect(await backend.canHandle(JSONL_DESCRIPTOR, JSON_DESCRIPTOR)).toBe(true);
   });
 
   it('JSONL_FORMAT descriptor has correct fields', () => {

@@ -1076,3 +1076,50 @@ export class YamlSerializeError extends WebcvtError {
     this.name = 'YamlSerializeError';
   }
 }
+
+// ---------------------------------------------------------------------------
+// Cross-format bridge errors (see bridge.ts)
+// ---------------------------------------------------------------------------
+
+/**
+ * Thrown by bridge()/toPlain()/fromPlain() when a source or target format is
+ * excluded from the cross-format value bridge. XML (attribute-vs-child
+ * ambiguity leaves no canonical plain-value mapping) and FWF (not MIME-routable,
+ * schema-driven) are the two exclusions; identity (same-format) conversion for
+ * them still works via the same-MIME path in DataTextBackend.
+ */
+export class CrossFormatNotSupportedError extends WebcvtError {
+  constructor(from: string, to: string) {
+    super(
+      'CROSS_FORMAT_NOT_SUPPORTED',
+      `data-text cannot bridge '${from}' → '${to}'. XML and FWF are excluded from cross-format value bridging; only identity (same-format) conversion is supported for them.`,
+    );
+    this.name = 'CrossFormatNotSupportedError';
+  }
+}
+
+/**
+ * Thrown when a plain value's SHAPE is incompatible with the target format —
+ * e.g. a non-object root for TOML/INI/ENV, a non-array root for CSV/TSV, or a
+ * nested object/array inside a CSV cell or an INI/ENV value. Shape errors are
+ * structural; value-level (type/range) failures raise CrossFormatValueError.
+ */
+export class CrossFormatShapeError extends WebcvtError {
+  constructor(detail: string) {
+    super('CROSS_FORMAT_SHAPE_ERROR', `Cross-format shape mismatch: ${detail}.`);
+    this.name = 'CrossFormatShapeError';
+  }
+}
+
+/**
+ * Thrown when a plain VALUE cannot be represented in the target format —
+ * e.g. a bigint outside JSON's safe-integer range (silent precision loss is
+ * refused), NaN/±Infinity targeting JSON/JSONL (RFC 8259 forbids them), or a
+ * null targeting TOML (TOML has no null type).
+ */
+export class CrossFormatValueError extends WebcvtError {
+  constructor(detail: string) {
+    super('CROSS_FORMAT_VALUE_ERROR', `Cross-format value error: ${detail}.`);
+    this.name = 'CrossFormatValueError';
+  }
+}

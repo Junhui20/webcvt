@@ -83,10 +83,13 @@ list.
   type. Deferred.
 - **TOON** (token-oriented object notation, indentation-based) —
   not a widely-deployed standard; deferred pending demand.
-- **Cross-format conversion** (CSV → JSON, INI → ENV, etc.) — each
-  format is parse/serialize-only within its own type. Conversion
-  helpers belong in a higher-level `@catlabtech/webcvt-convert` package, not
-  here.
+- **Cross-format conversion** (CSV → JSON, INI → ENV, etc.) —
+  ~~each format is parse/serialize-only within its own type. Conversion
+  helpers belong in a higher-level `@catlabtech/webcvt-convert` package,
+  not here.~~ **REVERSED (v0.3, Task 2).** There is no
+  `@catlabtech/webcvt-convert` package; a first-class cross-format value
+  bridge now lives *in this package* (`bridge.ts`). See
+  "Cross-format value bridge" below for the design and the supported matrix.
 - **Schema-aware coercion** (numbers, booleans, dates inferred from
   string fields). CSV / INI / ENV values are returned as raw
   strings; callers do their own typing.
@@ -469,12 +472,72 @@ guess-wrong dispatch causes silent data corruption.
 ## Backend integration
 
 `DataTextBackend` (in `backend.ts`) implements the
-`@catlabtech/webcvt-core` backend interface. `canHandle(input, hint)` returns
-`true` only when `hint.format` is one of the five formats above —
-no magic-byte sniffing. The backend is identity-within-format:
-`decode` returns the parsed `DataTextFile`; `encode` returns the
-serialized string. There is no fallback chain inside this package
-(unlike `archive-zip`'s bz2 / xz delegation to `backend-wasm`).
+`@catlabtech/webcvt-core` backend interface. `canHandle(input, output)`
+returns `true` on two routes and never sniffs magic bytes:
+
+1. **Identity** — `input.mime === output.mime` and the MIME is one of the
+   supported formats. `convert` parses then serializes the same kind; output
+   is byte-for-byte unchanged from the pre-bridge behaviour.
+2. **Cross-format** — both MIMEs map to supported formats and the pair is
+   bridgeable (`canBridge`; excludes XML/FWF). `convert` inserts a `'bridge'`
+   progress phase (~55%) between parse and serialize.
+
+There is no fallback chain inside this package (unlike `archive-zip`'s
+bz2 / xz delegation to `backend-wasm`).
+
+### Cross-format value bridge
+
+`bridge.ts` re-projects one parsed format as another through a common
+plain-value model, `PlainValue = JsonValue ∪ bigint`:
+
+```
+toPlain(file)  : DataTextFile -> PlainValue     (export half)
+fromPlain(k,v) : PlainValue   -> DataTextFile   (import half)
+bridge(f, to)  = fromPlain(to, toPlain(f))
+canBridge(a,b) : both sides bridgeable?
+```
+
+The `bigint` arm preserves 2^53..2^63-1 integers across a yaml↔toml bridge;
+JSON/JSONL import narrows bigint back to `number` only inside the IEEE-754
+safe-integer range and otherwise refuses (`CrossFormatValueError`) rather than
+lose precision. `hadBom` is never carried across a bridge — every imported
+file is built with `hadBom: false`.
+
+**Supported matrix.** The eight bridgeable formats inter-convert freely (any
+pair among them, both directions):
+
+| from \ to | json | yaml | toml | csv | tsv | jsonl | ini | env | xml | fwf |
+|-----------|:----:|:----:|:----:|:---:|:---:|:-----:|:---:|:---:|:---:|:---:|
+| **json**  |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **yaml**  |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **toml**  |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **csv**   |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **tsv**   |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **jsonl** |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **ini**   |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **env**   |  ✓   |  ✓   |  ✓   |  ✓  |  ✓  |   ✓   |  ✓  |  ✓  |  —  |  —  |
+| **xml**   |  —   |  —   |  —   |  —  |  —  |   —   |  —  |  —  |  id |  —  |
+| **fwf**   |  —   |  —   |  —   |  —  |  —  |   —   |  —  |  —  |  —  | id  |
+
+(`id` = identity-only, handled outside the value bridge; `—` = not supported —
+`bridge`/`canBridge` refuse it.)
+
+Whether a given *value* actually survives depends on the target's rules
+(each is enforced in `bridge.ts` and covered by a named test):
+
+- **json / jsonl import**: bigint narrows to number only within ±(2^53-1);
+  NaN/±Infinity are refused.
+- **toml import**: root must be an object; `null` anywhere is refused (TOML has
+  no null). **toml export**: `TomlDate`/`TomlTime`/`TomlDateTime` become ISO
+  8601 strings (lossy-but-explicit).
+- **csv / tsv**: array-of-objects → header table (union of keys, missing cells
+  `""`); array-of-arrays → header-less table; nested value in a cell is a shape
+  error. csv↔tsv is a pure delimiter flip.
+- **ini**: 2-level object; the `__default__` section flattens to root; deeper
+  nesting or arrays are shape errors.
+- **env**: flat object of stringified scalars; any nesting is a shape error.
+  On the backend, a text/plain side is only treated as ENV for cross-format
+  when the descriptor declares `ext === 'env'`.
 
 ## Fixture strategy
 

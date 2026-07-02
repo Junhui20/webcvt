@@ -44,6 +44,8 @@ export interface WasmBackendOptions {
 
 export class WasmBackend implements Backend {
   readonly name = 'ffmpeg-wasm';
+  /** Generic any-in/any-out fallback — rank below specialized codecs and Canvas. */
+  readonly priority = -10;
 
   private readonly queue = new SerialQueue();
   private readonly progressParser = new ProgressParser();
