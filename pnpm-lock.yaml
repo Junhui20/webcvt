@@ -801,6 +801,9 @@ importers:
       '@catlabtech/webcvt-core':
         specifier: workspace:^
         version: link:../core
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^2.1.0
@@ -826,6 +829,9 @@ importers:
       '@catlabtech/webcvt-core':
         specifier: workspace:^
         version: link:../core
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
     devDependencies:
       '@jsquash/avif':
         specifier: ^1.3.0
@@ -851,6 +857,9 @@ importers:
       '@catlabtech/webcvt-core':
         specifier: workspace:^
         version: link:../core
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
     devDependencies:
       '@jsquash/jxl':
         specifier: ^1.2.0
@@ -876,6 +885,9 @@ importers:
       '@catlabtech/webcvt-core':
         specifier: workspace:^
         version: link:../core
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
     devDependencies:
       '@jsquash/jpeg':
         specifier: ^1.6.0
@@ -901,6 +913,9 @@ importers:
       '@catlabtech/webcvt-core':
         specifier: workspace:^
         version: link:../core
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
     devDependencies:
       '@jsquash/oxipng':
         specifier: ^2.3.0
@@ -945,6 +960,9 @@ importers:
       '@catlabtech/webcvt-core':
         specifier: workspace:^
         version: link:../core
+      '@catlabtech/webcvt-image-canvas':
+        specifier: workspace:*
+        version: link:../image-canvas
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^2.1.0

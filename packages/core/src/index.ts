@@ -31,3 +31,8 @@ export {
   type BatchItemResult,
   type ConvertBatchOptions,
 } from './convert-batch.ts';
+export {
+  createLazyWasmLoader,
+  type LazyWasmLoader,
+  type LazyWasmLoaderConfig,
+} from './lazy-wasm-loader.ts';

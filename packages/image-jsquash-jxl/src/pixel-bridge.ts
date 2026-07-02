@@ -1,105 +1,48 @@
 /**
  * Pixel bridge for @catlabtech/webcvt-image-jsquash-jxl.
  *
- * Provides two conversions:
+ * Thin wrapper over the shared canvas round-trips in @catlabtech/webcvt-image-canvas:
  * - imageDataToBlob: ImageData → Blob via OffscreenCanvas (or HTMLCanvasElement fallback)
  * - blobToImageData:  Blob → ImageData via createImageBitmap → OffscreenCanvas
  *
  * Used for cross-format paths (e.g. PNG→JXL, JXL→PNG) where a canvas round-trip
- * is needed to convert between canvas-native formats and JPEG XL.
+ * is needed to convert between canvas-native formats and JPEG XL. The JXL-typed
+ * errors are preserved by injecting them into the shared helpers.
  *
  * Node.js note: OffscreenCanvas is unavailable in stock Node. When typeof OffscreenCanvas
  * is 'undefined', callers should gate these paths via hasPixelBridge() before calling.
  */
 
+import {
+  type PixelBridgeErrorHooks,
+  blobToImageData as sharedBlobToImageData,
+  hasPixelBridge as sharedHasPixelBridge,
+  imageDataToBlob as sharedImageDataToBlob,
+} from '@catlabtech/webcvt-image-canvas';
 import { MAX_PIXELS } from './constants.ts';
 import { JxlDecodeError, JxlDimensionsTooLargeError, JxlEncodeError } from './errors.ts';
 
-// ---------------------------------------------------------------------------
-// OffscreenCanvas vs HTMLCanvasElement bridge (mirrors image-canvas pattern)
-// ---------------------------------------------------------------------------
-
-/** Minimal interface covering both OffscreenCanvas and HTMLCanvasElement. */
-interface CanvasLike {
-  width: number;
-  height: number;
-  getContext(id: '2d'): CanvasRenderingContext2DLike | null;
-}
-
-interface CanvasRenderingContext2DLike {
-  drawImage(image: ImageBitmap, dx: number, dy: number): void;
-  getImageData(sx: number, sy: number, sw: number, sh: number): ImageData;
-  putImageData(imageData: ImageData, dx: number, dy: number): void;
-}
+/** Maps the shared bridge's failure points onto this package's typed errors. */
+const errorHooks: PixelBridgeErrorHooks = {
+  encodeContextError: () =>
+    new JxlEncodeError('Could not get 2D context from canvas for pixel bridge (imageDataToBlob).'),
+  decodeContextError: () =>
+    new JxlDecodeError('Could not get 2D context from canvas for pixel bridge (blobToImageData).'),
+  toBlobNullError: () =>
+    new JxlEncodeError(
+      'HTMLCanvasElement.toBlob produced null — canvas may not support the requested MIME type.',
+    ),
+  dimensionsTooLargeError: (width, height, maxPixels) =>
+    new JxlDimensionsTooLargeError(width, height, maxPixels),
+};
 
 /**
  * Returns true when pixel bridge operations are available in this environment.
  * Requires OffscreenCanvas (or HTMLCanvasElement + document) and createImageBitmap.
  */
 export function hasPixelBridge(): boolean {
-  return (
-    (typeof globalThis.OffscreenCanvas !== 'undefined' ||
-      (typeof globalThis.document !== 'undefined' &&
-        typeof globalThis.document.createElement === 'function')) &&
-    typeof globalThis.createImageBitmap === 'function'
-  );
+  return sharedHasPixelBridge();
 }
-
-/**
- * Creates a canvas of the requested size.
- * Prefers OffscreenCanvas for worker-thread compatibility;
- * falls back to HTMLCanvasElement in environments where OffscreenCanvas is unavailable.
- */
-function createCanvas(width: number, height: number): CanvasLike {
-  if (typeof globalThis.OffscreenCanvas !== 'undefined') {
-    return new globalThis.OffscreenCanvas(width, height) as unknown as CanvasLike;
-  }
-  const el = globalThis.document.createElement('canvas') as unknown as CanvasLike & {
-    toBlob: (cb: (b: Blob | null) => void, type: string, quality?: number) => void;
-  };
-  el.width = width;
-  el.height = height;
-  return el;
-}
-
-/**
- * Encodes a canvas to a Blob.
- * Uses OffscreenCanvas.convertToBlob when available; falls back to HTMLCanvasElement.toBlob.
- */
-async function canvasToBlob(canvas: CanvasLike, mime: string, quality?: number): Promise<Blob> {
-  if (typeof (canvas as { convertToBlob?: unknown }).convertToBlob === 'function') {
-    const oc = canvas as unknown as {
-      convertToBlob(opts: { type: string; quality?: number }): Promise<Blob>;
-    };
-    return oc.convertToBlob({ type: mime, quality });
-  }
-
-  // HTMLCanvasElement fallback
-  return new Promise<Blob>((resolve, reject) => {
-    const el = canvas as unknown as {
-      toBlob: (cb: (b: Blob | null) => void, type: string, quality?: number) => void;
-    };
-    el.toBlob(
-      (b) => {
-        if (b === null) {
-          reject(
-            new JxlEncodeError(
-              'HTMLCanvasElement.toBlob produced null — canvas may not support the requested MIME type.',
-            ),
-          );
-        } else {
-          resolve(b);
-        }
-      },
-      mime,
-      quality,
-    );
-  });
-}
-
-// ---------------------------------------------------------------------------
-// imageDataToBlob
-// ---------------------------------------------------------------------------
 
 /**
  * Converts ImageData to a Blob of the given MIME type via canvas.
@@ -111,25 +54,13 @@ async function canvasToBlob(canvas: CanvasLike, mime: string, quality?: number):
  * @param mime      - Target MIME type, e.g. 'image/png'.
  * @param quality   - Encode quality 0–1 for lossy formats (JPEG, WebP).
  */
-export async function imageDataToBlob(
+export function imageDataToBlob(
   imageData: ImageData,
   mime: string,
   quality?: number,
 ): Promise<Blob> {
-  const canvas = createCanvas(imageData.width, imageData.height);
-  const ctx = canvas.getContext('2d');
-  if (ctx === null) {
-    throw new JxlEncodeError(
-      'Could not get 2D context from canvas for pixel bridge (imageDataToBlob).',
-    );
-  }
-  ctx.putImageData(imageData, 0, 0);
-  return canvasToBlob(canvas, mime, quality);
+  return sharedImageDataToBlob(imageData, mime, quality, errorHooks);
 }
-
-// ---------------------------------------------------------------------------
-// blobToImageData
-// ---------------------------------------------------------------------------
 
 /**
  * Converts a Blob (PNG, JPEG, WebP, etc.) to ImageData via createImageBitmap.
@@ -142,27 +73,6 @@ export async function imageDataToBlob(
  *                    JxlDimensionsTooLargeError if width×height exceeds this value.
  * @throws {JxlDimensionsTooLargeError} if decoded dimensions exceed maxPixels.
  */
-export async function blobToImageData(blob: Blob, maxPixels = MAX_PIXELS): Promise<ImageData> {
-  const bitmap = await globalThis.createImageBitmap(blob);
-  try {
-    const { width, height } = bitmap;
-
-    // Pixel guard on blobToImageData (free function API, no backend to guard)
-    const pixels = width * height;
-    if (pixels > maxPixels) {
-      throw new JxlDimensionsTooLargeError(width, height, maxPixels);
-    }
-
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-      throw new JxlDecodeError(
-        'Could not get 2D context from canvas for pixel bridge (blobToImageData).',
-      );
-    }
-    ctx.drawImage(bitmap, 0, 0);
-    return ctx.getImageData(0, 0, width, height);
-  } finally {
-    bitmap.close();
-  }
+export function blobToImageData(blob: Blob, maxPixels = MAX_PIXELS): Promise<ImageData> {
+  return sharedBlobToImageData(blob, maxPixels, errorHooks);
 }

@@ -24,7 +24,8 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:^"
+    "@catlabtech/webcvt-core": "workspace:^",
+    "@catlabtech/webcvt-image-canvas": "workspace:*"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.0",
