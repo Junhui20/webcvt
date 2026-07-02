@@ -11,6 +11,15 @@ export {
   NoBackendError,
 } from './types.ts';
 
+export { InputTooLargeError, EncodeNotImplementedError } from './errors.ts';
+export {
+  RoundTripBackend,
+  type RoundTripBackendConfig,
+  type RoundTripProgressStep,
+  type RoundTripSizeGuard,
+  type CanHandleMode,
+} from './round-trip-backend.ts';
+
 export { findByExt, findByMime, resolveFormat, knownFormats } from './formats.ts';
 export { detectFormat, detectFormatWithHint } from './detect.ts';
 export { type Capabilities, detectCapabilities } from './capability.ts';
