@@ -1069,6 +1069,49 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
 
+  packages/transcode:
+    dependencies:
+      '@catlabtech/webcvt-codec-webcodecs':
+        specifier: workspace:*
+        version: link:../codec-webcodecs
+      '@catlabtech/webcvt-container-aac':
+        specifier: workspace:*
+        version: link:../container-aac
+      '@catlabtech/webcvt-container-flac':
+        specifier: workspace:*
+        version: link:../container-flac
+      '@catlabtech/webcvt-container-mp3':
+        specifier: workspace:*
+        version: link:../container-mp3
+      '@catlabtech/webcvt-container-ogg':
+        specifier: workspace:*
+        version: link:../container-ogg
+      '@catlabtech/webcvt-container-wav':
+        specifier: workspace:*
+        version: link:../container-wav
+      '@catlabtech/webcvt-container-webm':
+        specifier: workspace:*
+        version: link:../container-webm
+      '@catlabtech/webcvt-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@catlabtech/webcvt-test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(postcss@8.5.10)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
+
 packages:
 
   '@algolia/abtesting@1.16.2':

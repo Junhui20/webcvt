@@ -1,0 +1,70 @@
+{
+  "name": "@catlabtech/webcvt-transcode",
+  "version": "0.2.0",
+  "description": "WebCodecs-first audio/video transcode backend for webcvt — real cross-format conversion (wav/opus/aac/flac) via demux → decode → encode → mux, no ffmpeg.wasm",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist coverage .turbo"
+  },
+  "dependencies": {
+    "@catlabtech/webcvt-core": "workspace:*",
+    "@catlabtech/webcvt-codec-webcodecs": "workspace:*",
+    "@catlabtech/webcvt-container-wav": "workspace:*",
+    "@catlabtech/webcvt-container-ogg": "workspace:*",
+    "@catlabtech/webcvt-container-webm": "workspace:*",
+    "@catlabtech/webcvt-container-mp3": "workspace:*",
+    "@catlabtech/webcvt-container-flac": "workspace:*",
+    "@catlabtech/webcvt-container-aac": "workspace:*"
+  },
+  "devDependencies": {
+    "@catlabtech/webcvt-test-utils": "workspace:*",
+    "@vitest/coverage-v8": "^2.1.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Junhui20/webcvt.git",
+    "directory": "packages/transcode"
+  },
+  "bugs": {
+    "url": "https://github.com/Junhui20/webcvt/issues"
+  },
+  "homepage": "https://github.com/Junhui20/webcvt/tree/main/packages/transcode#readme",
+  "keywords": [
+    "webcvt",
+    "file-conversion",
+    "convert",
+    "transcode",
+    "webcodecs",
+    "audio",
+    "opus",
+    "wav",
+    "aac",
+    "flac",
+    "browser",
+    "typescript"
+  ]
+}
