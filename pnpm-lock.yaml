@@ -1005,6 +1005,39 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
 
+  packages/integration-tests:
+    devDependencies:
+      '@catlabtech/webcvt-archive-zip':
+        specifier: workspace:*
+        version: link:../archive-zip
+      '@catlabtech/webcvt-container-wav':
+        specifier: workspace:*
+        version: link:../container-wav
+      '@catlabtech/webcvt-core':
+        specifier: workspace:*
+        version: link:../core
+      '@catlabtech/webcvt-data-text':
+        specifier: workspace:*
+        version: link:../data-text
+      '@catlabtech/webcvt-email':
+        specifier: workspace:*
+        version: link:../email
+      '@catlabtech/webcvt-font':
+        specifier: workspace:*
+        version: link:../font
+      '@catlabtech/webcvt-subtitle':
+        specifier: workspace:*
+        version: link:../subtitle
+      '@vitest/coverage-v8':
+        specifier: ^2.1.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.17)(happy-dom@15.11.7))
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.17)(happy-dom@15.11.7)
+
   packages/subtitle:
     dependencies:
       '@catlabtech/webcvt-core':
