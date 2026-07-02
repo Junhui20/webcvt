@@ -4,6 +4,17 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ## [Unreleased]
 
+### Added
+
+- **`@catlabtech/webcvt-core`** — `convert()` can now route the text formats (JSON/CSV/YAML/…), which have no magic bytes: new `ConvertOptions.inputFormat` (explicit ext/MIME/descriptor route) and `ConvertOptions.filename` (extension fallback when magic-byte detection fails), with automatic fallback to a `File` input's `.name`; `convertBatch` threads item names as filename hints. The input blob is re-typed to the resolved format via zero-copy `Blob.slice` so `Blob.type`-dispatching backends work with typeless browser Files. `UnsupportedFormatError` gains an optional hint sentence pointing at the two explicit routes.
+- **`@catlabtech/webcvt-core`** — `Backend.priority` (optional, default 0): the registry now selects the highest-priority matching backend, with ties keeping registration order — specialized codecs win over generic any-in/any-out backends regardless of registration order. MozJPEG/OxiPNG/AVIF/JXL/HEIC backends rank 10, `ffmpeg-wasm` −10, `image-canvas` stays 0.
+- **`@catlabtech/webcvt-data-text`** — cross-format conversion via a new value bridge (`bridge`, `canBridge`, `toPlain`, `fromPlain`): json / yaml / toml / csv / tsv / jsonl / ini / env inter-convert, all pairs, both directions (XML and FWF are excluded — no canonical plain-value mapping / not MIME-routable). Lossiness is explicit, never silent, with typed errors (`CrossFormatNotSupportedError`, `CrossFormatShapeError`, `CrossFormatValueError`): bigint→JSON only within ±(2^53−1), NaN/±Inf rejected for JSON targets, TOML datetimes render as ISO 8601 strings, nested values are shape errors in tabular/keyed targets. `text/plain` is only treated as ENV when the descriptor's ext is `env`. Identity conversions stay byte-for-byte unchanged.
+
+### Fixed
+
+- **`@catlabtech/webcvt-core`** — the registry docstring claimed backends self-register at import time; they never did. It now documents explicit registration and the priority/tie-break rules.
+- **`@catlabtech/webcvt-data-text`** — package docs pointed cross-format users at `@catlabtech/webcvt-convert`, a package that does not exist.
+
 ## [0.2.0] — 2026-06-30
 
 > **34 packages, 4,991 tests.** Adds the modern image codecs, HEIC, image→PDF, the
