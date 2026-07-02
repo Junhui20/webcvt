@@ -20,12 +20,8 @@
  * Do NOT import backend-wasm directly; let the BackendRegistry fallback handle it.
  */
 
-import type {
-  Backend,
-  ConvertOptions,
-  ConvertResult,
-  FormatDescriptor,
-} from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { RoundTripBackend } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES, MKV_MIMES } from './constants.ts';
 import { MkvEncodeNotImplementedError, MkvInputTooLargeError } from './errors.ts';
 import { parseMkv } from './parser.ts';
@@ -35,58 +31,26 @@ import { serializeMkv } from './serializer.ts';
 // MkvBackend
 // ---------------------------------------------------------------------------
 
-export class MkvBackend implements Backend {
-  readonly name = 'container-mkv';
-
-  /**
-   * Identity-only canHandle (first pass).
-   *
-   * Returns true ONLY when both input AND output are the SAME MKV MIME type
-   * (video/x-matroska → video/x-matroska).
-   *
-   * Cross-MIME relabels return false so the BackendRegistry can route to a
-   * codec-capable backend. This is the identity-only pattern that avoids the
-   * 4-of-6 recurring canHandle issue from prior container reviews.
-   */
-  async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    return MKV_MIMES.has(input.mime) && input.mime === output.mime;
-  }
-
-  async convert(
-    input: Blob,
-    output: FormatDescriptor,
-    options: ConvertOptions,
-  ): Promise<ConvertResult> {
-    const startMs = Date.now();
-
-    if (input.size > MAX_INPUT_BYTES) {
-      throw new MkvInputTooLargeError(input.size, MAX_INPUT_BYTES);
-    }
-
-    options.onProgress?.({ percent: 5, phase: 'demux' });
-
-    const inputBytes = new Uint8Array(await input.arrayBuffer());
-    const mkvFile = parseMkv(inputBytes);
-
-    options.onProgress?.({ percent: 50, phase: 'mux' });
-
-    // Identity / round-trip path.
-    if (MKV_MIMES.has(output.mime)) {
-      const outputBytes = serializeMkv(mkvFile);
-      options.onProgress?.({ percent: 100, phase: 'done' });
-      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: output.mime });
-      return {
-        blob,
-        format: output,
-        durationMs: Date.now() - startMs,
-        backend: this.name,
-        hardwareAccelerated: false,
-      };
-    }
-
-    throw new MkvEncodeNotImplementedError(
-      `output MIME "${output.mime}" is not supported; only MKV identity round-trip is implemented`,
-    );
+export class MkvBackend extends RoundTripBackend<ReturnType<typeof parseMkv>> {
+  constructor() {
+    super({
+      name: 'container-mkv',
+      mimes: MKV_MIMES,
+      // Identity-only: both must be in the MKV MIME set AND must be equal.
+      canHandleMode: 'strict-identity',
+      sizeGuard: {
+        maxBytes: MAX_INPUT_BYTES,
+        error: (size, max) => new MkvInputTooLargeError(size, max),
+      },
+      parse: parseMkv,
+      serialize: serializeMkv,
+      encodeNotImplemented: (output) =>
+        new MkvEncodeNotImplementedError(
+          `output MIME "${output.mime}" is not supported; only MKV identity round-trip is implemented`,
+        ),
+      demuxStep: { percent: 5, phase: 'demux' },
+      serializeStep: { percent: 50, phase: 'mux' },
+    });
   }
 }
 

@@ -6,15 +6,16 @@
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import {
+  EncodeNotImplementedError,
+  InputTooLargeError,
+  WebcvtError,
+} from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
-export class WebmInputTooLargeError extends WebcvtError {
+export class WebmInputTooLargeError extends InputTooLargeError {
   constructor(size: number, max: number) {
-    super(
-      'WEBM_INPUT_TOO_LARGE',
-      `WebM input is ${size} bytes; maximum supported is ${max} bytes (200 MiB).`,
-    );
+    super('WEBM', 'WebM', size, max);
     this.name = 'WebmInputTooLargeError';
   }
 }
@@ -196,10 +197,10 @@ export class WebmTooManyCuePointsError extends WebcvtError {
 }
 
 /** Thrown when encode is requested for a path not supported by this backend. */
-export class WebmEncodeNotImplementedError extends WebcvtError {
+export class WebmEncodeNotImplementedError extends EncodeNotImplementedError {
   constructor(reason: string) {
     super(
-      'WEBM_ENCODE_NOT_IMPLEMENTED',
+      'WEBM',
       `WebM encode not implemented: ${reason}. Install @catlabtech/webcvt-backend-wasm for transcode support.`,
     );
     this.name = 'WebmEncodeNotImplementedError';

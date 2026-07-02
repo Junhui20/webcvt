@@ -15,12 +15,8 @@
  * - Do NOT import backend-wasm directly; let the BackendRegistry fallback chain handle it.
  */
 
-import type {
-  Backend,
-  ConvertOptions,
-  ConvertResult,
-  FormatDescriptor,
-} from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { RoundTripBackend } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import { OggEncodeNotImplementedError, OggInputTooLargeError } from './errors.ts';
 import { parseOgg } from './parser.ts';
@@ -41,56 +37,26 @@ const OGG_MIMES = new Set(['audio/ogg', 'audio/opus']);
 
 /**
  * Backend that round-trips Ogg/Vorbis and Ogg/Opus files via the container
- * parser (Phase 2 identity + Opus decode scaffold).
+ * parser (Phase 2 identity + Opus decode scaffold). Vorbis / Opus encode from
+ * non-Ogg sources routes to backend-wasm.
  */
-export class OggBackend implements Backend {
-  readonly name = 'container-ogg';
-
-  /**
-   * Phase 2: identity only (Ogg → Ogg).
-   *
-   * Returns true when both input AND output are Ogg MIME types.
-   * Vorbis / Opus encode from non-Ogg sources routes to backend-wasm.
-   */
-  async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    // Identity-only per the recurring lesson from container-flac/container-aac/container-ogg reviews.
-    return OGG_MIMES.has(input.mime) && input.mime === output.mime;
-  }
-
-  async convert(
-    input: Blob,
-    output: FormatDescriptor,
-    options: ConvertOptions,
-  ): Promise<ConvertResult> {
-    const startMs = Date.now();
-
-    if (input.size > MAX_INPUT_BYTES) {
-      throw new OggInputTooLargeError(input.size, MAX_INPUT_BYTES);
-    }
-
-    options.onProgress?.({ percent: 5, phase: 'demux' });
-
-    const inputBytes = new Uint8Array(await input.arrayBuffer());
-    const oggFile = parseOgg(inputBytes);
-
-    options.onProgress?.({ percent: 50, phase: 'decode' });
-
-    // Identity / round-trip path (Ogg → Ogg).
-    if (OGG_MIMES.has(output.mime)) {
-      const outputBytes = serializeOgg(oggFile);
-      options.onProgress?.({ percent: 100, phase: 'done' });
-      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: output.mime });
-      return {
-        blob,
-        format: output,
-        durationMs: Date.now() - startMs,
-        backend: this.name,
-        hardwareAccelerated: false,
-      };
-    }
-
-    // Phase 1/2: non-Ogg output not implemented.
-    throw new OggEncodeNotImplementedError();
+export class OggBackend extends RoundTripBackend<ReturnType<typeof parseOgg>> {
+  constructor() {
+    super({
+      name: 'container-ogg',
+      mimes: OGG_MIMES,
+      // Strict identity per the recurring container-flac/aac/ogg review lesson.
+      canHandleMode: 'strict-identity',
+      sizeGuard: {
+        maxBytes: MAX_INPUT_BYTES,
+        error: (size, max) => new OggInputTooLargeError(size, max),
+      },
+      parse: parseOgg,
+      serialize: serializeOgg,
+      encodeNotImplemented: () => new OggEncodeNotImplementedError(),
+      demuxStep: { percent: 5, phase: 'demux' },
+      serializeStep: { percent: 50, phase: 'decode' },
+    });
   }
 }
 

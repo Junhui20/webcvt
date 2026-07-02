@@ -4,7 +4,7 @@
  * All error codes are uppercase snake_case strings for programmatic matching.
  */
 
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import { EncodeNotImplementedError, WebcvtError } from '@catlabtech/webcvt-core';
 
 /**
  * Thrown when a frame header reports bitrate_index == 0 (free-format).
@@ -79,10 +79,10 @@ export class Mp3UnsynchronisationError extends WebcvtError {
  * WebCodecsAudioEncoder does not support mp3 output in current browsers.
  * Phase 1 is decode-only; encoding is deferred to a future lamejs-based phase.
  */
-export class Mp3EncodeNotImplementedError extends WebcvtError {
+export class Mp3EncodeNotImplementedError extends EncodeNotImplementedError {
   constructor() {
     super(
-      'MP3_ENCODE_NOT_IMPLEMENTED',
+      'MP3',
       'MP3 encoding is not implemented in Phase 1. ' +
         'WebCodecs AudioEncoder does not support mp3 output in current browsers. ' +
         'A lamejs-based encode path is planned for a future phase.',

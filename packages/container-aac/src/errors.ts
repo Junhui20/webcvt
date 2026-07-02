@@ -4,15 +4,16 @@
  * All error codes are uppercase snake_case strings for programmatic matching.
  */
 
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import {
+  EncodeNotImplementedError,
+  InputTooLargeError,
+  WebcvtError,
+} from '@catlabtech/webcvt-core';
 
 /** Thrown when the input is larger than the 200 MiB cap. */
-export class AdtsInputTooLargeError extends WebcvtError {
+export class AdtsInputTooLargeError extends InputTooLargeError {
   constructor(size: number, max: number) {
-    super(
-      'ADTS_INPUT_TOO_LARGE',
-      `ADTS input is ${size} bytes; maximum supported is ${max} bytes (200 MiB).`,
-    );
+    super('ADTS', 'ADTS', size, max);
     this.name = 'AdtsInputTooLargeError';
   }
 }
@@ -137,10 +138,10 @@ export class AdtsCrcUnsupportedError extends WebcvtError {
 }
 
 /** Thrown when a non-identity ADTS conversion is requested (Phase 1 decode-only). */
-export class AdtsEncodeNotImplementedError extends WebcvtError {
+export class AdtsEncodeNotImplementedError extends EncodeNotImplementedError {
   constructor() {
     super(
-      'ADTS_ENCODE_NOT_IMPLEMENTED',
+      'ADTS',
       'ADTS encoding from non-AAC input is not implemented in container-aac Phase 1. Install @catlabtech/webcvt-backend-wasm to enable transcode via ffmpeg.wasm.',
     );
     this.name = 'AdtsEncodeNotImplementedError';

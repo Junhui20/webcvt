@@ -15,12 +15,8 @@
  * Do NOT import backend-wasm directly; let the BackendRegistry fallback chain handle it.
  */
 
-import type {
-  Backend,
-  ConvertOptions,
-  ConvertResult,
-  FormatDescriptor,
-} from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { RoundTripBackend } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import {
   Mp4EncodeNotImplementedError,
@@ -46,64 +42,33 @@ const M4A_MIMES = new Set(['audio/mp4']);
 // Mp4Backend
 // ---------------------------------------------------------------------------
 
-export class Mp4Backend implements Backend {
-  readonly name = 'container-mp4';
-
-  /**
-   * Phase 3: identity only (audio/mp4 → audio/mp4).
-   *
-   * Returns true when both input AND output are the same M4A MIME type.
-   * Any cross-format conversion routes to backend-wasm.
-   */
-  async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    // Identity-only per the recurring lesson from container-flac/container-aac/container-ogg reviews.
-    return M4A_MIMES.has(input.mime) && input.mime === output.mime;
-  }
-
-  async convert(
-    input: Blob,
-    output: FormatDescriptor,
-    options: ConvertOptions,
-  ): Promise<ConvertResult> {
-    const startMs = Date.now();
-
-    if (input.size > MAX_INPUT_BYTES) {
-      throw new Mp4InputTooLargeError(input.size, MAX_INPUT_BYTES);
-    }
-
-    options.onProgress?.({ percent: 5, phase: 'demux' });
-
-    const inputBytes = new Uint8Array(await input.arrayBuffer());
-    const mp4File = parseMp4(inputBytes);
-
-    options.onProgress?.({ percent: 50, phase: 'mux' });
-
-    // Identity / round-trip path (audio/mp4 → audio/mp4).
-    if (M4A_MIMES.has(output.mime)) {
-      // C.4: project to single audio track when input has multiple tracks.
-      const audioTrack = findAudioTrack(mp4File);
-      if (!audioTrack) {
-        throw new Mp4NoAudioTrackError();
-      }
-
-      // If the file already has exactly one track and it is audio, no projection needed.
-      const fileToSerialize =
-        mp4File.tracks.length === 1 ? mp4File : projectToSingleTrack(mp4File, audioTrack);
-
-      const outputBytes = serializeMp4(fileToSerialize);
-      options.onProgress?.({ percent: 100, phase: 'done' });
-      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: output.mime });
-      return {
-        blob,
-        format: output,
-        durationMs: Date.now() - startMs,
-        backend: this.name,
-        hardwareAccelerated: false,
-      };
-    }
-
-    // Non-M4A output is not implemented in Phase 3.
-    throw new Mp4EncodeNotImplementedError();
+export class Mp4Backend extends RoundTripBackend<Mp4File> {
+  constructor() {
+    super({
+      name: 'container-mp4',
+      mimes: M4A_MIMES,
+      canHandleMode: 'strict-identity',
+      sizeGuard: {
+        maxBytes: MAX_INPUT_BYTES,
+        error: (size, max) => new Mp4InputTooLargeError(size, max),
+      },
+      parse: parseMp4,
+      // C.4: project to a single audio track when the input carries several,
+      // then serialize. Throws for missing-audio or fragmented-projection inputs.
+      serialize: (mp4File) => {
+        const audioTrack = findAudioTrack(mp4File);
+        if (!audioTrack) {
+          throw new Mp4NoAudioTrackError();
+        }
+        // If the file already has exactly one track and it is audio, no projection needed.
+        const fileToSerialize =
+          mp4File.tracks.length === 1 ? mp4File : projectToSingleTrack(mp4File, audioTrack);
+        return serializeMp4(fileToSerialize);
+      },
+      encodeNotImplemented: () => new Mp4EncodeNotImplementedError(),
+      demuxStep: { percent: 5, phase: 'demux' },
+      serializeStep: { percent: 50, phase: 'mux' },
+    });
   }
 }
 

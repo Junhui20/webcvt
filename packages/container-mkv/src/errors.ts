@@ -6,15 +6,16 @@
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import {
+  EncodeNotImplementedError,
+  InputTooLargeError,
+  WebcvtError,
+} from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
-export class MkvInputTooLargeError extends WebcvtError {
+export class MkvInputTooLargeError extends InputTooLargeError {
   constructor(size: number, max: number) {
-    super(
-      'MKV_INPUT_TOO_LARGE',
-      `MKV input is ${size} bytes; maximum supported is ${max} bytes (200 MiB).`,
-    );
+    super('MKV', 'MKV', size, max);
     this.name = 'MkvInputTooLargeError';
   }
 }
@@ -211,10 +212,10 @@ export class MkvTooManyCuePointsError extends WebcvtError {
 }
 
 /** Thrown when encode is requested for a path not supported by this backend. */
-export class MkvEncodeNotImplementedError extends WebcvtError {
+export class MkvEncodeNotImplementedError extends EncodeNotImplementedError {
   constructor(reason: string) {
     super(
-      'MKV_ENCODE_NOT_IMPLEMENTED',
+      'MKV',
       `MKV encode not implemented: ${reason}. Install @catlabtech/webcvt-backend-wasm for transcode support.`,
     );
     this.name = 'MkvEncodeNotImplementedError';

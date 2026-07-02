@@ -18,12 +18,8 @@
  * - Widen canHandle to output.category === 'audio' once WebCodecs decode is wired.
  */
 
-import type {
-  Backend,
-  ConvertOptions,
-  ConvertResult,
-  FormatDescriptor,
-} from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { RoundTripBackend } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES } from './constants.ts';
 import { FlacEncodeNotImplementedError, FlacInputTooLargeError } from './errors.ts';
 import { parseFlac } from './parser.ts';
@@ -40,65 +36,32 @@ const FLAC_MIMES = new Set([FLAC_MIME, 'audio/x-flac']);
 // ---------------------------------------------------------------------------
 
 /**
- * Backend that decodes FLAC files via the container parser (Phase 1).
+ * Backend that round-trips FLAC files via the container parser (Phase 1).
  *
- * In Phase 1, the `convert` method:
- * - For FLAC→FLAC (identity): parse and re-serialize (lossless round-trip).
- * - For FLAC→other audio: throws FlacEncodeNotImplementedError (WebCodecs
- *   decode path will be wired in Phase 2).
+ * Identity only (FLAC → FLAC): decode-to-other-audio is deferred to Phase 2,
+ * and encode-to-FLAC from a non-FLAC input is handled by
+ * @catlabtech/webcvt-backend-wasm through the registry fallback chain.
  */
-export class FlacBackend implements Backend {
-  readonly name = 'container-flac';
-
-  /**
-   * Phase 1: identity only (FLAC → FLAC).
-   *
-   * Returns true when both input AND output are FLAC MIME types.
-   * Decode-to-other-audio (FLAC → WAV etc.) is deferred to Phase 2 once the
-   * WebCodecs decode path is wired. Encode-to-FLAC from a non-FLAC input is
-   * handled by @catlabtech/webcvt-backend-wasm (design note §Phase-1).
-   */
-  async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    if (!FLAC_MIMES.has(input.mime)) return false;
-    // Phase 1: identity only. Decode path to non-FLAC formats deferred to Phase 2.
-    return FLAC_MIMES.has(output.mime);
-  }
-
-  async convert(
-    input: Blob,
-    output: FormatDescriptor,
-    options: ConvertOptions,
-  ): Promise<ConvertResult> {
-    const startMs = Date.now();
-
-    if (input.size > MAX_INPUT_BYTES) {
-      throw new FlacInputTooLargeError(input.size, MAX_INPUT_BYTES);
-    }
-
-    options.onProgress?.({ percent: 5, phase: 'demux' });
-
-    const inputBytes = new Uint8Array(await input.arrayBuffer());
-    const flacFile = parseFlac(inputBytes);
-
-    options.onProgress?.({ percent: 50, phase: 'decode' });
-
-    // Identity / round-trip path (FLAC → FLAC)
-    if (FLAC_MIMES.has(output.mime)) {
-      const { serializeFlac } = await import('./serializer.ts');
-      const outputBytes = serializeFlac(flacFile);
-      options.onProgress?.({ percent: 100, phase: 'done' });
-      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: FLAC_MIME });
-      return {
-        blob,
-        format: output,
-        durationMs: Date.now() - startMs,
-        backend: this.name,
-        hardwareAccelerated: false,
-      };
-    }
-
-    // Phase 1: non-FLAC output not yet implemented
-    throw new FlacEncodeNotImplementedError();
+export class FlacBackend extends RoundTripBackend<ReturnType<typeof parseFlac>> {
+  constructor() {
+    super({
+      name: 'container-flac',
+      mimes: FLAC_MIMES,
+      outputMime: FLAC_MIME,
+      sizeGuard: {
+        maxBytes: MAX_INPUT_BYTES,
+        error: (size, max) => new FlacInputTooLargeError(size, max),
+      },
+      parse: parseFlac,
+      // Serializer is lazily imported to keep the decode-only path lean.
+      serialize: async (flacFile) => {
+        const { serializeFlac } = await import('./serializer.ts');
+        return serializeFlac(flacFile);
+      },
+      encodeNotImplemented: () => new FlacEncodeNotImplementedError(),
+      demuxStep: { percent: 5, phase: 'demux' },
+      serializeStep: { percent: 50, phase: 'decode' },
+    });
   }
 }
 

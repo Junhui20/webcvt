@@ -5,16 +5,12 @@
  *   full WebCodecs integration with codec-webcodecs is deferred to Phase 2).
  *
  * Encode: requires AudioData input from codec-webcodecs (Phase 2).
- *   Stub throws NotImplementedError until that package is available.
+ *   Stub throws WavEncodeNotImplementedError until that package is available.
  */
 
-import type {
-  Backend,
-  ConvertOptions,
-  ConvertResult,
-  FormatDescriptor,
-} from '@catlabtech/webcvt-core';
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { RoundTripBackend } from '@catlabtech/webcvt-core';
+import { WavEncodeNotImplementedError } from './errors.ts';
 import { parseWav } from './parser.ts';
 import { serializeWav } from './serializer.ts';
 
@@ -24,25 +20,6 @@ import { serializeWav } from './serializer.ts';
 
 const WAV_MIME = 'audio/wav';
 const WAV_MIMES = new Set([WAV_MIME, 'audio/wave', 'audio/x-wav']);
-
-// ---------------------------------------------------------------------------
-// Error: encode not yet implemented
-// ---------------------------------------------------------------------------
-
-/**
- * Thrown when WAV encoding is requested before codec-webcodecs integration.
- * TODO Phase 2: remove once AudioData muxing is implemented.
- */
-class WavEncodeNotImplementedError extends WebcvtError {
-  constructor() {
-    super(
-      'WAV_ENCODE_NOT_IMPLEMENTED',
-      'WAV encoding requires AudioData from @catlabtech/webcvt-codec-webcodecs, which is not yet available. ' +
-        'This will be implemented in Phase 2.',
-    );
-    this.name = 'WavEncodeNotImplementedError';
-  }
-}
 
 // ---------------------------------------------------------------------------
 // WavBackend
@@ -61,45 +38,20 @@ class WavEncodeNotImplementedError extends WebcvtError {
  * - Encode from AudioData to WAV (PCM mux)
  * - Expose per-frame iteration for streaming decode
  */
-export class WavBackend implements Backend {
-  readonly name = 'container-wav';
-
-  async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    return WAV_MIMES.has(input.mime) && WAV_MIMES.has(output.mime);
-  }
-
-  async convert(
-    input: Blob,
-    output: FormatDescriptor,
-    options: ConvertOptions,
-  ): Promise<ConvertResult> {
-    const startMs = Date.now();
-
-    if (!WAV_MIMES.has(output.mime)) {
-      // TODO Phase 2: route to codec-webcodecs for transcode to other formats
-      throw new WavEncodeNotImplementedError();
-    }
-
-    options.onProgress?.({ percent: 10, phase: 'demux' });
-
-    const inputBytes = new Uint8Array(await input.arrayBuffer());
-    const wavFile = parseWav(inputBytes);
-
-    options.onProgress?.({ percent: 60, phase: 'mux' });
-
-    const outputBytes = serializeWav(wavFile);
-
-    options.onProgress?.({ percent: 100, phase: 'done' });
-
-    const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: WAV_MIME });
-
-    return {
-      blob,
-      format: output,
-      durationMs: Date.now() - startMs,
-      backend: this.name,
-      hardwareAccelerated: false,
-    };
+export class WavBackend extends RoundTripBackend<ReturnType<typeof parseWav>> {
+  constructor() {
+    super({
+      name: 'container-wav',
+      mimes: WAV_MIMES,
+      // Blob is always the canonical audio/wav MIME regardless of the wave/x-wav alias.
+      outputMime: WAV_MIME,
+      parse: parseWav,
+      serialize: serializeWav,
+      encodeNotImplemented: () => new WavEncodeNotImplementedError(),
+      // WAV has no input-size cap in Phase 1 (no OOM-prone streaming parse).
+      demuxStep: { percent: 10, phase: 'demux' },
+      serializeStep: { percent: 60, phase: 'mux' },
+    });
   }
 }
 

@@ -14,12 +14,8 @@
  * false from canHandle so the BackendRegistry routes to backend-wasm.
  */
 
-import type {
-  Backend,
-  ConvertOptions,
-  ConvertResult,
-  FormatDescriptor,
-} from '@catlabtech/webcvt-core';
+import type { FormatDescriptor } from '@catlabtech/webcvt-core';
+import { RoundTripBackend } from '@catlabtech/webcvt-core';
 import { MAX_INPUT_BYTES, TS_MIME } from './constants.ts';
 import { TsEncodeNotImplementedError, TsInputTooLargeError } from './errors.ts';
 import { parseTs } from './parser.ts';
@@ -29,53 +25,27 @@ import { serializeTs } from './serializer.ts';
 // TsBackend
 // ---------------------------------------------------------------------------
 
-export class TsBackend implements Backend {
-  readonly name = 'container-ts';
+const TS_MIMES = new Set([TS_MIME]);
 
-  /**
-   * Identity-only canHandle (first pass).
-   *
-   * Returns true ONLY when both input AND output are video/mp2t.
-   */
-  async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    return input.mime === TS_MIME && output.mime === TS_MIME;
-  }
-
-  async convert(
-    input: Blob,
-    output: FormatDescriptor,
-    options: ConvertOptions,
-  ): Promise<ConvertResult> {
-    const startMs = Date.now();
-
-    if (input.size > MAX_INPUT_BYTES) {
-      throw new TsInputTooLargeError(input.size, MAX_INPUT_BYTES);
-    }
-
-    options.onProgress?.({ percent: 5, phase: 'demux' });
-
-    const inputBytes = new Uint8Array(await input.arrayBuffer());
-    const tsFile = parseTs(inputBytes);
-
-    options.onProgress?.({ percent: 50, phase: 'mux' });
-
-    // Identity / round-trip path.
-    if (output.mime === TS_MIME) {
-      const outputBytes = serializeTs(tsFile);
-      options.onProgress?.({ percent: 100, phase: 'done' });
-      const blob = new Blob([outputBytes.buffer as ArrayBuffer], { type: output.mime });
-      return {
-        blob,
-        format: output,
-        durationMs: Date.now() - startMs,
-        backend: this.name,
-        hardwareAccelerated: false,
-      };
-    }
-
-    throw new TsEncodeNotImplementedError(
-      `output MIME "${output.mime}" is not supported; only TS identity round-trip is implemented`,
-    );
+export class TsBackend extends RoundTripBackend<ReturnType<typeof parseTs>> {
+  constructor() {
+    super({
+      name: 'container-ts',
+      mimes: TS_MIMES,
+      canHandleMode: 'strict-identity',
+      sizeGuard: {
+        maxBytes: MAX_INPUT_BYTES,
+        error: (size, max) => new TsInputTooLargeError(size, max),
+      },
+      parse: parseTs,
+      serialize: serializeTs,
+      encodeNotImplemented: (output) =>
+        new TsEncodeNotImplementedError(
+          `output MIME "${output.mime}" is not supported; only TS identity round-trip is implemented`,
+        ),
+      demuxStep: { percent: 5, phase: 'demux' },
+      serializeStep: { percent: 50, phase: 'mux' },
+    });
   }
 }
 

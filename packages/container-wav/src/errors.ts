@@ -2,7 +2,22 @@
  * WAV-specific error classes extending WebcvtError.
  */
 
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import { EncodeNotImplementedError, WebcvtError } from '@catlabtech/webcvt-core';
+
+/**
+ * Thrown when WAV encoding is requested before codec-webcodecs integration.
+ * TODO Phase 2: remove once AudioData muxing is implemented.
+ */
+export class WavEncodeNotImplementedError extends EncodeNotImplementedError {
+  constructor() {
+    super(
+      'WAV',
+      'WAV encoding requires AudioData from @catlabtech/webcvt-codec-webcodecs, which is not yet available. ' +
+        'This will be implemented in Phase 2.',
+    );
+    this.name = 'WavEncodeNotImplementedError';
+  }
+}
 
 /**
  * Thrown when the input begins with RF64 rather than RIFF.

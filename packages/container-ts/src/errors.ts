@@ -6,15 +6,16 @@
  * a typed subclass from this file.
  */
 
-import { WebcvtError } from '@catlabtech/webcvt-core';
+import {
+  EncodeNotImplementedError,
+  InputTooLargeError,
+  WebcvtError,
+} from '@catlabtech/webcvt-core';
 
 /** Thrown when the input exceeds the 200 MiB size cap. */
-export class TsInputTooLargeError extends WebcvtError {
+export class TsInputTooLargeError extends InputTooLargeError {
   constructor(size: number, max: number) {
-    super(
-      'TS_INPUT_TOO_LARGE',
-      `TS input is ${size} bytes; maximum supported is ${max} bytes (200 MiB).`,
-    );
+    super('TS', 'TS', size, max);
     this.name = 'TsInputTooLargeError';
   }
 }
@@ -113,10 +114,10 @@ export class TsTooManyPacketsError extends WebcvtError {
 }
 
 /** Thrown when encode is requested for a path not supported by this backend. */
-export class TsEncodeNotImplementedError extends WebcvtError {
+export class TsEncodeNotImplementedError extends EncodeNotImplementedError {
   constructor(reason: string) {
     super(
-      'TS_ENCODE_NOT_IMPLEMENTED',
+      'TS',
       `TS encode not implemented: ${reason}. Install @catlabtech/webcvt-backend-wasm for transcode support.`,
     );
     this.name = 'TsEncodeNotImplementedError';
