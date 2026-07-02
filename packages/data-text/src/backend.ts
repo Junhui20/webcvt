@@ -1,17 +1,22 @@
 /**
- * DataTextBackend — webcvt Backend implementation for the five text formats.
+ * DataTextBackend — webcvt Backend implementation for the ten text formats.
  *
- * canHandle: identity-within-format only (input.mime === output.mime AND
- * the MIME belongs to one of the five supported formats). No cross-format
- * conversion, no magic-byte sniffing.
+ * canHandle covers two routes:
+ *   1. Identity — input.mime === output.mime AND the MIME belongs to a
+ *      supported format. Byte-for-byte parse → serialize of the same kind.
+ *   2. Cross-format — both MIMEs map to a supported format AND the pair is
+ *      bridgeable (canBridge). json↔yaml, csv↔json, toml→jsonl, … all route
+ *      here; XML and FWF are excluded from bridging (see bridge.ts).
  *
- * Identity-only gate (Lesson 1 from prior packages): canHandle returns true
- * ONLY for the explicitly supported identity paths listed below.
+ * There is NO magic-byte sniffing on either route: these formats have no
+ * reliable signatures and overlap heavily, so callers MUST route by explicit
+ * MIME/descriptor. See parseDataText for the per-format parse API.
  *
- * Note: These five text formats (JSON, CSV, TSV, INI, ENV) have no reliable
- * magic-byte signatures and overlap heavily with each other. Format detection
- * is intentionally absent — callers MUST pass an explicit format hint to the
- * dispatcher. See parseDataText for the per-format parse API.
+ * text/plain hazard: ENV's MIME is text/plain, shared with arbitrary text (and
+ * FWF). The identity route keeps its historical behaviour, but the cross-format
+ * route refuses to treat a text/plain side as ENV unless the descriptor
+ * explicitly declares `ext === 'env'` — otherwise a plain-text blob could be
+ * silently reinterpreted as key=value pairs.
  */
 
 import type {
@@ -20,6 +25,7 @@ import type {
   ConvertResult,
   FormatDescriptor,
 } from '@catlabtech/webcvt-core';
+import { bridge, canBridge } from './bridge.ts';
 import {
   CSV_MIME,
   ENV_MIME,
@@ -87,12 +93,30 @@ export class DataTextBackend implements Backend {
   readonly name = 'data-text';
 
   /**
-   * Returns true only when input MIME === output MIME AND both map to one of
-   * the five supported text formats. No cross-format conversion.
+   * Returns true for two routes (see class doc):
+   *   - identity: input.mime === output.mime AND the MIME is supported.
+   *   - cross-format: both MIMEs map to supported formats AND the pair is
+   *     bridgeable, subject to the text/plain (ENV) opt-in below.
    */
   async canHandle(input: FormatDescriptor, output: FormatDescriptor): Promise<boolean> {
-    if (input.mime !== output.mime) return false;
-    return MIME_TO_FORMAT.has(input.mime);
+    const inFmt = MIME_TO_FORMAT.get(input.mime);
+    const outFmt = MIME_TO_FORMAT.get(output.mime);
+    if (inFmt === undefined || outFmt === undefined) return false;
+
+    // Identity route: unchanged historical behaviour (keeps text/plain ENV
+    // identity working without an ext check).
+    if (input.mime === output.mime) return true;
+
+    // Cross-format route: the pair must be bridgeable (excludes xml/fwf).
+    if (!canBridge(inFmt, outFmt)) return false;
+
+    // text/plain hazard: only trust a text/plain side as ENV when the
+    // descriptor explicitly says so. Applied to both sides so we neither parse
+    // arbitrary text as ENV nor emit ENV for a generic text/plain request.
+    if (input.mime === ENV_MIME && input.ext !== 'env') return false;
+    if (output.mime === ENV_MIME && output.ext !== 'env') return false;
+
+    return true;
   }
 
   async convert(
@@ -106,9 +130,13 @@ export class DataTextBackend implements Backend {
       throw new InputTooLargeError(input.size, MAX_INPUT_BYTES, 'data-text');
     }
 
-    const format = MIME_TO_FORMAT.get(input.type);
-    if (format === undefined) {
+    const inFmt = MIME_TO_FORMAT.get(input.type);
+    if (inFmt === undefined) {
       throw new UnsupportedFormatError(input.type);
+    }
+    const outFmt = MIME_TO_FORMAT.get(output.mime);
+    if (outFmt === undefined) {
+      throw new UnsupportedFormatError(output.mime);
     }
 
     options.onProgress?.({ percent: 5, phase: 'demux' });
@@ -116,7 +144,14 @@ export class DataTextBackend implements Backend {
     const text = await input.text();
 
     options.onProgress?.({ percent: 40, phase: 'parse' });
-    const parsed = parseDataText(text, format);
+    let parsed = parseDataText(text, inFmt);
+
+    // Cross-format re-projection. The identity path (inFmt === outFmt) skips
+    // the bridge entirely so its output stays byte-for-byte as before.
+    if (inFmt !== outFmt) {
+      options.onProgress?.({ percent: 55, phase: 'bridge' });
+      parsed = bridge(parsed, outFmt);
+    }
 
     options.onProgress?.({ percent: 70, phase: 'serialize' });
     const serialized = serializeDataText(parsed);

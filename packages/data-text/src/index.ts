@@ -8,7 +8,12 @@
  *   XML 1.0 Fifth Edition (W3C 2008).
  *
  * No auto-detection: callers must explicitly pass the format to parseDataText.
- * No cross-format conversion: use @catlabtech/webcvt-convert for that.
+ * Cross-format conversion IS supported (via the value bridge, see bridge.ts):
+ *   json, yaml, toml, csv, tsv, jsonl, ini, and env inter-convert through a
+ *   common plain-value model (bridge / canBridge / toPlain / fromPlain, or
+ *   DataTextBackend cross-MIME routing). XML and FWF are excluded — an XML
+ *   element tree has no canonical plain-value mapping, and FWF is schema-driven
+ *   and not MIME-routable; both remain identity-only.
  * No schema coercion: all values returned as strings (except JSON).
  * No streaming: all operations are fully buffered.
  *
@@ -111,6 +116,13 @@ export { parseDataText } from './parser.ts';
 export { serializeDataText } from './serializer.ts';
 
 // ---------------------------------------------------------------------------
+// Cross-format bridge
+// ---------------------------------------------------------------------------
+
+export type { PlainValue } from './bridge.ts';
+export { bridge, canBridge, toPlain, fromPlain } from './bridge.ts';
+
+// ---------------------------------------------------------------------------
 // Backend + format descriptors
 // ---------------------------------------------------------------------------
 
@@ -209,4 +221,7 @@ export {
   YamlBadEscapeError,
   YamlDuplicateKeyError,
   YamlSerializeError,
+  CrossFormatNotSupportedError,
+  CrossFormatShapeError,
+  CrossFormatValueError,
 } from './errors.ts';
