@@ -72,7 +72,7 @@ export function encodeWav(decoded: DecodedAudio): Uint8Array {
 // Shared AudioEncoder driver
 // ---------------------------------------------------------------------------
 
-interface EncodedOut {
+export interface EncodedOut {
   readonly data: Uint8Array;
   readonly timestampUs: number;
   readonly durationUs: number;
@@ -145,11 +145,23 @@ async function encodeAudioChunks(
 // Opus encode + mux
 // ---------------------------------------------------------------------------
 
-const OPUS_RATE = 48_000;
-const OPUS_PRE_SKIP = 3840; // libopus default pre-skip @48 kHz.
+export const OPUS_RATE = 48_000;
+export const OPUS_PRE_SKIP = 3840; // libopus default pre-skip @48 kHz.
 const OGG_SERIAL = 1;
 const WEBM_TIMECODE_SCALE = 1_000_000; // 1 ms ticks.
 const WEBM_CLUSTER_MAX_TICKS = 30_000; // keep per-block int16 delta well within range.
+
+/**
+ * Encode planar-float PCM to Opus chunks (bytes + timing). Exported so the video
+ * pipeline can reuse the exact audio-encode path for a webm/mkv Opus track.
+ */
+export function encodeOpusChunks(
+  decoded: DecodedAudio,
+  opts: EncodeOptions,
+  ctx: EncodeContext,
+): Promise<EncodedOut[]> {
+  return encodeOpus(decoded, opts, ctx);
+}
 
 async function encodeOpus(
   decoded: DecodedAudio,
