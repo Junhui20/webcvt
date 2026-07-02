@@ -38,3 +38,30 @@ export {
   AdtsCrcUnsupportedError,
   AdtsEncodeNotImplementedError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerAacBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { AacBackend } from './backend.ts';
+
+/**
+ * Construct an AacBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-aac')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerAacBackend } from '@catlabtech/webcvt-container-aac';
+ * registerAacBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerAacBackend(registry: BackendRegistry = defaultRegistry): AacBackend {
+  const backend = new AacBackend();
+  registry.register(backend);
+  return backend;
+}

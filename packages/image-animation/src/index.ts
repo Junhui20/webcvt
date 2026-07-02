@@ -107,3 +107,32 @@ export {
   WebpAnimOddOffsetError,
   WebpMissingSubFrameError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerAnimationBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { AnimationBackend } from './backend.ts';
+
+/**
+ * Construct an AnimationBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('image-animation')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerAnimationBackend } from '@catlabtech/webcvt-image-animation';
+ * registerAnimationBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerAnimationBackend(
+  registry: BackendRegistry = defaultRegistry,
+): AnimationBackend {
+  const backend = new AnimationBackend();
+  registry.register(backend);
+  return backend;
+}

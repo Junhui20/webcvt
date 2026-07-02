@@ -66,3 +66,30 @@ export {
 
 // Backend
 export { FlacBackend, FLAC_FORMAT } from './backend.ts';
+
+// ---------------------------------------------------------------------------
+// registerFlacBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { FlacBackend } from './backend.ts';
+
+/**
+ * Construct a FlacBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-flac')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerFlacBackend } from '@catlabtech/webcvt-container-flac';
+ * registerFlacBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerFlacBackend(registry: BackendRegistry = defaultRegistry): FlacBackend {
+  const backend = new FlacBackend();
+  registry.register(backend);
+  return backend;
+}

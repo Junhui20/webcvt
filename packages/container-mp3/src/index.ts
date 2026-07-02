@@ -40,3 +40,30 @@ export { parseXingHeader } from './xing.ts';
 
 // Backend
 export { Mp3Backend, MP3_FORMAT } from './backend.ts';
+
+// ---------------------------------------------------------------------------
+// registerMp3Backend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { Mp3Backend } from './backend.ts';
+
+/**
+ * Construct a Mp3Backend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-mp3')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerMp3Backend } from '@catlabtech/webcvt-container-mp3';
+ * registerMp3Backend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerMp3Backend(registry: BackendRegistry = defaultRegistry): Mp3Backend {
+  const backend = new Mp3Backend();
+  registry.register(backend);
+  return backend;
+}

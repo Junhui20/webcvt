@@ -56,3 +56,30 @@ export {
   OggEncodeNotImplementedError,
   OggPageBodyTooLargeError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerOggBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { OggBackend } from './backend.ts';
+
+/**
+ * Construct an OggBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-ogg')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerOggBackend } from '@catlabtech/webcvt-container-ogg';
+ * registerOggBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerOggBackend(registry: BackendRegistry = defaultRegistry): OggBackend {
+  const backend = new OggBackend();
+  registry.register(backend);
+  return backend;
+}

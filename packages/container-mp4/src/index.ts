@@ -176,3 +176,30 @@ export type {
   Mp4ProtectionSchemeInfo,
   Mp4TrackEncryption,
 } from './boxes/sinf.ts';
+
+// ---------------------------------------------------------------------------
+// registerMp4Backend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { Mp4Backend } from './backend.ts';
+
+/**
+ * Construct a Mp4Backend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-mp4')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerMp4Backend } from '@catlabtech/webcvt-container-mp4';
+ * registerMp4Backend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerMp4Backend(registry: BackendRegistry = defaultRegistry): Mp4Backend {
+  const backend = new Mp4Backend();
+  registry.register(backend);
+  return backend;
+}

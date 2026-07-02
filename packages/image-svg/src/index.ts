@@ -49,3 +49,30 @@ export {
   SvgRasterizeError,
   SvgEncodeNotImplementedError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerSvgBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { SvgBackend } from './backend.ts';
+
+/**
+ * Construct a SvgBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('image-svg')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerSvgBackend } from '@catlabtech/webcvt-image-svg';
+ * registerSvgBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerSvgBackend(registry: BackendRegistry = defaultRegistry): SvgBackend {
+  const backend = new SvgBackend();
+  registry.register(backend);
+  return backend;
+}

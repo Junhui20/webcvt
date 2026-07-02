@@ -72,3 +72,30 @@ export {
   ComicTooManyPagesError,
   ComicUnsupportedPageFormatError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerComicBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { ComicBackend } from './backend.ts';
+
+/**
+ * Construct a ComicBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('comic')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerComicBackend } from '@catlabtech/webcvt-comic';
+ * registerComicBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerComicBackend(registry: BackendRegistry = defaultRegistry): ComicBackend {
+  const backend = new ComicBackend();
+  registry.register(backend);
+  return backend;
+}

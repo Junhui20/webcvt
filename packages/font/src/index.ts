@@ -62,3 +62,30 @@ export {
   FontTooManyTablesError,
   FontWoff2NotSupportedError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerFontBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { FontBackend } from './backend.ts';
+
+/**
+ * Construct a FontBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('font')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerFontBackend } from '@catlabtech/webcvt-font';
+ * registerFontBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerFontBackend(registry: BackendRegistry = defaultRegistry): FontBackend {
+  const backend = new FontBackend();
+  registry.register(backend);
+  return backend;
+}

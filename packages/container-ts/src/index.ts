@@ -66,3 +66,30 @@ export {
   STREAM_TYPE_AVC,
   STREAM_TYPE_AAC_ADTS,
 } from './constants.ts';
+
+// ---------------------------------------------------------------------------
+// registerTsBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { TsBackend } from './backend.ts';
+
+/**
+ * Construct a TsBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-ts')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerTsBackend } from '@catlabtech/webcvt-container-ts';
+ * registerTsBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerTsBackend(registry: BackendRegistry = defaultRegistry): TsBackend {
+  const backend = new TsBackend();
+  registry.register(backend);
+  return backend;
+}

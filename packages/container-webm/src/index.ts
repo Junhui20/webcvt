@@ -65,3 +65,30 @@ export {
   WebmTooManyCuePointsError,
   WebmEncodeNotImplementedError,
 } from './errors.ts';
+
+// ---------------------------------------------------------------------------
+// registerWebmBackend — explicit opt-in (no auto-registration)
+// ---------------------------------------------------------------------------
+
+import type { BackendRegistry } from '@catlabtech/webcvt-core';
+import { defaultRegistry } from '@catlabtech/webcvt-core';
+import { WebmBackend } from './backend.ts';
+
+/**
+ * Construct a WebmBackend and register it with the given registry (or core's
+ * defaultRegistry when omitted). Returns the constructed backend so the caller
+ * can later unregister it by name (`registry.unregister('container-webm')`).
+ *
+ * Must be called explicitly by the application — nothing registers on import.
+ *
+ * @example
+ * ```ts
+ * import { registerWebmBackend } from '@catlabtech/webcvt-container-webm';
+ * registerWebmBackend(); // registers into core's defaultRegistry
+ * ```
+ */
+export function registerWebmBackend(registry: BackendRegistry = defaultRegistry): WebmBackend {
+  const backend = new WebmBackend();
+  registry.register(backend);
+  return backend;
+}
