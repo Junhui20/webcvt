@@ -29,6 +29,7 @@
     "@catlabtech/webcvt-image-legacy": "workspace:*",
     "@catlabtech/webcvt-image-pdf": "workspace:*",
     "@catlabtech/webcvt-subtitle": "workspace:*",
+    "@catlabtech/webcvt-transcode": "workspace:*",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.0",
     "libheif-js": "^1.19.0",

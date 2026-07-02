@@ -4,6 +4,13 @@ import type { BackendRegistry, FormatDescriptor } from '@catlabtech/webcvt-core'
 export interface TargetOption {
   readonly format: FormatDescriptor;
   readonly loader: () => Promise<void>;
+  /**
+   * Optional runtime capability gate. When present and it returns `false`, the
+   * target is hidden by {@link getTargetsFor} — used for the WebCodecs transcode
+   * targets so browsers without `VideoEncoder`/`AudioEncoder` never advertise a
+   * conversion that would fail to find a backend.
+   */
+  readonly available?: () => boolean;
 }
 
 /** Resolve a format descriptor, throwing if the ext is unknown. */
@@ -65,6 +72,49 @@ const heicLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-heic');
   tryRegister(mod.registerHeicBackend);
 };
+
+// ---------------------------------------------------------------------------
+// WebCodecs transcode (audio + video) — capability-gated
+// ---------------------------------------------------------------------------
+
+/** True when the runtime can decode audio via WebCodecs (needed for → wav). */
+const hasAudioDecode = (): boolean => typeof globalThis.AudioDecoder !== 'undefined';
+/** True when the runtime can decode AND encode audio (needed for → opus/aac/flac). */
+const hasAudioEncode = (): boolean =>
+  typeof globalThis.AudioEncoder !== 'undefined' && typeof globalThis.AudioDecoder !== 'undefined';
+/** True when the runtime can decode AND encode video (needed for → webm/mkv). */
+const hasVideoTranscode = (): boolean =>
+  typeof globalThis.VideoEncoder !== 'undefined' && typeof globalThis.VideoDecoder !== 'undefined';
+
+/**
+ * Register the single WebCodecs transcode backend. It no-ops on runtimes with no
+ * WebCodecs at all; `canHandle` still probes each concrete codec pair, so an
+ * unsupported pair falls through cleanly.
+ */
+const transcodeLoader = async (): Promise<void> => {
+  if (!hasAudioDecode() && !hasVideoTranscode()) return; // no WebCodecs — no-op.
+  const mod = await import('@catlabtech/webcvt-transcode');
+  tryRegister(mod.registerTranscodeBackend);
+};
+
+/** WebCodecs transcode target that only needs an audio DECODER (→ wav / PCM). */
+const audioDecodeTarget = (ext: string): TargetOption => ({
+  format: fmt(ext),
+  loader: transcodeLoader,
+  available: hasAudioDecode,
+});
+/** WebCodecs transcode target that needs an audio ENCODER (→ opus/ogg/aac/flac). */
+const audioEncodeTarget = (ext: string): TargetOption => ({
+  format: fmt(ext),
+  loader: transcodeLoader,
+  available: hasAudioEncode,
+});
+/** WebCodecs transcode target that needs a video decoder + encoder (→ webm/mkv). */
+const videoTarget = (ext: string): TargetOption => ({
+  format: fmt(ext),
+  loader: transcodeLoader,
+  available: hasVideoTranscode,
+});
 
 /**
  * Allowlist mapping input file extension to available conversion targets.
@@ -182,14 +232,90 @@ export const BACKEND_ALLOWLIST: Readonly<Record<string, readonly TargetOption[]>
   ],
   // Archive — archive-zip backend
   zip: [{ format: fmt('tar'), loader: archiveZipLoader }],
+
+  // -------------------------------------------------------------------------
+  // Audio — WebCodecs transcode backend (capability-gated). Only shown on
+  // runtimes with the matching WebCodecs classes; otherwise hidden so the UI
+  // never advertises a conversion with no backend.
+  // -------------------------------------------------------------------------
+  mp3: [
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+    audioEncodeTarget('ogg'),
+    audioEncodeTarget('aac'),
+    audioEncodeTarget('flac'),
+  ],
+  wav: [
+    audioEncodeTarget('opus'),
+    audioEncodeTarget('ogg'),
+    audioEncodeTarget('aac'),
+    audioEncodeTarget('flac'),
+  ],
+  ogg: [
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+    audioEncodeTarget('aac'),
+    audioEncodeTarget('flac'),
+  ],
+  opus: [
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('ogg'),
+    audioEncodeTarget('aac'),
+    audioEncodeTarget('flac'),
+  ],
+  flac: [
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+    audioEncodeTarget('ogg'),
+    audioEncodeTarget('aac'),
+  ],
+  aac: [
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+    audioEncodeTarget('ogg'),
+    audioEncodeTarget('flac'),
+  ],
+  m4a: [
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+    audioEncodeTarget('ogg'),
+    audioEncodeTarget('aac'),
+    audioEncodeTarget('flac'),
+  ],
+
+  // -------------------------------------------------------------------------
+  // Video — WebCodecs transcode backend (VP9|VP8 + Opus). Video targets need
+  // VideoEncoder/Decoder; the audio-extraction targets need AudioDecoder.
+  // -------------------------------------------------------------------------
+  mp4: [
+    videoTarget('webm'),
+    videoTarget('mkv'),
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+  ],
+  webm: [
+    videoTarget('webm'),
+    videoTarget('mkv'),
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+  ],
+  mkv: [
+    videoTarget('webm'),
+    videoTarget('mkv'),
+    audioDecodeTarget('wav'),
+    audioEncodeTarget('opus'),
+  ],
 };
 
 /**
  * Return target options for a given input extension.
- * Returns an empty array for unsupported formats.
+ * Returns an empty array for unsupported formats. Targets with an `available`
+ * capability gate that currently returns `false` (e.g. WebCodecs transcode on a
+ * runtime lacking `VideoEncoder`/`AudioEncoder`) are filtered out.
  */
 export function getTargetsFor(inputExt: string): readonly TargetOption[] {
-  return BACKEND_ALLOWLIST[inputExt.toLowerCase()] ?? [];
+  const targets = BACKEND_ALLOWLIST[inputExt.toLowerCase()] ?? [];
+  return targets.filter((t) => t.available === undefined || t.available());
 }
 
 /**
