@@ -46,6 +46,13 @@ export interface ConvertOptions {
   readonly onProgress?: (progress: ProgressEvent) => void;
   /** Abort signal for cancelling in-progress conversion. */
   readonly signal?: AbortSignal;
+  /** Explicit input format — extension ("json"), MIME, or descriptor.
+   *  Takes precedence over detection. Required for text formats when no
+   *  filename is available (JSON/CSV/YAML/… have no magic bytes). */
+  readonly inputFormat?: string | FormatDescriptor;
+  /** Original filename, used as an extension fallback when magic-byte
+   *  detection fails. Auto-derived from File inputs. */
+  readonly filename?: string;
 }
 
 export interface ConvertResult {
@@ -80,10 +87,14 @@ export class WebcvtError extends Error {
 }
 
 export class UnsupportedFormatError extends WebcvtError {
-  constructor(format: string, direction: 'input' | 'output') {
+  // `hint` is an optional third arg appended as an extra sentence. Additive: the
+  // existing 2-arg call sites keep their exact message (no trailing hint).
+  constructor(format: string, direction: 'input' | 'output', hint?: string) {
     super(
       'UNSUPPORTED_FORMAT',
-      `Unsupported ${direction} format: "${format}". Install an additional @catlabtech/webcvt-* package or check the format name.`,
+      `Unsupported ${direction} format: "${format}". Install an additional @catlabtech/webcvt-* package or check the format name.${
+        hint ? ` ${hint}` : ''
+      }`,
     );
     this.name = 'UnsupportedFormatError';
   }
