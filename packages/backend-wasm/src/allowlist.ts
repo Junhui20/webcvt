@@ -11,6 +11,7 @@
  * Key is `${inputMime}|${outputMime}`.
  */
 
+import { findByMime } from '@catlabtech/webcvt-core';
 import type { FormatDescriptor } from '@catlabtech/webcvt-core';
 
 // ---------------------------------------------------------------------------
@@ -316,132 +317,22 @@ for (const [i, o] of WASM_SUPPORTED_PAIRS) {
 }
 
 /**
- * Minimal FormatDescriptor list derived from the allowlist.
+ * FormatDescriptor list derived from the allowlist's unique MIMEs.
+ *
+ * Descriptors are single-sourced from core's KNOWN_FORMATS via findByMime() so
+ * their metadata (ext, category, description) can never drift from core. This
+ * package owns capability routing — the MIME *pairs* above — not format
+ * metadata. Any MIME that appears in WASM_SUPPORTED_PAIRS must have a matching
+ * descriptor registered in core/src/formats.ts, or it is silently dropped here.
+ *
  * Used by registerWasmBackend() to advertise capabilities.
  */
 export const WASM_SUPPORTED_FORMATS: readonly FormatDescriptor[] = buildFormatList();
 
 function buildFormatList(): FormatDescriptor[] {
-  const mimeToDescriptor = new Map<string, FormatDescriptor>([
-    [
-      'video/mp4',
-      { ext: 'mp4', mime: 'video/mp4', category: 'video', description: 'MPEG-4 Part 14' },
-    ],
-    ['video/webm', { ext: 'webm', mime: 'video/webm', category: 'video', description: 'WebM' }],
-    [
-      'video/x-matroska',
-      { ext: 'mkv', mime: 'video/x-matroska', category: 'video', description: 'Matroska' },
-    ],
-    [
-      'video/quicktime',
-      { ext: 'mov', mime: 'video/quicktime', category: 'video', description: 'QuickTime Movie' },
-    ],
-    [
-      'video/x-msvideo',
-      {
-        ext: 'avi',
-        mime: 'video/x-msvideo',
-        category: 'video',
-        description: 'Audio Video Interleave',
-      },
-    ],
-    [
-      'video/x-flv',
-      { ext: 'flv', mime: 'video/x-flv', category: 'video', description: 'Flash Video' },
-    ],
-    ['video/3gpp', { ext: '3gp', mime: 'video/3gpp', category: 'video', description: '3GPP' }],
-    [
-      'audio/mp4',
-      { ext: 'm4a', mime: 'audio/mp4', category: 'audio', description: 'MPEG-4 Audio' },
-    ],
-    [
-      'audio/mpeg',
-      { ext: 'mp3', mime: 'audio/mpeg', category: 'audio', description: 'MPEG Audio Layer III' },
-    ],
-    [
-      'audio/flac',
-      {
-        ext: 'flac',
-        mime: 'audio/flac',
-        category: 'audio',
-        description: 'Free Lossless Audio Codec',
-      },
-    ],
-    ['audio/ogg', { ext: 'ogg', mime: 'audio/ogg', category: 'audio', description: 'Ogg Vorbis' }],
-    [
-      'audio/opus',
-      { ext: 'opus', mime: 'audio/opus', category: 'audio', description: 'Opus Audio' },
-    ],
-    [
-      'audio/wav',
-      { ext: 'wav', mime: 'audio/wav', category: 'audio', description: 'Waveform Audio' },
-    ],
-    [
-      'audio/aac',
-      { ext: 'aac', mime: 'audio/aac', category: 'audio', description: 'Advanced Audio Coding' },
-    ],
-    [
-      'image/vnd.adobe.photoshop',
-      {
-        ext: 'psd',
-        mime: 'image/vnd.adobe.photoshop',
-        category: 'image',
-        description: 'Adobe Photoshop',
-      },
-    ],
-    [
-      'image/x-blp',
-      { ext: 'blp', mime: 'image/x-blp', category: 'image', description: 'BLP Texture' },
-    ],
-    [
-      'image/vnd.ms-dds',
-      {
-        ext: 'dds',
-        mime: 'image/vnd.ms-dds',
-        category: 'image',
-        description: 'DirectDraw Surface',
-      },
-    ],
-    [
-      'application/postscript',
-      {
-        ext: 'eps',
-        mime: 'application/postscript',
-        category: 'image',
-        description: 'Encapsulated PostScript',
-      },
-    ],
-    ['image/jp2', { ext: 'jp2', mime: 'image/jp2', category: 'image', description: 'JPEG 2000' }],
-    [
-      'video/mp2t',
-      { ext: 'ts', mime: 'video/mp2t', category: 'video', description: 'MPEG-2 Transport Stream' },
-    ],
-    [
-      'video/x-ms-wmv',
-      { ext: 'wmv', mime: 'video/x-ms-wmv', category: 'video', description: 'Windows Media Video' },
-    ],
-    [
-      'video/x-f4v',
-      { ext: 'f4v', mime: 'video/x-f4v', category: 'video', description: 'Flash MP4 Video' },
-    ],
-    [
-      'audio/x-ms-wma',
-      { ext: 'wma', mime: 'audio/x-ms-wma', category: 'audio', description: 'Windows Media Audio' },
-    ],
-    [
-      'audio/aiff',
-      {
-        ext: 'aiff',
-        mime: 'audio/aiff',
-        category: 'audio',
-        description: 'Audio Interchange File Format',
-      },
-    ],
-  ]);
-
   const result: FormatDescriptor[] = [];
   for (const mime of UNIQUE_MIMES) {
-    const descriptor = mimeToDescriptor.get(mime);
+    const descriptor = findByMime(mime);
     if (descriptor !== undefined) {
       result.push(descriptor);
     }

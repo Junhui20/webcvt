@@ -56,6 +56,23 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'webm', mime: 'video/webm', category: 'video', description: 'WebM' },
   { ext: 'mkv', mime: 'video/x-matroska', category: 'video', description: 'Matroska container' },
   { ext: 'ts', mime: 'video/mp2t', category: 'video', description: 'MPEG-2 Transport Stream' },
+  // Additional audio/video containers & codecs handled by backend-wasm (ffmpeg).
+  // Descriptors live here (not privately in backend-wasm) so capability packages
+  // single-source them via findByMime() and never drift.
+  { ext: 'mov', mime: 'video/quicktime', category: 'video', description: 'QuickTime Movie' },
+  { ext: 'avi', mime: 'video/x-msvideo', category: 'video', description: 'Audio Video Interleave' },
+  { ext: 'flv', mime: 'video/x-flv', category: 'video', description: 'Flash Video' },
+  { ext: '3gp', mime: 'video/3gpp', category: 'video', description: '3GPP' },
+  { ext: 'wmv', mime: 'video/x-ms-wmv', category: 'video', description: 'Windows Media Video' },
+  { ext: 'f4v', mime: 'video/x-f4v', category: 'video', description: 'Flash MP4 Video' },
+  { ext: 'opus', mime: 'audio/opus', category: 'audio', description: 'Opus Audio' },
+  { ext: 'wma', mime: 'audio/x-ms-wma', category: 'audio', description: 'Windows Media Audio' },
+  {
+    ext: 'aiff',
+    mime: 'audio/aiff',
+    category: 'audio',
+    description: 'Audio Interchange File Format',
+  },
   // Image (Phase 4: image-animation package — animated variants)
   { ext: 'apng', mime: 'image/apng', category: 'image', description: 'Animated PNG (APNG)' },
   // Image (Phase 4: image-svg package)
@@ -148,6 +165,22 @@ const KNOWN_FORMATS: readonly FormatDescriptor[] = [
   { ext: 'pcx', mime: 'image/x-pcx', category: 'image', description: 'PC Paintbrush' },
   { ext: 'xpm', mime: 'image/x-xpixmap', category: 'image', description: 'X PixMap' },
   { ext: 'icns', mime: 'image/icns', category: 'image', description: 'Apple Icon Image' },
+  // Legacy / specialized image formats handled by backend-wasm (ffmpeg, identity-only).
+  {
+    ext: 'psd',
+    mime: 'image/vnd.adobe.photoshop',
+    category: 'image',
+    description: 'Adobe Photoshop',
+  },
+  { ext: 'blp', mime: 'image/x-blp', category: 'image', description: 'BLP Texture' },
+  { ext: 'dds', mime: 'image/vnd.ms-dds', category: 'image', description: 'DirectDraw Surface' },
+  {
+    ext: 'eps',
+    mime: 'application/postscript',
+    category: 'image',
+    description: 'Encapsulated PostScript',
+  },
+  { ext: 'jp2', mime: 'image/jp2', category: 'image', description: 'JPEG 2000' },
   // Document (image-pdf package — wraps images into a PDF)
   {
     ext: 'pdf',
