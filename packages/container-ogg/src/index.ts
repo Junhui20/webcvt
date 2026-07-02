@@ -32,9 +32,12 @@ export {
 export {
   decodeOpusHead,
   decodeOpusTags,
+  buildOpusHead,
+  buildOpusTags,
   isOpusHeadPacket,
   isOpusTagsPacket,
   type OpusHead,
+  type OpusHeadInit,
   type OpusTags,
 } from './opus.ts';
 export { parsePage, serializePage, buildSegmentTable, hasOggSAt, type OggPage } from './page.ts';

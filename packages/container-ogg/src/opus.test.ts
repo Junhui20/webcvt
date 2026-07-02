@@ -5,7 +5,14 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_COMMENT_BYTES, MAX_COMMENT_COUNT } from './constants.ts';
 import { OggOpusHeaderError } from './errors.ts';
-import { decodeOpusHead, decodeOpusTags, isOpusHeadPacket, isOpusTagsPacket } from './opus.ts';
+import {
+  decodeOpusHead,
+  decodeOpusTags,
+  buildOpusHead as encodeOpusHead,
+  buildOpusTags as encodeOpusTags,
+  isOpusHeadPacket,
+  isOpusTagsPacket,
+} from './opus.ts';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -305,6 +312,68 @@ describe('decodeOpusHead (version boundary)', () => {
   it('rejects version with high nibble set (major != 1)', () => {
     const data = buildOpusHead({ version: 0x20 }); // major=2
     expect(() => decodeOpusHead(data)).toThrow(OggOpusHeaderError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildOpusHead / buildOpusTags (production byte builders)
+// ---------------------------------------------------------------------------
+
+describe('buildOpusHead', () => {
+  it('emits RFC 7845 magic + version + channels + pre_skip', () => {
+    const bytes = encodeOpusHead({ channelCount: 2, preSkip: 3840, inputSampleRate: 48000 });
+    expect(bytes.length).toBe(19);
+    expect(isOpusHeadPacket(bytes)).toBe(true);
+    expect(bytes[8]).toBe(1); // version
+    expect(bytes[9]).toBe(2); // channels
+    const view = new DataView(bytes.buffer);
+    expect(view.getUint16(10, true)).toBe(3840); // pre_skip
+    expect(bytes[18]).toBe(0); // channel_mapping_family
+  });
+
+  it('round-trips through decodeOpusHead', () => {
+    const bytes = encodeOpusHead({
+      channelCount: 1,
+      preSkip: 312,
+      inputSampleRate: 44100,
+      outputGain: -256,
+    });
+    const head = decodeOpusHead(bytes);
+    expect(head.version).toBe(1);
+    expect(head.channelCount).toBe(1);
+    expect(head.preSkip).toBe(312);
+    expect(head.inputSampleRate).toBe(44100);
+    expect(head.outputGain).toBe(-256);
+    expect(head.channelMappingFamily).toBe(0);
+  });
+
+  it('throws OggOpusHeaderError for zero channels', () => {
+    expect(() => encodeOpusHead({ channelCount: 0, preSkip: 0, inputSampleRate: 48000 })).toThrow(
+      OggOpusHeaderError,
+    );
+  });
+});
+
+describe('buildOpusTags', () => {
+  it('emits a valid OpusTags packet that decodes back', () => {
+    const bytes = encodeOpusTags('webcvt', [
+      { key: 'ENCODER', value: 'webcvt-transcode' },
+      { key: 'TITLE', value: 'Sine' },
+    ]);
+    expect(isOpusTagsPacket(bytes)).toBe(true);
+    const tags = decodeOpusTags(bytes);
+    expect(tags.vendor).toBe('webcvt');
+    expect(tags.userComments).toEqual([
+      { key: 'ENCODER', value: 'webcvt-transcode' },
+      { key: 'TITLE', value: 'Sine' },
+    ]);
+  });
+
+  it('emits an empty comment list by default', () => {
+    const bytes = encodeOpusTags('vendor');
+    const tags = decodeOpusTags(bytes);
+    expect(tags.vendor).toBe('vendor');
+    expect(tags.userComments.length).toBe(0);
   });
 });
 

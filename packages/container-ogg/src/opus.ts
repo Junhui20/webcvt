@@ -50,6 +50,89 @@ export interface OpusTags {
   readonly userComments: ReadonlyArray<{ readonly key: string; readonly value: string }>;
 }
 
+// Shared TextEncoder singleton — mirrors the decoder's UTF8_DECODER.
+const UTF8_ENCODER = new TextEncoder();
+
+// ---------------------------------------------------------------------------
+// OpusHead / OpusTags builders (RFC 7845 §5.1 / §5.2)
+// ---------------------------------------------------------------------------
+
+/** Fields for {@link buildOpusHead}. Only channel_mapping_family 0 is emitted. */
+export interface OpusHeadInit {
+  /** Channel count (1 = mono, 2 = stereo). Family 0 only. */
+  readonly channelCount: number;
+  /** Pre-skip in 48 kHz samples the decoder must discard from the start. */
+  readonly preSkip: number;
+  /** Original input sample rate (informational; playback is always 48 kHz). */
+  readonly inputSampleRate: number;
+  /** Output gain in Q7.8 dB (signed). Default 0. */
+  readonly outputGain?: number;
+  /** Version byte. Default 1 (per RFC 7845). */
+  readonly version?: number;
+}
+
+/**
+ * Build an OpusHead identification packet (RFC 7845 §5.1), byte-compatible with
+ * {@link decodeOpusHead}. Emits the 19-byte channel_mapping_family 0 layout
+ * (mono/stereo) — the same bytes are used verbatim as the WebM `CodecPrivate`
+ * for an A_OPUS track.
+ *
+ * @throws OggOpusHeaderError when channelCount < 1 (family 0 supports 1–2).
+ */
+export function buildOpusHead(init: OpusHeadInit): Uint8Array {
+  const { channelCount, preSkip, inputSampleRate, outputGain = 0, version = 1 } = init;
+
+  if (channelCount < 1) {
+    throw new OggOpusHeaderError('buildOpusHead: channel_count must be ≥ 1.');
+  }
+
+  const buf = new Uint8Array(OPUS_HEAD_MIN_SIZE);
+  buf.set(OPUS_HEAD_MAGIC, 0);
+  const view = new DataView(buf.buffer);
+  buf[8] = version;
+  buf[9] = channelCount;
+  view.setUint16(10, preSkip & 0xffff, true);
+  view.setUint32(12, inputSampleRate >>> 0, true);
+  view.setInt16(16, outputGain, true);
+  buf[18] = 0; // channel_mapping_family 0
+  return buf;
+}
+
+/**
+ * Build an OpusTags comment packet (RFC 7845 §5.2), byte-compatible with
+ * {@link decodeOpusTags}. Each user comment is encoded as `KEY=value`.
+ */
+export function buildOpusTags(
+  vendor: string,
+  userComments: ReadonlyArray<{ readonly key: string; readonly value: string }> = [],
+): Uint8Array {
+  const vendorBytes = UTF8_ENCODER.encode(vendor);
+  const commentBytes = userComments.map((c) => UTF8_ENCODER.encode(`${c.key}=${c.value}`));
+
+  const total = 8 + 4 + vendorBytes.length + 4 + commentBytes.reduce((s, c) => s + 4 + c.length, 0);
+
+  const buf = new Uint8Array(total);
+  buf.set(OPUS_TAGS_MAGIC, 0);
+  const view = new DataView(buf.buffer);
+  let pos = 8;
+
+  view.setUint32(pos, vendorBytes.length, true);
+  pos += 4;
+  buf.set(vendorBytes, pos);
+  pos += vendorBytes.length;
+
+  view.setUint32(pos, commentBytes.length, true);
+  pos += 4;
+  for (const cb of commentBytes) {
+    view.setUint32(pos, cb.length, true);
+    pos += 4;
+    buf.set(cb, pos);
+    pos += cb.length;
+  }
+
+  return buf;
+}
+
 // ---------------------------------------------------------------------------
 // OpusHead decoder
 // ---------------------------------------------------------------------------
