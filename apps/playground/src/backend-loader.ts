@@ -1,5 +1,5 @@
 import { defaultRegistry, findByExt } from '@catlabtech/webcvt-core';
-import type { Backend, FormatDescriptor } from '@catlabtech/webcvt-core';
+import type { BackendRegistry, FormatDescriptor } from '@catlabtech/webcvt-core';
 
 export interface TargetOption {
   readonly format: FormatDescriptor;
@@ -14,51 +14,56 @@ function fmt(ext: string): FormatDescriptor {
 }
 
 /**
- * Register a backend instance, tolerating duplicate registration (can happen
- * when the same loader runs twice across a user session). Looks up by backend
- * name rather than class identity because the Backend's `name` is the
- * registry's primary key.
+ * Invoke a package's `registerXxx()` helper against the default registry,
+ * tolerating duplicate registration (can happen when the same loader runs twice
+ * across a user session — e.g. png→webp then png→jpeg both load image-canvas).
+ * The registry throws when a backend name is already present; that specific case
+ * is a no-op here, and anything else is re-thrown.
  */
-function tryRegister(backend: Backend): void {
-  if (defaultRegistry.list().some((b) => b.name === backend.name)) return;
-  defaultRegistry.register(backend);
+function tryRegister(register: (registry?: BackendRegistry) => unknown): void {
+  try {
+    register(defaultRegistry);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('already registered')) return;
+    throw err;
+  }
 }
 
 const imageCanvasLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-canvas');
-  tryRegister(new mod.CanvasBackend());
+  tryRegister(mod.registerCanvasBackend);
 };
 const imageLegacyLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-legacy');
-  tryRegister(new mod.ImageLegacyBackend());
+  tryRegister(mod.registerImageLegacyBackend);
 };
 const subtitleLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-subtitle');
-  tryRegister(new mod.SubtitleBackend());
+  tryRegister(mod.registerSubtitleBackend);
 };
 const dataTextLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-data-text');
-  tryRegister(new mod.DataTextBackend());
+  tryRegister(mod.registerDataTextBackend);
 };
 const archiveZipLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-archive-zip');
-  tryRegister(new mod.ArchiveBackend());
+  tryRegister(mod.registerArchiveBackend);
 };
 const jxlLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-jsquash-jxl');
-  tryRegister(new mod.JxlBackend());
+  tryRegister(mod.registerJxlBackend);
 };
 const avifLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-jsquash-avif');
-  tryRegister(new mod.AvifBackend());
+  tryRegister(mod.registerAvifBackend);
 };
 const pdfLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-pdf');
-  tryRegister(new mod.PdfBackend());
+  tryRegister(mod.registerPdfBackend);
 };
 const heicLoader = async (): Promise<void> => {
   const mod = await import('@catlabtech/webcvt-image-heic');
-  tryRegister(new mod.HeicBackend());
+  tryRegister(mod.registerHeicBackend);
 };
 
 /**
