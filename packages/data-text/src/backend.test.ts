@@ -2,7 +2,7 @@
  * Tests for backend.ts — DataTextBackend.
  */
 
-import { BackendRegistry } from '@catlabtech/webcvt-core';
+import { BackendRegistry, convert } from '@catlabtech/webcvt-core';
 import { describe, expect, it } from 'vitest';
 import {
   CSV_FORMAT,
@@ -13,6 +13,7 @@ import {
   TSV_FORMAT,
   YAML_FORMAT,
 } from './backend.ts';
+import { parseDataText } from './parser.ts';
 
 const backend = new DataTextBackend();
 
@@ -176,5 +177,39 @@ describe('DataTextBackend format descriptors', () => {
 
   it('ENV_FORMAT has correct ext', () => {
     expect(ENV_FORMAT.ext).toBe('env');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// End-to-end through core convert() — the full public pipeline (resolve →
+// detect/hint → registry → backend), not just registry-level findFor.
+// ---------------------------------------------------------------------------
+
+describe('end-to-end through core convert()', () => {
+  it('routes json → yaml via options.inputFormat', async () => {
+    const registry = new BackendRegistry();
+    registry.register(new DataTextBackend());
+    const blob = new Blob(['{"name":"webcvt","count":2}'], { type: 'application/json' });
+    const result = await convert(blob, { format: 'yaml', inputFormat: 'json' }, { registry });
+    expect(result.backend).toBe('data-text');
+    expect(result.format.ext).toBe('yaml');
+    const parsed = parseDataText(await result.blob.text(), 'yaml');
+    if (parsed.kind !== 'yaml') throw new Error('expected yaml kind');
+    // YAML Core Schema parses integers as bigint (see yaml-tokenizer.ts).
+    expect(parsed.file.value).toEqual({ name: 'webcvt', count: 2n });
+  });
+
+  it('routes a typeless File named *.json via the filename fallback', async () => {
+    // The common browser case: a File input with no MIME type. convert() must
+    // resolve the format from the name AND re-type the blob so the backend's
+    // Blob.type-based dispatch works.
+    const registry = new BackendRegistry();
+    registry.register(new DataTextBackend());
+    const file = new File(['{"a":[1,2]}'], 'report.json');
+    const result = await convert(file, { format: 'yaml' }, { registry });
+    expect(result.backend).toBe('data-text');
+    const parsed = parseDataText(await result.blob.text(), 'yaml');
+    if (parsed.kind !== 'yaml') throw new Error('expected yaml kind');
+    expect(parsed.file.value).toEqual({ a: [1n, 2n] });
   });
 });
