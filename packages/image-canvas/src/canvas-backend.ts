@@ -7,6 +7,8 @@ import type {
 import { UnsupportedFormatError } from '@catlabtech/webcvt-core';
 import { writeBmp } from './bmp-writer.ts';
 import { writeIco } from './ico-writer.ts';
+// Canonical canvas round-trip helpers, shared with the image codec packages.
+import { type CanvasLike, canvasToBlob, createCanvas } from './pixel.ts';
 
 // ---------------------------------------------------------------------------
 // Supported format sets
@@ -30,76 +32,6 @@ const SUPPORTED_OUTPUT_MIMES = new Set([
   'image/bmp',
   'image/x-icon',
 ]);
-
-// ---------------------------------------------------------------------------
-// Canvas abstraction
-// ---------------------------------------------------------------------------
-
-/** Minimal interface covering both OffscreenCanvas and HTMLCanvasElement. */
-interface CanvasLike {
-  width: number;
-  height: number;
-  getContext(id: '2d'): CanvasRenderingContext2DLike | null;
-}
-
-interface CanvasRenderingContext2DLike {
-  drawImage(image: ImageBitmap, dx: number, dy: number): void;
-  getImageData(sx: number, sy: number, sw: number, sh: number): { data: Uint8ClampedArray };
-}
-
-type ToBlob = (blob: Blob) => void;
-
-/**
- * Creates a canvas of the requested size. Prefers OffscreenCanvas for
- * worker-thread compatibility; falls back to HTMLCanvasElement in environments
- * where OffscreenCanvas is unavailable (e.g. older Safari).
- */
-function createCanvas(width: number, height: number): CanvasLike {
-  if (typeof globalThis.OffscreenCanvas !== 'undefined') {
-    const oc = new globalThis.OffscreenCanvas(width, height) as unknown as CanvasLike;
-    oc.width = width;
-    oc.height = height;
-    return oc;
-  }
-  // HTMLCanvasElement fallback (main thread only).
-  const el = globalThis.document.createElement('canvas') as unknown as CanvasLike & {
-    toBlob: (cb: ToBlob, type: string, quality?: number) => void;
-  };
-  el.width = width;
-  el.height = height;
-  return el;
-}
-
-/**
- * Encode the canvas to a Blob. Uses OffscreenCanvas.convertToBlob when
- * available, otherwise wraps HTMLCanvasElement.toBlob in a Promise.
- */
-async function canvasToBlob(canvas: CanvasLike, mime: string, quality?: number): Promise<Blob> {
-  if (typeof (canvas as { convertToBlob?: unknown }).convertToBlob === 'function') {
-    const oc = canvas as unknown as {
-      convertToBlob(opts: { type: string; quality?: number }): Promise<Blob>;
-    };
-    return oc.convertToBlob({ type: mime, quality });
-  }
-
-  // HTMLCanvasElement path
-  return new Promise<Blob>((resolve, reject) => {
-    const el = canvas as unknown as {
-      toBlob: (cb: (b: Blob | null) => void, type: string, quality?: number) => void;
-    };
-    el.toBlob(
-      (b) => {
-        if (b === null) {
-          reject(new Error('HTMLCanvasElement.toBlob produced null'));
-        } else {
-          resolve(b);
-        }
-      },
-      mime,
-      quality,
-    );
-  });
-}
 
 // ---------------------------------------------------------------------------
 // BMP fallback detection
