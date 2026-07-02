@@ -5,14 +5,20 @@
  * - NEVER static-import @jsquash/jpeg (Trap §1: tree-shaking / side-effects).
  * - Double-checked Promise guard (Trap §2): N concurrent first-callers
  *   all receive the same Promise; only one dynamic import() executes.
- * - After disposeMozjpeg(), both _module AND _loading are nulled out
- *   so the next call cold-reloads.
+ * - After disposeMozjpeg(), both the cached module AND the in-flight load are
+ *   cleared so the next call cold-reloads.
  *
  * INVARIANT: importing this module (or the barrel index) triggers zero
  * wasm bytes fetched. The wasm payload is only fetched when ensureLoaded()
  * is first called.
+ *
+ * The shared lazy-load skeleton (singleton, double-checked guard, dispose-race
+ * generation counter) lives in core's createLazyWasmLoader; this file only
+ * supplies the @jsquash/jpeg dynamic import, the shape validator, and the
+ * MozjpegLoadError constructor.
  */
 
+import { createLazyWasmLoader } from '@catlabtech/webcvt-core';
 import { MozjpegLoadError } from './errors.ts';
 
 /**
@@ -46,46 +52,40 @@ export interface JsquashMozjpegEncodeOptions {
   chroma_quality: number;
 }
 
-let _module: MozjpegModule | null = null;
-let _loading: Promise<MozjpegModule> | null = null;
-let _generation = 0;
+// ---------------------------------------------------------------------------
+// Lazy loader (shared skeleton from core)
+// ---------------------------------------------------------------------------
+
+const loader = createLazyWasmLoader<MozjpegModule>({
+  load: () => import('@jsquash/jpeg'),
+  validate: (imported) => {
+    const candidate = imported as MozjpegModule;
+    if (typeof candidate.decode !== 'function' || typeof candidate.encode !== 'function') {
+      throw new TypeError(
+        '@jsquash/jpeg did not export expected decode/encode functions. ' +
+          'Check that @jsquash/jpeg ^1.6.0 is installed.',
+      );
+    }
+    return candidate;
+  },
+  LoadError: MozjpegLoadError,
+  loadErrorMessage: 'Failed to import @jsquash/jpeg — see error.cause for details.',
+});
 
 /** Returns the cached MozjpegModule if already loaded, null otherwise. */
 export function getCachedModule(): MozjpegModule | null {
-  return _module;
+  return loader.getCached();
 }
 
 /**
  * Ensures the @jsquash/jpeg module is loaded and ready (double-checked Promise
  * guard). Up to N concurrent callers share a single dynamic import(). If
- * disposeMozjpeg() runs while a load is in flight, the generation counter
- * ensures the stale result is NOT written to _module.
+ * disposeMozjpeg() runs while a load is in flight, the stale result is NOT cached.
  *
  * @throws {MozjpegLoadError} if import() fails or exports are missing.
  */
-export async function ensureLoaded(): Promise<MozjpegModule> {
-  if (_module !== null) {
-    return _module;
-  }
-  if (_loading !== null) {
-    return _loading;
-  }
-
-  const myGen = ++_generation;
-  _loading = doLoad().then((mod) => {
-    if (myGen === _generation) {
-      _module = mod;
-    }
-    return mod;
-  });
-
-  _loading.catch(() => {
-    if (myGen === _generation) {
-      _loading = null;
-    }
-  });
-
-  return _loading;
+export function ensureLoaded(): Promise<MozjpegModule> {
+  return loader.ensureLoaded();
 }
 
 /**
@@ -94,33 +94,10 @@ export async function ensureLoaded(): Promise<MozjpegModule> {
  * wasm heap once the module object is unreferenced.
  */
 export function disposeMozjpeg(): void {
-  _module = null;
-  _loading = null;
-  _generation++;
+  loader.dispose();
 }
 
 /** Proactively loads the @jsquash/jpeg wasm module without decoding/encoding. */
-export async function preloadMozjpeg(): Promise<void> {
-  await ensureLoaded();
-}
-
-async function doLoad(): Promise<MozjpegModule> {
-  let mod: MozjpegModule;
-  try {
-    const imported = await import('@jsquash/jpeg');
-    const candidate = imported as unknown as MozjpegModule;
-    if (typeof candidate.decode !== 'function' || typeof candidate.encode !== 'function') {
-      throw new TypeError(
-        '@jsquash/jpeg did not export expected decode/encode functions. ' +
-          'Check that @jsquash/jpeg ^1.6.0 is installed.',
-      );
-    }
-    mod = candidate;
-  } catch (err) {
-    throw new MozjpegLoadError('Failed to import @jsquash/jpeg — see error.cause for details.', {
-      cause: err,
-    });
-  }
-
-  return mod;
+export function preloadMozjpeg(): Promise<void> {
+  return loader.preload();
 }

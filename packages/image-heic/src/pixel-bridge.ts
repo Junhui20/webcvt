@@ -4,91 +4,49 @@
  * HEIC is decode-only here, so after libheif renders RGBA we paint it onto a canvas
  * and export the target format (PNG/JPEG/WebP) via convertToBlob / toBlob.
  *
+ * Thin wrapper over the shared canvas encode round-trip in
+ * @catlabtech/webcvt-image-canvas; the HEIC-typed errors are preserved by
+ * injecting them into the shared helper. Because HEIC never decodes a blob to
+ * pixels here, hasPixelBridge() does not require createImageBitmap.
+ *
  * Node.js note: OffscreenCanvas is unavailable in stock Node. Gate via hasPixelBridge().
  */
 
+import {
+  type PixelBridgeErrorHooks,
+  hasPixelBridge as sharedHasPixelBridge,
+  imageDataToBlob as sharedImageDataToBlob,
+} from '@catlabtech/webcvt-image-canvas';
 import { HeicEncodeError } from './errors.ts';
 
-interface CanvasLike {
-  width: number;
-  height: number;
-  getContext(id: '2d'): CanvasRenderingContext2DLike | null;
-}
-
-interface CanvasRenderingContext2DLike {
-  putImageData(imageData: ImageData, dx: number, dy: number): void;
-}
+/** Maps the shared bridge's encode failure points onto this package's typed error. */
+const errorHooks: PixelBridgeErrorHooks = {
+  encodeContextError: () =>
+    new HeicEncodeError('Could not get 2D context from canvas for pixel bridge (imageDataToBlob).'),
+  toBlobNullError: () =>
+    new HeicEncodeError(
+      'HTMLCanvasElement.toBlob produced null — canvas may not support the requested MIME type.',
+    ),
+};
 
 /**
  * Returns true when canvas encode operations are available in this environment.
- * Requires OffscreenCanvas (or HTMLCanvasElement + document).
+ * Requires OffscreenCanvas (or HTMLCanvasElement + document). createImageBitmap
+ * is NOT required — this bridge only encodes ImageData that libheif already
+ * decoded.
  */
 export function hasPixelBridge(): boolean {
-  return (
-    typeof globalThis.OffscreenCanvas !== 'undefined' ||
-    (typeof globalThis.document !== 'undefined' &&
-      typeof globalThis.document.createElement === 'function')
-  );
-}
-
-function createCanvas(width: number, height: number): CanvasLike {
-  if (typeof globalThis.OffscreenCanvas !== 'undefined') {
-    return new globalThis.OffscreenCanvas(width, height) as unknown as CanvasLike;
-  }
-  const el = globalThis.document.createElement('canvas') as unknown as CanvasLike & {
-    toBlob: (cb: (b: Blob | null) => void, type: string, quality?: number) => void;
-  };
-  el.width = width;
-  el.height = height;
-  return el;
-}
-
-async function canvasToBlob(canvas: CanvasLike, mime: string, quality?: number): Promise<Blob> {
-  if (typeof (canvas as { convertToBlob?: unknown }).convertToBlob === 'function') {
-    const oc = canvas as unknown as {
-      convertToBlob(opts: { type: string; quality?: number }): Promise<Blob>;
-    };
-    return oc.convertToBlob({ type: mime, quality });
-  }
-
-  return new Promise<Blob>((resolve, reject) => {
-    const el = canvas as unknown as {
-      toBlob: (cb: (b: Blob | null) => void, type: string, quality?: number) => void;
-    };
-    el.toBlob(
-      (b) => {
-        if (b === null) {
-          reject(
-            new HeicEncodeError(
-              'HTMLCanvasElement.toBlob produced null — canvas may not support the requested MIME type.',
-            ),
-          );
-        } else {
-          resolve(b);
-        }
-      },
-      mime,
-      quality,
-    );
-  });
+  return sharedHasPixelBridge({ requireImageBitmap: false });
 }
 
 /**
  * Converts decoded ImageData to a Blob of the given MIME type via canvas.
  * Used for HEIC → {PNG, JPEG, WebP}.
  */
-export async function imageDataToBlob(
+export function imageDataToBlob(
   imageData: ImageData,
   mime: string,
   quality?: number,
 ): Promise<Blob> {
-  const canvas = createCanvas(imageData.width, imageData.height);
-  const ctx = canvas.getContext('2d');
-  if (ctx === null) {
-    throw new HeicEncodeError(
-      'Could not get 2D context from canvas for pixel bridge (imageDataToBlob).',
-    );
-  }
-  ctx.putImageData(imageData, 0, 0);
-  return canvasToBlob(canvas, mime, quality);
+  return sharedImageDataToBlob(imageData, mime, quality, errorHooks);
 }

@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@catlabtech/webcvt-core': resolve(__dirname, '../core/src/index.ts'),
+      '@catlabtech/webcvt-image-canvas': resolve(__dirname, '../image-canvas/src/index.ts'),
     },
   },
   test: {

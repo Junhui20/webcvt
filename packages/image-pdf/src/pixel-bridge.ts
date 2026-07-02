@@ -5,44 +5,34 @@
  * createImageBitmap, then handed to imageDataToPdf(). JPEG skips the bridge and
  * is embedded directly.
  *
+ * Thin wrapper over the shared canvas round-trip in @catlabtech/webcvt-image-canvas;
+ * the PDF-typed errors are preserved by injecting them into the shared helper.
+ *
  * Node.js note: OffscreenCanvas is unavailable in stock Node. Gate via hasPixelBridge().
  */
 
+import {
+  type PixelBridgeErrorHooks,
+  blobToImageData as sharedBlobToImageData,
+  hasPixelBridge as sharedHasPixelBridge,
+} from '@catlabtech/webcvt-image-canvas';
 import { MAX_PIXELS } from './constants.ts';
 import { PdfDecodeError, PdfDimensionsTooLargeError } from './errors.ts';
 
-interface CanvasLike {
-  width: number;
-  height: number;
-  getContext(id: '2d'): CanvasRenderingContext2DLike | null;
-}
-
-interface CanvasRenderingContext2DLike {
-  drawImage(image: ImageBitmap, dx: number, dy: number): void;
-  getImageData(sx: number, sy: number, sw: number, sh: number): ImageData;
-}
+/** Maps the shared bridge's decode failure points onto this package's typed errors. */
+const errorHooks: PixelBridgeErrorHooks = {
+  decodeContextError: () =>
+    new PdfDecodeError('Could not get 2D context from canvas for pixel bridge (blobToImageData).'),
+  dimensionsTooLargeError: (width, height, maxPixels) =>
+    new PdfDimensionsTooLargeError(width, height, maxPixels),
+};
 
 /**
  * Returns true when pixel bridge operations are available in this environment.
  * Requires OffscreenCanvas (or HTMLCanvasElement + document) and createImageBitmap.
  */
 export function hasPixelBridge(): boolean {
-  return (
-    (typeof globalThis.OffscreenCanvas !== 'undefined' ||
-      (typeof globalThis.document !== 'undefined' &&
-        typeof globalThis.document.createElement === 'function')) &&
-    typeof globalThis.createImageBitmap === 'function'
-  );
-}
-
-function createCanvas(width: number, height: number): CanvasLike {
-  if (typeof globalThis.OffscreenCanvas !== 'undefined') {
-    return new globalThis.OffscreenCanvas(width, height) as unknown as CanvasLike;
-  }
-  const el = globalThis.document.createElement('canvas') as unknown as CanvasLike;
-  el.width = width;
-  el.height = height;
-  return el;
+  return sharedHasPixelBridge();
 }
 
 /**
@@ -51,23 +41,6 @@ function createCanvas(width: number, height: number): CanvasLike {
  * @throws {PdfDimensionsTooLargeError} if decoded dimensions exceed maxPixels.
  * @throws {PdfDecodeError} if a 2D context cannot be obtained.
  */
-export async function blobToImageData(blob: Blob, maxPixels = MAX_PIXELS): Promise<ImageData> {
-  const bitmap = await globalThis.createImageBitmap(blob);
-  try {
-    const { width, height } = bitmap;
-    if (width * height > maxPixels) {
-      throw new PdfDimensionsTooLargeError(width, height, maxPixels);
-    }
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-      throw new PdfDecodeError(
-        'Could not get 2D context from canvas for pixel bridge (blobToImageData).',
-      );
-    }
-    ctx.drawImage(bitmap, 0, 0);
-    return ctx.getImageData(0, 0, width, height);
-  } finally {
-    bitmap.close();
-  }
+export function blobToImageData(blob: Blob, maxPixels = MAX_PIXELS): Promise<ImageData> {
+  return sharedBlobToImageData(blob, maxPixels, errorHooks);
 }
