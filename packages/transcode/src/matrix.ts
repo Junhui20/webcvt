@@ -92,6 +92,78 @@ export function outputTargetFor(mime: string): OutputTarget | undefined {
 }
 
 // ---------------------------------------------------------------------------
+// Video + container-track matrix (video stage).
+//
+// These are DELIBERATELY separate from INPUT_CODECS / OUTPUT_TARGETS /
+// TRANSCODE_MATRIX above (which stay the frozen audio-only matrix). A container
+// input (mp4/webm/mkv) is not a single audio codec — it may carry a video and
+// an audio track — so it is routed through its own lookups. `canHandle`/`convert`
+// consult BOTH the audio matrix and these container lookups.
+// ---------------------------------------------------------------------------
+
+/** Demuxable container family (its sample/block iterators feed the pipeline). */
+export type ContainerFamily = 'mp4' | 'webm' | 'mkv';
+
+/** WebCodecs video codec token for a demux/mux side. */
+export type VideoSideCodec = 'h264' | 'vp9' | 'vp8' | 'av1' | 'hevc';
+
+/**
+ * Container input MIME → family. Covers the video containers (video/mp4,
+ * video/webm, video/x-matroska) and the audio-only projections that share a
+ * demuxer (audio/mp4 = m4a, audio/webm). A container input can be transcoded
+ * to a video target (its video track) OR have its audio track routed into the
+ * existing audio matrix. Kept out of INPUT_CODECS so `inputCodecFor('video/mp4')`
+ * stays `undefined` (a container is not one audio codec).
+ */
+export const CONTAINER_INPUTS: Readonly<Record<string, ContainerFamily>> = Object.freeze({
+  'video/mp4': 'mp4',
+  'audio/mp4': 'mp4', // m4a — audio-only track extraction
+  'video/webm': 'webm',
+  'audio/webm': 'webm', // webm audio-only extraction
+  'video/x-matroska': 'mkv',
+  'video/mkv': 'mkv',
+});
+
+/** Output container family for a video target (VP9 default, VP8 fallback). */
+export interface VideoTarget {
+  readonly container: 'webm' | 'mkv';
+}
+
+/**
+ * Video output MIME → container. `→ mp4` is intentionally absent (no from-scratch
+ * mp4 muxer yet — deferred to a later stage). The encoder codec (VP9 preferred,
+ * VP8 fallback) is resolved at convert time by probing, not fixed here.
+ */
+export const VIDEO_TARGETS: Readonly<Record<string, VideoTarget>> = Object.freeze({
+  'video/webm': { container: 'webm' },
+  'video/x-matroska': { container: 'mkv' },
+  'video/mkv': { container: 'mkv' },
+});
+
+/**
+ * Assumed audio-track codec per container family, used only by `canHandle`
+ * probing (the true codec is known after demux). mp4 audio is ~always AAC and
+ * webm/mkv audio is ~always Opus. A mismatch (e.g. Vorbis-in-webm) is rejected
+ * at demux — the same optimistic-probe contract the ogg(opus) input already uses.
+ */
+export const CONTAINER_AUDIO_CODEC: Readonly<Record<ContainerFamily, Exclude<SideCodec, 'pcm'>>> =
+  Object.freeze({ mp4: 'aac', webm: 'opus', mkv: 'opus' });
+
+/** Assumed video-track codec per family, for `canHandle` decoder probing. */
+export const CONTAINER_VIDEO_CODEC: Readonly<Record<ContainerFamily, VideoSideCodec>> =
+  Object.freeze({ mp4: 'h264', webm: 'vp9', mkv: 'h264' });
+
+/** Lookup the container family for an input MIME, or `undefined`. */
+export function containerFamilyFor(mime: string): ContainerFamily | undefined {
+  return CONTAINER_INPUTS[mime];
+}
+
+/** Lookup the video output target for a MIME, or `undefined`. */
+export function videoTargetFor(mime: string): VideoTarget | undefined {
+  return VIDEO_TARGETS[mime];
+}
+
+// ---------------------------------------------------------------------------
 // Options → encoder config mapping
 // ---------------------------------------------------------------------------
 
@@ -136,9 +208,38 @@ export function resolveBitrate(
   return Math.round(stereo * scale);
 }
 
+/**
+ * Map video geometry + `quality` to a VP9/VP8 bitrate in bits/s. Resolution
+ * drives the base (design note ladder: 720p ≈ 3 Mbps for VP9), scaled ±40% by
+ * quality around the default `0.7`, with VP8 at ≈1.3× VP9. Clamped to a sane
+ * floor so tiny test clips still get a positive bitrate.
+ */
+export function resolveVideoBitrate(
+  width: number,
+  height: number,
+  quality: number,
+  codec: 'vp9' | 'vp8',
+): number {
+  const q = clamp01(quality);
+  const pixels = Math.max(1, width) * Math.max(1, height);
+  const ratio = pixels / (1280 * 720);
+  const base = VP9_720P_BPS * ratio;
+  const scale =
+    q <= DEFAULT_QUALITY
+      ? 0.6 + (0.4 * q) / DEFAULT_QUALITY // q 0 → 0.6, q 0.7 → 1.0
+      : 1.0 + (0.4 * (q - DEFAULT_QUALITY)) / (1 - DEFAULT_QUALITY); // q 1 → 1.4
+  const codecFactor = codec === 'vp8' ? 1.3 : 1;
+  return Math.max(VIDEO_MIN_BPS, Math.round(base * scale * codecFactor));
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+/** VP9 base bitrate at 720p, quality 0.7. */
+const VP9_720P_BPS = 3_000_000;
+/** Floor so tiny clips still get a positive, encodable bitrate. */
+const VIDEO_MIN_BPS = 100_000;
 
 function clamp01(v: number): number {
   if (Number.isNaN(v)) return DEFAULT_QUALITY;

@@ -29,6 +29,8 @@
     "@catlabtech/webcvt-container-wav": "workspace:*",
     "@catlabtech/webcvt-container-ogg": "workspace:*",
     "@catlabtech/webcvt-container-webm": "workspace:*",
+    "@catlabtech/webcvt-container-mkv": "workspace:*",
+    "@catlabtech/webcvt-container-mp4": "workspace:*",
     "@catlabtech/webcvt-container-mp3": "workspace:*",
     "@catlabtech/webcvt-container-flac": "workspace:*",
     "@catlabtech/webcvt-container-aac": "workspace:*"

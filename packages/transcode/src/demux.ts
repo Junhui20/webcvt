@@ -22,8 +22,9 @@ import { parseMp3 } from '@catlabtech/webcvt-container-mp3';
 import { parseOgg } from '@catlabtech/webcvt-container-ogg';
 import { parseWav } from '@catlabtech/webcvt-container-wav';
 import { TranscodeDemuxError } from './errors.ts';
-import type { SideCodec } from './matrix.ts';
+import type { ContainerFamily, SideCodec } from './matrix.ts';
 import { type DecodedAudio, wavToDecoded } from './pcm.ts';
+import { demuxContainerAudioTrack } from './video-demux.ts';
 
 /** One encoded access unit to hand to the AudioDecoder. */
 export interface EncodedChunkSpec {
@@ -66,6 +67,24 @@ export function demuxAudio(inputCodec: SideCodec, bytes: Uint8Array): DemuxResul
     if (err instanceof TranscodeDemuxError) throw err;
     throw new TranscodeDemuxError(err instanceof Error ? err.message : String(err), { cause: err });
   }
+}
+
+/**
+ * Demux a container's (mp4/webm/mkv) audio track into encoded chunks + an
+ * `AudioDecoderConfig`, so a container's audio can be routed into the existing
+ * audio matrix (e.g. mp4/m4a AAC → wav, webm/mkv Opus → opus). The heavy
+ * lifting lives in {@link demuxContainerAudioTrack}; this adapts it to the
+ * shared {@link DemuxResult} shape the decode driver consumes.
+ */
+export function demuxContainerAudio(family: ContainerFamily, bytes: Uint8Array): DemuxResult {
+  const track = demuxContainerAudioTrack(family, bytes);
+  return {
+    kind: 'encoded',
+    config: track.config,
+    chunks: track.chunks,
+    sampleRate: track.sampleRate,
+    numberOfChannels: track.numberOfChannels,
+  };
 }
 
 // ---------------------------------------------------------------------------
