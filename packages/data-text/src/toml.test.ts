@@ -850,7 +850,7 @@ describe('TC27: DataTextBackend canHandle for application/toml', () => {
     expect(can).toBe(true);
   });
 
-  it('returns false for cross-format TOML → JSON', async () => {
+  it('returns true for cross-format TOML → JSON (v0.3 value bridge)', async () => {
     const backend = new DataTextBackend();
     const jsonFormat = {
       ext: 'json',
@@ -859,7 +859,7 @@ describe('TC27: DataTextBackend canHandle for application/toml', () => {
       description: 'JSON',
     };
     const can = await backend.canHandle(TOML_FORMAT, jsonFormat);
-    expect(can).toBe(false);
+    expect(can).toBe(true);
   });
 });
 

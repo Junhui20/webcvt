@@ -544,14 +544,17 @@ describe('parseDataText / serializeDataText YAML wiring', () => {
       const desc = { ext: 'yaml', mime, category: 'data' as const, description: 'YAML' };
       expect(await backend.canHandle(desc, desc)).toBe(true);
     }
-    // Non-YAML should not match
+    // JSON → YAML is now a supported cross-format bridge (v0.3), not a reject.
     const json = {
       ext: 'json',
       mime: 'application/json',
       category: 'data' as const,
       description: 'JSON',
     };
-    expect(await backend.canHandle(json, yaml)).toBe(false);
+    expect(await backend.canHandle(json, yaml)).toBe(true);
+    // A genuinely unsupported MIME still does not match either side.
+    const unknown = { ext: 'xyz', mime: 'application/x-unknown', category: 'data' as const };
+    expect(await backend.canHandle(unknown, yaml)).toBe(false);
   });
 
   it('TC51: serializeDataText dispatches YAML', () => {
