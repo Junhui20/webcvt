@@ -1,6 +1,23 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
+
+// ESM replacement for CJS __dirname (this package is "type": "module").
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Repo-root shared fixtures (the old public/samples/ files were replaced by
+// inline base64 in src/ui/samples.ts, so specs use these instead).
+const PNG_FIXTURE = resolve(__dirname, '../../../tests/fixtures/image/testsrc-64x64.png');
+
+const SAMPLE_SRT = `1
+00:00:00,000 --> 00:00:02,000
+Hello, webcvt!
+
+2
+00:00:02,500 --> 00:00:05,000
+This is a sample subtitle file.
+`;
 
 // ---------------------------------------------------------------------------
 // Helper: upload a file via the hidden file input
@@ -38,8 +55,7 @@ test('page loads with title and dropzone', async ({ page }) => {
 test('PNG upload shows preview with format label', async ({ page }) => {
   await page.goto('/');
 
-  const pngPath = resolve(__dirname, '../public/samples/sample.png');
-  await uploadFile(page, pngPath);
+  await uploadFile(page, PNG_FIXTURE);
 
   const preview = page.locator('#preview-card');
   await expect(preview).toBeVisible({ timeout: 5000 });
@@ -53,8 +69,7 @@ test('PNG upload shows preview with format label', async ({ page }) => {
 test('PNG → WebP conversion produces valid WebP blob', async ({ page }) => {
   await page.goto('/');
 
-  const pngPath = resolve(__dirname, '../public/samples/sample.png');
-  await uploadFile(page, pngPath);
+  await uploadFile(page, PNG_FIXTURE);
 
   await expect(page.locator('#picker-section')).toBeVisible({ timeout: 5000 });
   await page.locator('#format-select').selectOption({ value: 'webp' });
@@ -114,9 +129,7 @@ test('SRT → VTT conversion succeeds', async ({ page }) => {
 
   ensureFixturesDir();
   const tmpPath = resolve(__dirname, 'fixtures/sample.srt');
-  const srcPath = resolve(__dirname, '../public/samples/sample.srt');
-  const { readFileSync } = await import('node:fs');
-  writeFileSync(tmpPath, readFileSync(srcPath));
+  writeFileSync(tmpPath, SAMPLE_SRT);
 
   await uploadFile(page, tmpPath);
 

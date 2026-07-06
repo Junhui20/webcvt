@@ -12,6 +12,10 @@ Thumbs.db
 .env.local
 .pnpm-store
 *.tsbuildinfo
+# Playwright artifacts + test-generated fixtures
+/apps/playground/test-results
+/apps/playground/playwright-report
+/apps/playground/tests/fixtures
 /apps/*/.next
 /apps/*/out
 /apps/*/.vercel

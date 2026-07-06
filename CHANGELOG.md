@@ -16,6 +16,7 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`@catlabtech/webcvt-codec-webcodecs`** — decoder-side probes `probeVideoDecoder` / `probeAudioDecoder` (mirroring the encoder probes).
 - **`@catlabtech/webcvt-container-ogg`** — public `buildOpusHead` / `buildOpusTags` byte builders (round-trip-tested against the package's own parsers; the OpusHead bytes double as WebM `CodecPrivate`).
 - **Playground** — WebCodecs transcode wired in behind a runtime capability check (no-ops where `VideoEncoder`/`AudioEncoder` are absent): mp4/webm/mkv → webm/mkv video conversion plus the audio matrix, all client-side.
+- **Playground e2e** — real-browser transcode spec (`tests/transcode.spec.ts`, system Chrome via `channel: 'chrome'`): mp4 (H.264+AAC) → webm and mp3 → ogg (Opus) through the actual UI, asserting output magic bytes and that `webcodecs-transcode` (not the ffmpeg-wasm fallback) handled the conversion — the only coverage of the real (unmocked) WebCodecs path.
 
 ### Changed
 
@@ -32,6 +33,8 @@ All notable changes to `webcvt` are documented in this file. The format is based
 - **`@catlabtech/webcvt-core`** — the registry docstring claimed backends self-register at import time; they never did. It now documents explicit registration and the priority/tie-break rules.
 - **`@catlabtech/webcvt-data-text`** — package docs pointed cross-format users at `@catlabtech/webcvt-convert`, a package that does not exist.
 - **`@catlabtech/webcvt-container-mp3`** — `canHandle` no longer claims mp3 → any-audio conversions it could only throw on (a placeholder awaiting the transcode backend, which now owns those routes); it is identity-only like the other containers.
+- **Playground** — the progress bar and download card were visible before and during every conversion: `#progress-section`/`#result-section` set `display: grid`, which overrides the UA stylesheet's `[hidden] { display: none }`. A global `[hidden] { display: none !important; }` rule restores the `el.hidden` toggling the UI code always assumed.
+- **Playground e2e** — the smoke spec had been unrunnable since the package went ESM (`__dirname` is undefined in module scope) and still pointed at `public/samples/` files long since replaced by inline base64 samples; it now uses the shared repo fixtures and an inline SRT.
 
 ## [0.2.0] — 2026-06-30
 

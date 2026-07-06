@@ -7,6 +7,12 @@
   padding: 0;
 }
 
+/* The hidden attribute must beat author display rules (e.g. #result-section's
+   display: grid), otherwise sections toggled via el.hidden never disappear. */
+[hidden] {
+  display: none !important;
+}
+
 :root {
   --bg: #0d0d0d;
   --surface: #1a1a1a;
