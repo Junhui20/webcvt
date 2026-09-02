@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-codec-webcodecs",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Thin adapter over the W3C WebCodecs API — encode/decode video and audio frames for webcvt container packages",
   "type": "module",
   "main": "./dist/index.cjs",

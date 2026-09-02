@@ -2,38 +2,43 @@
 
 All notable changes to `webcvt` are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] — unreleased, tag `v0.3.0` to publish
 
-> **`core` is behind its own dependents on npm — fix this before the next release.**
-> The registry currently holds `transcode@0.2.2`, `container-ogg@0.2.1` and
-> `codec-webcodecs@0.2.1`, all built against `core`'s `InputTooLargeError`,
-> `RoundTripBackend`, `Backend.priority` and `createLazyWasmLoader` — none of
-> which exist in `core@0.2.0`, the newest `core` on the registry. Those three
-> published packages are therefore broken for anyone installing them fresh;
-> confirmed 2026-09-02 by toolboxcat's CI, which fails `npm ci` + build with
-> `MISSING_EXPORT: InputTooLargeError` from `webcvt-core`. It builds on machines
-> whose `node_modules` still holds an unpublished `core`, which is why this went
-> unnoticed.
->
-> It happened because `pnpm -r publish` skips any package whose version is
-> already on the registry: the three bumps were made and released while `core`'s
-> version was left alone, so `core` silently did not publish. Publishing `core`
-> with these entries is what unbreaks the three. Work the release set out from
-> the entries below — `core`, `data-text`, `archive-zip`, `image-canvas`,
-> `backend-wasm`, `container-mp3` and the twenty packages that gained a
-> `registerXxx` export all changed too.
->
-> **Publishing `core@0.2.1` alone will not fix the three.** They went out with
-> `"@catlabtech/webcvt-core": "0.2.0"` — an exact pin, because `workspace:*` is
-> replaced at publish time with the workspace's exact version. No later `core`
-> can ever satisfy them. Unbreaking those three means republishing them under
-> new versions alongside a new `core`; `npm deprecate` on the broken versions is
-> what tells anyone already on them.
->
-> The pin is why this is now `workspace:^` across all 35 packages (98
-> dependencies): pnpm expands that to `^<version>`, so a future patched `core`
-> is picked up by already-published dependents instead of requiring the whole
-> tree to be republished in lockstep.
+### The whole 0.2.x line on npm is broken; this release is the fix
+
+`@catlabtech/webcvt-core@0.2.0` — still the newest `core` on the registry —
+exports only:
+
+    BackendRegistry, NoBackendError, UnsupportedFormatError, WebcvtError,
+    convert, convertBatch, defaultRegistry, detectCapabilities, detectFormat,
+    detectFormatWithHint, findByExt, findByMime, knownFormats, resolveFormat
+
+`InputTooLargeError`, `EncodeNotImplementedError`, `RoundTripBackend`,
+`createLazyWasmLoader` and `Backend.priority` are missing from it, and the
+published `transcode` (all of 0.2.0/0.2.1/0.2.2), `container-mp4`,
+`container-ogg`, `archive-zip`, `data-text`, `font` and `codec-webcodecs` all
+import them. Every one of those is unbuildable from a clean install, and there
+is no combination of published versions that works.
+
+How it happened: `pnpm -r publish` skips a package whose version is already on
+the registry. `core`'s version was never bumped, so it silently did not publish
+while everything built against it did. `workspace:*` then froze the mistake in
+place — pnpm expands it to the workspace's *exact* version at publish time, so
+those packages depend on `"webcvt-core": "0.2.0"` and no later `core` can ever
+satisfy them. Both are fixed here: `workspace:^` across all 35 packages, and a
+uniform version so the set can only ship together.
+
+Found 2026-09-02 through toolboxcat, whose CI fails `npm ci` + build with
+`MISSING_EXPORT: InputTooLargeError`. It had been building only on a machine
+whose `node_modules` still held an unpublished `core`.
+
+**Every public package goes to 0.3.0**, not 0.2.1: `^0.2.0` consumers must not
+silently roll onto this, because what they have now does not work and moving is
+a deliberate step. Consumers pinned to `^0.2.x` need their range widened.
+
+Publishing is one command — `git tag v0.3.0 && git push origin v0.3.0` — and
+`.github/workflows/release.yml` does the rest. It is deliberately left untagged;
+npm versions are permanent.
 
 ### Added
 

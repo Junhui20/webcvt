@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-api-server",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Hono-based HTTP convert API for webcvt — runs on Node, Bun, Deno, and Cloudflare Workers",
   "type": "module",
   "main": "./dist/index.cjs",

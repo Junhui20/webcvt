@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-jsquash-oxipng",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Lossless PNG optimisation / encoding for webcvt — lazy-loads @jsquash/oxipng wasm, plugs into the image adapter pipeline",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-pdf",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Wrap images (JPEG, PNG, WebP, …) into a PDF for webcvt — clean-room PDF writer, zero runtime dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

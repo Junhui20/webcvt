@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-backend-native",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Node-only webcvt Backend that converts files by spawning native CLI tools (ffmpeg/pandoc/libreoffice/ghostscript). NOT browser-safe — imports node:child_process/fs/os.",
   "type": "module",
   "main": "./dist/index.cjs",

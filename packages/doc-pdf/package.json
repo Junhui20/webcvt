@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-doc-pdf",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Multi-page image→PDF writer and bounded read-only PDF info reader for webcvt — clean-room PDF 1.7, no text extraction",
   "type": "module",
   "main": "./dist/index.cjs",

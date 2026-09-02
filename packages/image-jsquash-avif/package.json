@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-image-jsquash-avif",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "AVIF decode/encode for webcvt — lazy-loads @jsquash/avif wasm, plugs into the image adapter pipeline",
   "type": "module",
   "main": "./dist/index.cjs",

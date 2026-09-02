@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-container-ogg",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Ogg container muxer and demuxer for webcvt — pure TypeScript, no native dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

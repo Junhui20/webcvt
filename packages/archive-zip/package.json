@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-archive-zip",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "ZIP / TAR / GZip archive demuxer and muxer for webcvt — pure TypeScript, no native dependencies",
   "type": "module",
   "main": "./dist/index.cjs",

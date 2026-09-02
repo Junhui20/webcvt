@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-transcode",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "WebCodecs-first audio/video transcode backend for webcvt — real cross-format conversion (wav/opus/aac/flac) via demux → decode → encode → mux, no ffmpeg.wasm",
   "type": "module",
   "main": "./dist/index.cjs",

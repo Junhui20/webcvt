@@ -1,6 +1,6 @@
 {
   "name": "@catlabtech/webcvt-comic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Browser-first comic book (CBZ → PDF) reader for webcvt — self-written, composes archive-zip + doc-pdf",
   "type": "module",
   "main": "./dist/index.cjs",
