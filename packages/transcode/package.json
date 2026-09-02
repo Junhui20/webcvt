@@ -24,19 +24,19 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:*",
-    "@catlabtech/webcvt-codec-webcodecs": "workspace:*",
-    "@catlabtech/webcvt-container-wav": "workspace:*",
-    "@catlabtech/webcvt-container-ogg": "workspace:*",
-    "@catlabtech/webcvt-container-webm": "workspace:*",
-    "@catlabtech/webcvt-container-mkv": "workspace:*",
-    "@catlabtech/webcvt-container-mp4": "workspace:*",
-    "@catlabtech/webcvt-container-mp3": "workspace:*",
-    "@catlabtech/webcvt-container-flac": "workspace:*",
-    "@catlabtech/webcvt-container-aac": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:^",
+    "@catlabtech/webcvt-codec-webcodecs": "workspace:^",
+    "@catlabtech/webcvt-container-wav": "workspace:^",
+    "@catlabtech/webcvt-container-ogg": "workspace:^",
+    "@catlabtech/webcvt-container-webm": "workspace:^",
+    "@catlabtech/webcvt-container-mkv": "workspace:^",
+    "@catlabtech/webcvt-container-mp4": "workspace:^",
+    "@catlabtech/webcvt-container-mp3": "workspace:^",
+    "@catlabtech/webcvt-container-flac": "workspace:^",
+    "@catlabtech/webcvt-container-aac": "workspace:^"
   },
   "devDependencies": {
-    "@catlabtech/webcvt-test-utils": "workspace:*",
+    "@catlabtech/webcvt-test-utils": "workspace:^",
     "@vitest/coverage-v8": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",

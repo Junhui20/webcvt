@@ -24,10 +24,10 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:^"
   },
   "devDependencies": {
-    "@catlabtech/webcvt-test-utils": "workspace:*",
+    "@catlabtech/webcvt-test-utils": "workspace:^",
     "@vitest/coverage-v8": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",

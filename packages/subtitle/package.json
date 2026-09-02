@@ -24,7 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:^"
   },
   "devDependencies": {
     "tsup": "^8.3.0",

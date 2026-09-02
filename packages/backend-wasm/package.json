@@ -24,7 +24,7 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:^"
   },
   "peerDependencies": {
     "@ffmpeg/ffmpeg": "^0.12.0",
@@ -41,7 +41,7 @@
   "devDependencies": {
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.2",
-    "@catlabtech/webcvt-test-utils": "workspace:*",
+    "@catlabtech/webcvt-test-utils": "workspace:^",
     "@vitest/coverage-v8": "^2.1.0",
     "tsup": "^8.3.0",
     "typescript": "^5.7.0",

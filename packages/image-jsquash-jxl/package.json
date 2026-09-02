@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@catlabtech/webcvt-core": "workspace:^",
-    "@catlabtech/webcvt-image-canvas": "workspace:*"
+    "@catlabtech/webcvt-image-canvas": "workspace:^"
   },
   "peerDependencies": {
     "@jsquash/jxl": "^1.2.0"

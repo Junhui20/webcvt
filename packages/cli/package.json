@@ -17,26 +17,26 @@
     "clean": "rm -rf dist coverage .turbo"
   },
   "dependencies": {
-    "@catlabtech/webcvt-core": "workspace:*"
+    "@catlabtech/webcvt-core": "workspace:^"
   },
   "optionalDependencies": {
-    "@catlabtech/webcvt-container-mp3": "workspace:*",
-    "@catlabtech/webcvt-container-wav": "workspace:*",
-    "@catlabtech/webcvt-container-flac": "workspace:*",
-    "@catlabtech/webcvt-container-ogg": "workspace:*",
-    "@catlabtech/webcvt-container-aac": "workspace:*",
-    "@catlabtech/webcvt-container-mp4": "workspace:*",
-    "@catlabtech/webcvt-container-webm": "workspace:*",
-    "@catlabtech/webcvt-container-mkv": "workspace:*",
-    "@catlabtech/webcvt-container-ts": "workspace:*",
-    "@catlabtech/webcvt-image-canvas": "workspace:*",
-    "@catlabtech/webcvt-image-svg": "workspace:*",
-    "@catlabtech/webcvt-image-animation": "workspace:*",
-    "@catlabtech/webcvt-image-legacy": "workspace:*",
-    "@catlabtech/webcvt-data-text": "workspace:*",
-    "@catlabtech/webcvt-archive-zip": "workspace:*",
-    "@catlabtech/webcvt-subtitle": "workspace:*",
-    "@catlabtech/webcvt-backend-wasm": "workspace:*"
+    "@catlabtech/webcvt-container-mp3": "workspace:^",
+    "@catlabtech/webcvt-container-wav": "workspace:^",
+    "@catlabtech/webcvt-container-flac": "workspace:^",
+    "@catlabtech/webcvt-container-ogg": "workspace:^",
+    "@catlabtech/webcvt-container-aac": "workspace:^",
+    "@catlabtech/webcvt-container-mp4": "workspace:^",
+    "@catlabtech/webcvt-container-webm": "workspace:^",
+    "@catlabtech/webcvt-container-mkv": "workspace:^",
+    "@catlabtech/webcvt-container-ts": "workspace:^",
+    "@catlabtech/webcvt-image-canvas": "workspace:^",
+    "@catlabtech/webcvt-image-svg": "workspace:^",
+    "@catlabtech/webcvt-image-animation": "workspace:^",
+    "@catlabtech/webcvt-image-legacy": "workspace:^",
+    "@catlabtech/webcvt-data-text": "workspace:^",
+    "@catlabtech/webcvt-archive-zip": "workspace:^",
+    "@catlabtech/webcvt-subtitle": "workspace:^",
+    "@catlabtech/webcvt-backend-wasm": "workspace:^"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.0",

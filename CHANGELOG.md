@@ -22,6 +22,18 @@ All notable changes to `webcvt` are documented in this file. The format is based
 > the entries below — `core`, `data-text`, `archive-zip`, `image-canvas`,
 > `backend-wasm`, `container-mp3` and the twenty packages that gained a
 > `registerXxx` export all changed too.
+>
+> **Publishing `core@0.2.1` alone will not fix the three.** They went out with
+> `"@catlabtech/webcvt-core": "0.2.0"` — an exact pin, because `workspace:*` is
+> replaced at publish time with the workspace's exact version. No later `core`
+> can ever satisfy them. Unbreaking those three means republishing them under
+> new versions alongside a new `core`; `npm deprecate` on the broken versions is
+> what tells anyone already on them.
+>
+> The pin is why this is now `workspace:^` across all 35 packages (98
+> dependencies): pnpm expands that to `^<version>`, so a future patched `core`
+> is picked up by already-published dependents instead of requiring the whole
+> tree to be republished in lockstep.
 
 ### Added
 
