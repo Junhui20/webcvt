@@ -4,16 +4,24 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ## [Unreleased]
 
-> **Releasing this section — bump `core` together with everything that depends on it.**
-> `pnpm -r publish` skips any package whose version is already on the registry, so
-> bumping only the packages you *think* changed is how a broken release happens:
-> the dependents publish, `core` silently does not, and `workspace:*` resolves to
-> the last published `core` — which lacks the APIs the new dependents call.
-> This section adds `ConvertOptions.inputFormat`, `Backend.priority`,
-> `RoundTripBackend` and `createLazyWasmLoader` to `core`, and `registerXxx`
-> exports to 20 backend packages, so the release set is wide. Work out the set
-> from the entries below at release time; do not leave half a bump sitting in the
-> working tree between releases (2026-09-02).
+> **`core` is behind its own dependents on npm — fix this before the next release.**
+> The registry currently holds `transcode@0.2.2`, `container-ogg@0.2.1` and
+> `codec-webcodecs@0.2.1`, all built against `core`'s `InputTooLargeError`,
+> `RoundTripBackend`, `Backend.priority` and `createLazyWasmLoader` — none of
+> which exist in `core@0.2.0`, the newest `core` on the registry. Those three
+> published packages are therefore broken for anyone installing them fresh;
+> confirmed 2026-09-02 by toolboxcat's CI, which fails `npm ci` + build with
+> `MISSING_EXPORT: InputTooLargeError` from `webcvt-core`. It builds on machines
+> whose `node_modules` still holds an unpublished `core`, which is why this went
+> unnoticed.
+>
+> It happened because `pnpm -r publish` skips any package whose version is
+> already on the registry: the three bumps were made and released while `core`'s
+> version was left alone, so `core` silently did not publish. Publishing `core`
+> with these entries is what unbreaks the three. Work the release set out from
+> the entries below — `core`, `data-text`, `archive-zip`, `image-canvas`,
+> `backend-wasm`, `container-mp3` and the twenty packages that gained a
+> `registerXxx` export all changed too.
 
 ### Added
 
