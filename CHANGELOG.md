@@ -4,6 +4,17 @@ All notable changes to `webcvt` are documented in this file. The format is based
 
 ## [Unreleased]
 
+> **Releasing this section — bump `core` together with everything that depends on it.**
+> `pnpm -r publish` skips any package whose version is already on the registry, so
+> bumping only the packages you *think* changed is how a broken release happens:
+> the dependents publish, `core` silently does not, and `workspace:*` resolves to
+> the last published `core` — which lacks the APIs the new dependents call.
+> This section adds `ConvertOptions.inputFormat`, `Backend.priority`,
+> `RoundTripBackend` and `createLazyWasmLoader` to `core`, and `registerXxx`
+> exports to 20 backend packages, so the release set is wide. Work out the set
+> from the entries below at release time; do not leave half a bump sitting in the
+> working tree between releases (2026-09-02).
+
 ### Added
 
 - **`@catlabtech/webcvt-core`** — `convert()` can now route the text formats (JSON/CSV/YAML/…), which have no magic bytes: new `ConvertOptions.inputFormat` (explicit ext/MIME/descriptor route) and `ConvertOptions.filename` (extension fallback when magic-byte detection fails), with automatic fallback to a `File` input's `.name`; `convertBatch` threads item names as filename hints. The input blob is re-typed to the resolved format via zero-copy `Blob.slice` so `Blob.type`-dispatching backends work with typeless browser Files. `UnsupportedFormatError` gains an optional hint sentence pointing at the two explicit routes.
